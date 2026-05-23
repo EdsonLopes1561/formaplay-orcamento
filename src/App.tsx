@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Save, Printer, MessageCircle, FolderOpen,
-  Trash2, RotateCcw, ChevronDown, CheckCircle, AlertCircle
+  Trash2, RotateCcw, ChevronDown, CheckCircle, AlertCircle,
+  FileText, Users, Tag
 } from 'lucide-react';
 import { supabase } from './supabase.ts';
 import { Orcamento, EMPRESA, PRODUTOS, emptyOrcamento } from './types';
@@ -15,6 +16,45 @@ const getProdutoImagem = (nome: string): string | null => {
   if (n.includes('logístico') || n.includes('logistico')) return '/desafio-logistico.png';
   if (n.includes('kids')) return '/desafio-kids.png';
   if (n.includes('professor')) return '/edicao-professor.png';
+  return null;
+};
+
+type ProdutoInfo = {
+  titulo: string;
+  descricao: string;
+  publico: string;
+  categoria: string;
+};
+
+const getProdutoInfo = (nome: string): ProdutoInfo | null => {
+  const n = (nome || '').toLowerCase();
+  if (n.includes('kids')) {
+    return {
+      titulo: 'Desafio Kids',
+      descricao:
+        'Jogo educativo voltado ao desenvolvimento lógico, interação infantil e aprendizado divertido.',
+      publico: 'Crianças de 6 a 12 anos',
+      categoria: 'Educacional Infantil',
+    };
+  }
+  if (n.includes('logístico') || n.includes('logistico')) {
+    return {
+      titulo: 'Desafio Logístico',
+      descricao:
+        'Simulação prática de operações logísticas, estratégia e tomada de decisão profissional.',
+      publico: 'Estudantes, professores e profissionais',
+      categoria: 'Educacional',
+    };
+  }
+  if (n.includes('professor')) {
+    return {
+      titulo: 'Edição Professor',
+      descricao:
+        'Versão voltada para aplicação em sala de aula, treinamentos e atividades educacionais.',
+      publico: 'Professores, educadores e facilitadores',
+      categoria: 'Ensino e Treinamento',
+    };
+  }
   return null;
 };
 
@@ -474,6 +514,52 @@ function App() {
                       <p className="text-xs text-blue-600 font-semibold mt-1" translate="no">
                         Valor unitário: {fmtCurrency(form.valor_unitario)}
                       </p>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Product description card */}
+              {(() => {
+                const info = getProdutoInfo(form.produto);
+                if (!info) return null;
+                return (
+                  <div className="bg-white rounded-xl shadow-md border border-blue-200 p-5" translate="no">
+                    <div className="flex items-center gap-2 mb-3 border-l-4 border-blue-700 pl-3">
+                      <FileText className="w-4 h-4 text-blue-700" />
+                      <h2 className="font-bold text-blue-900 text-sm" translate="no">
+                        Descrição do Produto
+                      </h2>
+                    </div>
+                    <h3 className="font-black text-blue-900 text-base mb-2" translate="no">
+                      {info.titulo}
+                    </h3>
+                    <p className="text-sm text-gray-700 leading-relaxed mb-3" translate="no">
+                      {info.descricao}
+                    </p>
+                    <div className="grid grid-cols-1 gap-2 pt-3 border-t border-blue-100">
+                      <div className="flex items-start gap-2">
+                        <Users className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <span className="text-[11px] font-bold uppercase tracking-wide text-blue-700 block">
+                            Público-alvo
+                          </span>
+                          <span className="text-xs text-gray-700 font-medium" translate="no">
+                            {info.publico}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Tag className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <span className="text-[11px] font-bold uppercase tracking-wide text-blue-700 block">
+                            Categoria
+                          </span>
+                          <span className="text-xs text-gray-700 font-medium" translate="no">
+                            {info.categoria}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
