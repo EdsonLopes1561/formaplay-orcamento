@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Save, Printer, MessageCircle, FolderOpen,
   Trash2, RotateCcw, ChevronDown, CheckCircle, AlertCircle,
-  FileText, Users, Tag
+  FileText, Users, Tag, Sparkles, Check
 } from 'lucide-react';
 import { supabase } from './supabase.ts';
 import { Orcamento, EMPRESA, PRODUTOS, emptyOrcamento } from './types';
@@ -24,6 +24,7 @@ type ProdutoInfo = {
   descricao: string;
   publico: string;
   categoria: string;
+  diferenciais: string[];
 };
 
 const getProdutoInfo = (nome: string): ProdutoInfo | null => {
@@ -35,6 +36,12 @@ const getProdutoInfo = (nome: string): ProdutoInfo | null => {
         'Jogo educativo voltado ao desenvolvimento lógico, interação infantil e aprendizado divertido.',
       publico: 'Crianças de 6 a 12 anos',
       categoria: 'Educacional Infantil',
+      diferenciais: [
+        'Aprendizado divertido',
+        'Desenvolvimento lógico',
+        'Interação infantil',
+        'Estímulo criativo',
+      ],
     };
   }
   if (n.includes('logístico') || n.includes('logistico')) {
@@ -44,6 +51,12 @@ const getProdutoInfo = (nome: string): ProdutoInfo | null => {
         'Simulação prática de operações logísticas, estratégia e tomada de decisão profissional.',
       publico: 'Estudantes, professores e profissionais',
       categoria: 'Educacional',
+      diferenciais: [
+        'Aprendizado prático',
+        'Estratégia e tomada de decisão',
+        'Aplicação educacional',
+        'Dinâmica em grupo',
+      ],
     };
   }
   if (n.includes('professor')) {
@@ -53,6 +66,12 @@ const getProdutoInfo = (nome: string): ProdutoInfo | null => {
         'Versão voltada para aplicação em sala de aula, treinamentos e atividades educacionais.',
       publico: 'Professores, educadores e facilitadores',
       categoria: 'Ensino e Treinamento',
+      diferenciais: [
+        'Aplicação em sala de aula',
+        'Material de apoio educacional',
+        'Dinâmicas pedagógicas',
+        'Treinamentos e workshops',
+      ],
     };
   }
   return null;
@@ -561,6 +580,38 @@ function App() {
                         </div>
                       </div>
                     </div>
+                  </div>
+                );
+              })()}
+
+              {/* Product differentials card */}
+              {(() => {
+                const info = getProdutoInfo(form.produto);
+                if (!info) return null;
+                return (
+                  <div className="bg-white rounded-xl shadow-md border border-blue-200 p-5" translate="no">
+                    <div className="flex items-center gap-2 mb-4 border-l-4 border-blue-700 pl-3">
+                      <Sparkles className="w-4 h-4 text-blue-700" />
+                      <h2 className="font-bold text-blue-900 text-sm" translate="no">
+                        Diferenciais do Produto
+                      </h2>
+                    </div>
+                    <ul className="space-y-2">
+                      {info.diferenciais.map((item, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-2.5 bg-blue-50/60 rounded-lg px-3 py-2 border border-blue-100"
+                          translate="no"
+                        >
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center mt-0.5">
+                            <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                          </span>
+                          <span className="text-sm text-gray-800 font-medium leading-snug">
+                            {item}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 );
               })()}
