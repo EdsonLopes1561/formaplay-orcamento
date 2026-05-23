@@ -10,6 +10,14 @@ import { HistoricoModal } from './components/HistoricoModal';
 
 type Toast = { type: 'success' | 'error'; message: string };
 
+const getProdutoImagem = (nome: string): string | null => {
+  const n = (nome || '').toLowerCase();
+  if (n.includes('logístico') || n.includes('logistico')) return '/desafio-logistico.png';
+  if (n.includes('kids')) return '/desafio-kids.png';
+  if (n.includes('professor')) return '/edicao-professor.png';
+  return null;
+};
+
 function App() {
   const [form, setForm] = useState<Omit<Orcamento, 'id' | 'created_at'>>(emptyOrcamento());
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -444,6 +452,32 @@ function App() {
                   </div>
                 </div>
               </div>
+
+              {/* Selected product card */}
+              {(() => {
+                const imgSrc = getProdutoImagem(form.produto);
+                if (!imgSrc) return null;
+                return (
+                  <div className="bg-white rounded-xl shadow-md border border-blue-200 p-5" translate="no">
+                    <h2 className="font-bold text-blue-900 mb-3 text-sm border-l-4 border-blue-700 pl-3" translate="no">
+                      Produto Selecionado
+                    </h2>
+                    <div className="bg-blue-50/60 rounded-lg border border-blue-100 p-3 flex items-center justify-center min-h-[140px]">
+                      <img
+                        src={imgSrc}
+                        alt={form.produto}
+                        className="max-h-40 w-auto object-contain"
+                      />
+                    </div>
+                    <div className="mt-3">
+                      <p className="font-bold text-sm text-blue-900" translate="no">{form.produto}</p>
+                      <p className="text-xs text-blue-600 font-semibold mt-1" translate="no">
+                        Valor unitário: {fmtCurrency(form.valor_unitario)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Financial summary */}
               <div className="bg-gradient-to-br from-blue-900 to-blue-800 rounded-xl shadow-lg border-l-4 border-green-400 p-6 text-white">
