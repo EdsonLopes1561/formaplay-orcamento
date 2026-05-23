@@ -211,7 +211,7 @@ function App() {
           <div className="max-w-6xl mx-auto px-4 py-5">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-5">
-                <img src="/ChatGPT_Image_18_de_mai._de_2026,_22_43_59.png" alt="FormaPlay" className="h-14 object-contain filter drop-shadow-2xl transform hover:scale-105 transition-transform" />
+                <img src="/logocircular.png" alt="FormaPlay" className="h-14 object-contain filter drop-shadow-2xl transform hover:scale-105 transition-transform" />
                 <div className="border-l-4 border-green-400 pl-5 py-1">
                   <h1 className="font-black text-white leading-tight text-lg sm:text-xl tracking-tight">
                     FormaPlay
@@ -473,7 +473,7 @@ function App() {
 
               {/* Company card */}
               <div className="bg-gradient-to-br from-blue-700 to-blue-900 rounded-2xl p-5 text-white shadow-sm">
-                <img src="/ChatGPT_Image_18_de_mai._de_2026,_22_43_59.png" alt="FormaPlay" className="h-12 object-contain mb-3" />
+                <img src="/logocircular.png" alt="FormaPlay" className="h-12 object-contain mb-3" />
                 <p className="font-bold text-sm">{EMPRESA.nome}</p>
                 <div className="mt-2 space-y-1 text-blue-100 text-xs">
                   <p>CNPJ: {EMPRESA.cnpj}</p>
