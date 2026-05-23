@@ -1,0 +1,441 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .form-label {
+    @apply block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide;
+  }
+  .form-input {
+    @apply w-full px-4 py-2.5 rounded-lg border border-gray-300 text-gray-900 text-sm font-medium
+           focus:outline-none focus:ring-2 focus:ring-green-500/40 focus:border-green-500
+           placeholder:text-gray-400 transition-all bg-white
+           disabled:bg-gray-100 disabled:cursor-not-allowed;
+  }
+}
+
+/* ============================================================
+   PRINT STYLES
+   ============================================================ */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 15mm;
+  }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    color: #111;
+    background: #fff;
+  }
+
+  .print-area {
+    width: 100%;
+    max-width: 780px;
+    margin: 0 auto;
+    background: #fff;
+  }
+
+  /* Premium Header */
+  .print-header-premium {
+    background: linear-gradient(135deg, #003d99 0%, #1e3a8a 50%, #0052cc 100%);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+    margin-bottom: 12px;
+  }
+
+  .print-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    gap: 20px;
+  }
+
+  .print-header-logo-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+  }
+
+  .print-logo-premium {
+    height: 120px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.2));
+  }
+
+  .print-header-title {
+    flex: 1;
+    border-left: 4px solid #16a34a;
+    padding-left: 16px;
+    color: #fff;
+  }
+
+  .print-company-title {
+    font-size: 32px;
+    font-weight: 900;
+    margin: 0;
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
+
+  .print-company-subtitle {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 4px 0 0;
+    color: #22c55e;
+    letter-spacing: 0.05em;
+  }
+
+  .print-company-tagline {
+    font-size: 11px;
+    font-weight: 600;
+    margin: 2px 0 0;
+    color: #d1fae5;
+    font-style: italic;
+  }
+
+  .print-header-numero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 12px 18px;
+    border-radius: 8px;
+    border: 2px solid #22c55e;
+    backdrop-filter: blur(10px);
+  }
+
+  .print-numero-banner {
+    font-size: 32px;
+    font-weight: 900;
+    color: #22c55e;
+    line-height: 1;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.05em;
+  }
+
+  .print-numero-label {
+    font-size: 8px;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #d1fae5;
+    letter-spacing: 0.1em;
+    margin: 0;
+  }
+
+  .print-header-bottom {
+    display: flex;
+    justify-content: space-around;
+    gap: 12px;
+    padding: 12px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 2px solid #22c55e;
+  }
+
+  .print-header-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+  }
+
+  .print-info-label {
+    font-size: 7px;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #d1fae5;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .print-info-value {
+    font-size: 11px;
+    font-weight: 700;
+    color: #22c55e;
+    letter-spacing: 0.02em;
+  }
+
+  .print-company-name {
+    font-size: 18px;
+    font-weight: 900;
+    color: #1e3a8a;
+    margin: 0;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+  }
+
+  .print-company-sub {
+    font-size: 10px;
+    color: #16a34a;
+    margin: 2px 0 0;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .print-divider-premium {
+    height: 3px;
+    background: linear-gradient(90deg, #1e3a8a 0%, #16a34a 50%, #1e3a8a 100%);
+    border-radius: 2px;
+    margin: 12px 0;
+  }
+
+  .print-divider {
+    height: 0;
+    display: none;
+  }
+
+  /* Section */
+  .print-section {
+    margin-bottom: 14px;
+  }
+
+  .print-section-title {
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #fff;
+    background: linear-gradient(90deg, #1e3a8a 0%, #0052cc 100%);
+    padding: 6px 10px;
+    margin: 10px -10px 8px;
+    border-left: 4px solid #16a34a;
+  }
+
+  /* Client grid */
+  .print-client-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 18px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f0f7ff 100%);
+    border: 2px solid #cbd5e1;
+    border-left: 4px solid #16a34a;
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+
+  .print-field {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .print-field-full {
+    grid-column: span 2;
+  }
+
+  .print-label {
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #1e3a8a;
+  }
+
+  .print-value {
+    font-size: 10px;
+    color: #1f2937;
+    font-weight: 600;
+  }
+
+  /* Table */
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #cbd5e1;
+  }
+
+  .print-th {
+    background: linear-gradient(135deg, #003d99 0%, #0052cc 100%);
+    color: #fff;
+    font-size: 8px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 10px 12px;
+    border-bottom: 3px solid #16a34a;
+  }
+
+  .print-th-left { text-align: left; }
+  .print-th-center { text-align: center; }
+  .print-th-right { text-align: right; }
+
+  .print-td {
+    padding: 9px 12px;
+    font-size: 10px;
+    color: #1f2937;
+    border-bottom: 1px solid #e2e8f0;
+    font-weight: 500;
+  }
+
+  .print-td:nth-child(odd) {
+    background: rgba(22, 163, 74, 0.02);
+  }
+
+  .print-td-center { text-align: center; }
+  .print-td-right { text-align: right; }
+
+  /* Summary */
+  .print-summary-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 14px;
+  }
+
+  .print-summary {
+    width: 310px;
+    border: 3px solid #16a34a;
+    border-radius: 8px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #f0fdf4 0%, #dbeafe 100%);
+    padding: 15px 16px;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+  }
+
+  .print-summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #1e3a8a;
+    padding: 5px 0;
+    font-weight: 600;
+  }
+
+  .print-summary-divider {
+    height: 2px;
+    background: linear-gradient(90deg, #16a34a 0%, #22c55e 50%, #16a34a 100%);
+    margin: 9px 0;
+  }
+
+  .print-summary-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+    font-weight: 900;
+    color: #fff;
+    background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-top: 3px;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+  }
+
+  /* Conditions */
+  .print-conditions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 18px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f0f7ff 100%);
+    border: 2px solid #cbd5e1;
+    border-left: 4px solid #16a34a;
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+
+  /* Signature */
+  .print-signature {
+    margin: 18px 0 14px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f0f7ff 100%);
+    border: 2px solid #cbd5e1;
+    border-left: 4px solid #16a34a;
+    border-radius: 6px;
+  }
+
+  .print-signature-line {
+    display: flex;
+    gap: 40px;
+  }
+
+  .print-sig-box {
+    flex: 1;
+    text-align: center;
+    padding: 8px;
+    background: #fff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 4px;
+  }
+
+  .print-sig-line {
+    height: 2px;
+    background: linear-gradient(90deg, #1e3a8a 0%, #16a34a 50%, #1e3a8a 100%);
+    margin-bottom: 10px;
+  }
+
+  .print-sig-box p {
+    margin: 4px 0;
+    font-size: 9px;
+    color: #1f2937;
+    font-weight: 500;
+  }
+  .print-sig-box p:first-child { font-weight: 700; color: #1e3a8a; }
+
+  /* Footer */
+  .print-footer {
+    padding-top: 14px;
+    text-align: center;
+    margin-top: auto;
+  }
+
+  .print-footer-line {
+    height: 3px;
+    background: linear-gradient(90deg, #003d99 0%, #16a34a 50%, #003d99 100%);
+    border-radius: 2px;
+    margin-bottom: 11px;
+    box-shadow: 0 2px 4px rgba(30, 58, 138, 0.25);
+  }
+
+  .print-footer-content {
+    display: flex;
+    justify-content: space-around;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, #003d99 0%, #1e3a8a 100%);
+    border-radius: 6px;
+    border: 2px solid #16a34a;
+    box-shadow: 0 2px 6px rgba(30, 58, 138, 0.2);
+  }
+
+  .print-footer-left,
+  .print-footer-center,
+  .print-footer-right {
+    flex: 1;
+    min-width: 90px;
+  }
+
+  .print-footer-label {
+    font-size: 7px;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #d1fae5;
+    letter-spacing: 0.1em;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .print-footer-value {
+    font-size: 10px;
+    color: #22c55e;
+    font-weight: 700;
+    display: block;
+    letter-spacing: 0.03em;
+  }
+
+  .print-footer-disclaimer {
+    font-size: 7px;
+    color: #cbd5e1;
+    margin-top: 6px;
+    font-weight: 500;
+    font-style: italic;
+  }
+}
