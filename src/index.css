@@ -310,18 +310,66 @@
   /* Summary */
   .print-summary-wrapper {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 14px;
     margin-bottom: 14px;
   }
 
   .print-summary {
     width: 310px;
+    flex-shrink: 0;
     border: 1px solid #dbeafe;
     border-radius: 10px;
     overflow: hidden;
     background: #ffffff;
     padding: 14px 16px;
     box-shadow: 0 2px 8px rgba(30, 58, 138, 0.08);
+  }
+
+  /* Product image card */
+  .print-product-image-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid #dbeafe;
+    border-radius: 10px;
+    padding: 12px 14px;
+    box-shadow: 0 2px 8px rgba(30, 58, 138, 0.08);
+    min-width: 0;
+  }
+
+  .print-product-image-title {
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #1e3a8a;
+    margin: 0 0 8px;
+    padding: 0 0 0 10px;
+    border-left: 3px solid #1e40af;
+  }
+
+  .print-product-image-frame {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px;
+    min-height: 140px;
+  }
+
+  .print-product-image {
+    max-width: 100%;
+    max-height: 170px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
   }
 
   .print-summary-row {
