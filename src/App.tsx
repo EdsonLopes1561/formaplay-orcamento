@@ -207,19 +207,34 @@ function App() {
         )}
 
         {/* Header */}
-        <header className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 border-b-4 border-green-500 shadow-2xl sticky top-0 z-40">
-          <div className="max-w-6xl mx-auto px-4 py-5">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-5">
-                <img src="/logocircular.png" alt="FormaPlay" className="h-14 object-contain filter drop-shadow-2xl transform hover:scale-105 transition-transform" />
-                <div className="border-l-4 border-green-400 pl-5 py-1">
-                  <h1 className="font-black text-white leading-tight text-lg sm:text-xl tracking-tight">
-                    FormaPlay
-                  </h1>
-                  <p className="text-sm font-bold text-green-300">Jogos Educacionais</p>
-                  <p className="text-xs text-blue-100 mt-0.5">Orçamento Comercial</p>
-                </div>
-              </div>
+       <header className="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-950 border-b-4 border-green-400 shadow-2xl sticky top-0 z-40 backdrop-blur-md">
+  <div className="max-w-6xl mx-auto px-4 py-5">
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center gap-5">
+
+        <div className="h-16 w-16 rounded-full overflow-hidden border-2 border-green-400 shadow-2xl bg-blue-900 flex items-center justify-center">
+          <img
+            src="/logocircular.png"
+            alt="FormaPlay"
+            className="h-full w-full object-cover"
+          />
+        </div>
+
+        <div className="border-l-4 border-green-400 pl-5 py-1">
+          <h1 className="font-black text-white leading-tight text-2xl tracking-tight drop-shadow-lg">
+            FormaPlay
+          </h1>
+
+          <p className="text-sm font-extrabold text-green-300 tracking-wide uppercase">
+            Jogos Educacionais
+          </p>
+
+          <p className="text-xs text-blue-100 mt-1 font-medium tracking-wide">
+            Sistema de Orçamentos Profissionais
+          </p>
+        </div>
+
+      </div>
               {form.numero && (
                 <div className="text-right bg-gradient-to-r from-green-500 to-green-600 px-5 py-3 rounded-xl border-2 border-green-300 shadow-lg transform hover:scale-105 transition-all">
                   <span className="text-xs text-green-900 font-black uppercase tracking-widest block">Orçamento</span>
