@@ -8,6 +8,7 @@ import { supabase } from './supabase.ts';
 import { Orcamento, EMPRESA, PRODUTOS, emptyOrcamento } from './types';
 import { PrintView } from './components/PrintView';
 import { HistoricoModal } from './components/HistoricoModal';
+import { FormaPlayBrand } from './components/FormaPlayBrand';
 
 type Toast = { type: 'success' | 'error'; message: string };
 
@@ -324,7 +325,7 @@ function App() {
 
         <div className="border-l-4 border-green-400 pl-5 py-1">
           <h1 className="font-black text-white leading-tight text-2xl tracking-tight drop-shadow-lg">
-            FormaPlay
+            <FormaPlayBrand />
           </h1>
 
           <p className="text-sm font-extrabold text-green-300 tracking-wide uppercase">
@@ -721,7 +722,7 @@ function App() {
               {/* Company card */}
               <div className="bg-gradient-to-br from-blue-700 to-blue-900 rounded-2xl p-5 text-white shadow-sm">
                 <img src="/logocircular.png" alt="FormaPlay" className="h-12 object-contain mb-3" />
-                <p className="font-bold text-sm">{EMPRESA.nome}</p>
+                <p className="font-bold text-sm"><FormaPlayBrand /> Jogos Educacionais</p>
                 <div className="mt-2 space-y-1 text-blue-100 text-xs">
                   <p>CNPJ: {EMPRESA.cnpj}</p>
                   <p>WhatsApp: {EMPRESA.whatsapp}</p>
