@@ -674,12 +674,12 @@ function App() {
                 <h2 className="font-black text-green-300 mb-5 text-lg">Resumo Financeiro</h2>
                 <div className="space-y-3">
                   <div>
-                    <label className="form-label">Frete (R$)</label>
+                    <label className="form-label !text-blue-100/90">Frete (R$)</label>
                     <input name="frete" type="number" min="0" step="0.01" value={form.frete} onChange={handleChange}
                       className="form-input" />
                   </div>
                   <div>
-                    <label className="form-label">Desconto (R$)</label>
+                    <label className="form-label !text-blue-100/90">Desconto (R$)</label>
                     <input name="desconto" type="number" min="0" step="0.01" value={form.desconto} onChange={handleChange}
                       className="form-input" />
                   </div>
