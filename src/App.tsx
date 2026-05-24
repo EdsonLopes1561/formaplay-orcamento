@@ -684,24 +684,20 @@ function App() {
                       className="form-input" />
                   </div>
 
-                  <div className="pt-5 border-t-2 border-green-400/30 space-y-3">
+                  <div className="pt-5 border-t-2 border-blue-300/30 space-y-2.5">
                     <div className="flex justify-between text-sm">
-                      <span className="text-green-50 font-semibold">Subtotal</span>
-                      <span className="text-green-100 font-bold">{fmtCurrency(form.subtotal)}</span>
+                      <span className="text-blue-100 font-semibold">Subtotal</span>
+                      <span className="text-white font-bold">{fmtCurrency(form.subtotal)}</span>
                     </div>
-                    {form.frete > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-green-50 font-semibold">Frete</span>
-                        <span className="text-green-100 font-bold">+ {fmtCurrency(form.frete)}</span>
-                      </div>
-                    )}
-                    {form.desconto > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-green-50 font-semibold">Desconto</span>
-                        <span className="text-red-200 font-bold">- {fmtCurrency(form.desconto)}</span>
-                      </div>
-                    )}
-                    <div className="mt-4 pt-4 border-t-2 border-green-400/40" />
+                    <div className="flex justify-between text-sm">
+                      <span className="text-blue-100 font-semibold">Frete</span>
+                      <span className="text-white font-bold">+ {fmtCurrency(form.frete)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-blue-100 font-semibold">Desconto</span>
+                      <span className="text-red-200 font-bold">- {fmtCurrency(form.desconto)}</span>
+                    </div>
+                    <div className="mt-4 pt-4 border-t-2 border-blue-300/40" />
                     <div className="flex justify-between items-center bg-gradient-to-r from-green-600 to-green-500 rounded-xl px-5 py-4 shadow-lg transform">
                       <span className="font-black text-white text-lg uppercase tracking-wide">Total Final</span>
                       <span className="text-3xl font-black text-white drop-shadow-lg">{fmtCurrency(form.total)}</span>
