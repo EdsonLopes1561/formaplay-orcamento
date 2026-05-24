@@ -38,11 +38,28 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
+    position: relative;
+    isolation: isolate;
   }
 
   .print-area * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* Elegant watermark — repete em todas as paginas impressas */
+  .print-watermark {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 480px auto;
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: -1;
   }
 
   /* Premium Header */
@@ -369,6 +386,43 @@
     color: #1e293b;
     font-weight: 600;
     letter-spacing: 0.01em;
+    line-height: 1.2;
+  }
+
+  /* Box contents card */
+  .print-conteudo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 5px 8px;
+    background: #ffffff;
+    border: 1px solid #dbeafe;
+    border-radius: 8px;
+    padding: 8px 10px;
+    box-shadow: 0 2px 6px rgba(30, 58, 138, 0.06);
+  }
+
+  .print-conteudo-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 4px 8px;
+  }
+
+  .print-conteudo-dot {
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1e40af 0%, #0a2472 100%);
+  }
+
+  .print-conteudo-text {
+    font-size: 9px;
+    color: #1e293b;
+    font-weight: 600;
     line-height: 1.2;
   }
 

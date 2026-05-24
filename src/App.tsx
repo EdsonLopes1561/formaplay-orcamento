@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Save, Printer, MessageCircle, FolderOpen,
   Trash2, RotateCcw, ChevronDown, CheckCircle, AlertCircle,
-  FileText, Users, Tag, Sparkles, Check
+  FileText, Users, Tag, Sparkles, Check, Package
 } from 'lucide-react';
 import { supabase } from './supabase.ts';
 import { Orcamento, EMPRESA, PRODUTOS, emptyOrcamento } from './types';
@@ -25,6 +25,7 @@ type ProdutoInfo = {
   publico: string;
   categoria: string;
   diferenciais: string[];
+  conteudo: string[];
 };
 
 const getProdutoInfo = (nome: string): ProdutoInfo | null => {
@@ -42,6 +43,13 @@ const getProdutoInfo = (nome: string): ProdutoInfo | null => {
         'Interação infantil',
         'Estímulo criativo',
       ],
+      conteudo: [
+        'Tabuleiro infantil',
+        'Cartas coloridas',
+        'Peças educativas',
+        'Manual infantil',
+        'Dinâmicas lúdicas',
+      ],
     };
   }
   if (n.includes('logístico') || n.includes('logistico')) {
@@ -57,6 +65,14 @@ const getProdutoInfo = (nome: string): ProdutoInfo | null => {
         'Aplicação educacional',
         'Dinâmica em grupo',
       ],
+      conteudo: [
+        'Tabuleiro premium',
+        'Cartas operacionais',
+        'Peões personalizados',
+        'Dados',
+        'Manual do jogo',
+        'Dinâmicas educacionais',
+      ],
     };
   }
   if (n.includes('professor')) {
@@ -71,6 +87,13 @@ const getProdutoInfo = (nome: string): ProdutoInfo | null => {
         'Material de apoio educacional',
         'Dinâmicas pedagógicas',
         'Treinamentos e workshops',
+      ],
+      conteudo: [
+        'Material pedagógico',
+        'Cartas avançadas',
+        'Guia do educador',
+        'Dinâmicas em grupo',
+        'Aplicação em sala',
       ],
     };
   }
@@ -606,6 +629,36 @@ function App() {
                           <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center mt-0.5">
                             <Check className="w-3 h-3 text-white" strokeWidth={3} />
                           </span>
+                          <span className="text-sm text-gray-800 font-medium leading-snug">
+                            {item}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })()}
+
+              {/* Box contents card */}
+              {(() => {
+                const info = getProdutoInfo(form.produto);
+                if (!info) return null;
+                return (
+                  <div className="bg-white rounded-xl shadow-md border border-blue-200 p-5" translate="no">
+                    <div className="flex items-center gap-2 mb-4 border-l-4 border-blue-700 pl-3">
+                      <Package className="w-4 h-4 text-blue-700" />
+                      <h2 className="font-bold text-blue-900 text-sm" translate="no">
+                        Conteúdo da Caixa
+                      </h2>
+                    </div>
+                    <ul className="grid grid-cols-1 gap-2">
+                      {info.conteudo.map((item, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-center gap-2.5 bg-blue-50/60 rounded-lg px-3 py-2 border border-blue-100"
+                          translate="no"
+                        >
+                          <span className="flex-shrink-0 w-2 h-2 rounded-full bg-gradient-to-br from-blue-600 to-blue-800" />
                           <span className="text-sm text-gray-800 font-medium leading-snug">
                             {item}
                           </span>
