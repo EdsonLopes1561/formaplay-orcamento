@@ -72,24 +72,24 @@
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 6px 18px rgba(15, 23, 90, 0.28);
-    margin-bottom: 14px;
+    margin-bottom: 8px;
   }
 
   .print-header-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 24px;
-    gap: 22px;
+    padding: 12px 22px;
+    gap: 20px;
   }
 
   .print-header-logo-box {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 92px;
-    height: 92px;
-    padding: 5px;
+    width: 72px;
+    height: 72px;
+    padding: 4px;
     background: #ffffff;
     border-radius: 50%;
     border: 3px solid rgba(255, 255, 255, 0.85);
@@ -114,24 +114,24 @@
   }
 
   .print-company-title {
-    font-size: 34px;
+    font-size: 26px;
     font-weight: 900;
     margin: 0;
     line-height: 1;
-    letter-spacing: -0.6px;
+    letter-spacing: -0.5px;
     text-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
   }
 
   .print-company-subtitle {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 700;
-    margin: 4px 0 0;
+    margin: 3px 0 0;
     color: #bfdbfe;
     letter-spacing: 0.05em;
   }
 
   .print-company-tagline {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     margin: 2px 0 0;
     color: #93c5fd;
@@ -142,10 +142,10 @@
     display: flex;
     flex-direction: column-reverse;
     align-items: center;
-    gap: 4px;
-    min-width: 130px;
+    gap: 3px;
+    min-width: 110px;
     background: linear-gradient(180deg, #ffffff 0%, #f1f5ff 100%);
-    padding: 14px 22px;
+    padding: 9px 18px;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.9);
     box-shadow:
@@ -155,7 +155,7 @@
   }
 
   .print-numero-banner {
-    font-size: 30px;
+    font-size: 24px;
     font-weight: 900;
     color: #0a2472;
     line-height: 1;
@@ -176,7 +176,7 @@
     display: flex;
     justify-content: space-around;
     gap: 12px;
-    padding: 10px 20px;
+    padding: 6px 20px;
     background: rgba(0, 0, 0, 0.18);
     border-top: 1px solid rgba(255, 255, 255, 0.15);
   }
@@ -234,7 +234,7 @@
 
   /* Section */
   .print-section {
-    margin-bottom: 14px;
+    margin-bottom: 8px;
   }
 
   .print-section-title {
@@ -244,8 +244,8 @@
     letter-spacing: 0.14em;
     color: #1e3a8a;
     background: transparent;
-    padding: 6px 0 6px 10px;
-    margin: 8px 0;
+    padding: 3px 0 3px 10px;
+    margin: 4px 0 5px;
     border-left: 3px solid #1e40af;
   }
 
@@ -253,11 +253,11 @@
   .print-client-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px 18px;
+    gap: 4px 16px;
     background: #f8fafc;
     border: 1px solid #dbeafe;
     border-radius: 8px;
-    padding: 12px 14px;
+    padding: 8px 12px;
     box-shadow: 0 1px 3px rgba(30, 58, 138, 0.06);
   }
 
@@ -302,7 +302,7 @@
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    padding: 10px 12px;
+    padding: 7px 11px;
   }
 
   .print-th-left { text-align: left; }
@@ -310,7 +310,7 @@
   .print-th-right { text-align: right; }
 
   .print-td {
-    padding: 9px 12px;
+    padding: 6px 11px;
     font-size: 10px;
     color: #1f2937;
     border-bottom: 1px solid #e2e8f0;
@@ -329,18 +329,18 @@
     display: flex;
     justify-content: space-between;
     align-items: stretch;
-    gap: 14px;
-    margin-bottom: 14px;
+    gap: 12px;
+    margin-bottom: 8px;
   }
 
   .print-summary {
-    width: 310px;
+    width: 290px;
     flex-shrink: 0;
     border: 1px solid #dbeafe;
     border-radius: 10px;
     overflow: hidden;
     background: #ffffff;
-    padding: 14px 16px;
+    padding: 10px 14px;
     box-shadow: 0 2px 8px rgba(30, 58, 138, 0.08);
   }
 
@@ -348,11 +348,11 @@
   .print-diferenciais-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 6px 10px;
+    gap: 4px 8px;
     background: #ffffff;
     border: 1px solid #dbeafe;
     border-radius: 8px;
-    padding: 10px 12px;
+    padding: 7px 10px;
     box-shadow: 0 2px 6px rgba(30, 58, 138, 0.06);
   }
 
@@ -363,7 +363,7 @@
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
-    padding: 5px 8px;
+    padding: 3px 7px;
   }
 
   .print-diferenciais-check {
@@ -393,22 +393,22 @@
   .print-conteudo-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 5px 8px;
+    gap: 4px 7px;
     background: #ffffff;
     border: 1px solid #dbeafe;
     border-radius: 8px;
-    padding: 8px 10px;
+    padding: 6px 8px;
     box-shadow: 0 2px 6px rgba(30, 58, 138, 0.06);
   }
 
   .print-conteudo-item {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
-    padding: 4px 8px;
+    padding: 3px 7px;
   }
 
   .print-conteudo-dot {
@@ -434,7 +434,7 @@
     background: #ffffff;
     border: 1px solid #dbeafe;
     border-radius: 10px;
-    padding: 12px 14px;
+    padding: 8px 12px;
     box-shadow: 0 2px 8px rgba(30, 58, 138, 0.08);
     min-width: 0;
   }
@@ -445,7 +445,7 @@
     text-transform: uppercase;
     letter-spacing: 0.14em;
     color: #1e3a8a;
-    margin: 0 0 8px;
+    margin: 0 0 5px;
     padding: 0 0 0 10px;
     border-left: 3px solid #1e40af;
   }
@@ -458,13 +458,13 @@
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 8px;
-    min-height: 140px;
+    padding: 6px;
+    min-height: 100px;
   }
 
   .print-product-image {
     max-width: 100%;
-    max-height: 170px;
+    max-height: 130px;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -476,27 +476,27 @@
     justify-content: space-between;
     font-size: 10px;
     color: #1e3a8a;
-    padding: 5px 0;
+    padding: 3px 0;
     font-weight: 600;
   }
 
   .print-summary-divider {
     height: 1px;
     background: #e2e8f0;
-    margin: 8px 0;
+    margin: 5px 0;
   }
 
   .print-summary-total {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 900;
     color: #fff;
     background: linear-gradient(135deg, #1e3a8a 0%, #0052cc 100%);
-    padding: 11px 14px;
+    padding: 9px 13px;
     border-radius: 8px;
-    margin-top: 4px;
+    margin-top: 3px;
     box-shadow: 0 2px 6px rgba(30, 58, 138, 0.25);
     letter-spacing: 0.04em;
   }
@@ -505,18 +505,18 @@
   .print-conditions-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px 18px;
+    gap: 4px 16px;
     background: #f8fafc;
     border: 1px solid #dbeafe;
     border-radius: 8px;
-    padding: 12px 14px;
+    padding: 8px 12px;
     box-shadow: 0 1px 3px rgba(30, 58, 138, 0.06);
   }
 
   /* Signature */
   .print-signature {
-    margin: 16px 0 12px;
-    padding: 14px;
+    margin: 8px 0 6px;
+    padding: 8px 12px;
     background: #ffffff;
     border: 1px solid #dbeafe;
     border-radius: 8px;
@@ -531,7 +531,7 @@
   .print-sig-box {
     flex: 1;
     text-align: center;
-    padding: 8px;
+    padding: 6px;
     background: #fff;
     border: 1px dashed #cbd5e1;
     border-radius: 4px;
@@ -540,47 +540,118 @@
   .print-sig-line {
     height: 1px;
     background: #cbd5e1;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
   }
 
   .print-sig-box p {
-    margin: 4px 0;
+    margin: 2px 0;
     font-size: 9px;
     color: #1f2937;
     font-weight: 500;
   }
   .print-sig-box p:first-child { font-weight: 700; color: #1e3a8a; }
 
-  /* Footer */
+  /* Footer — premium */
   .print-footer {
-    padding-top: 14px;
+    padding-top: 6px;
     text-align: center;
     margin-top: auto;
   }
 
   .print-footer-line {
+    height: 2px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      #1e40af 25%,
+      #0a2472 50%,
+      #1e40af 75%,
+      transparent 100%);
+    margin-bottom: 8px;
+    border-radius: 1px;
+  }
+
+  .print-footer-card {
+    background: linear-gradient(180deg, #ffffff 0%, #f1f5ff 100%);
+    border: 1px solid #dbeafe;
+    border-radius: 10px;
+    padding: 9px 14px 8px;
+    box-shadow: 0 2px 8px rgba(30, 58, 138, 0.08);
+  }
+
+  .print-footer-brand {
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  .print-footer-brand-name {
+    font-size: 12px;
+    font-weight: 900;
+    color: #0a2472;
+    margin: 0;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+  }
+
+  .print-footer-brand-tagline {
+    font-size: 9px;
+    font-weight: 600;
+    color: #1e40af;
+    margin: 2px 0 0;
+    font-style: italic;
+    letter-spacing: 0.04em;
+  }
+
+  .print-footer-divider-soft {
     height: 1px;
-    background: #dbeafe;
-    margin-bottom: 10px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      #cbd5e1 50%,
+      transparent 100%);
+    margin: 0 0 7px;
   }
 
   .print-footer-content {
     display: flex;
     justify-content: space-around;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 6px;
-    padding: 10px 14px;
-    background: #f8fafc;
-    border-radius: 8px;
-    border: 1px solid #dbeafe;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
   }
 
-  .print-footer-left,
-  .print-footer-center,
-  .print-footer-right {
+  .print-footer-item {
     flex: 1;
-    min-width: 90px;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    justify-content: center;
+  }
+
+  .print-footer-icon-wrap {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1e40af 0%, #0a2472 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(30, 58, 138, 0.25);
+  }
+
+  .print-footer-icon {
+    width: 12px;
+    height: 12px;
+    stroke: #ffffff;
+    stroke-width: 2.4;
+  }
+
+  .print-footer-item-text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    line-height: 1.15;
   }
 
   .print-footer-label {
@@ -590,22 +661,23 @@
     color: #64748b;
     letter-spacing: 0.12em;
     display: block;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
   }
 
   .print-footer-value {
-    font-size: 10px;
-    color: #1e3a8a;
+    font-size: 9.5px;
+    color: #0a2472;
     font-weight: 700;
     display: block;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
   }
 
   .print-footer-disclaimer {
     font-size: 7px;
     color: #94a3b8;
-    margin-top: 6px;
+    margin-top: 4px;
     font-weight: 500;
     font-style: italic;
+    letter-spacing: 0.05em;
   }
 }
