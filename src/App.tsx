@@ -213,7 +213,17 @@ function App() {
   const carregarOrcamento = (orc: Orcamento) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, created_at, ...rest } = orc;
-    setForm(rest);
+    // Coerce numeric fields (Supabase may return them as strings)
+    const normalized = {
+      ...rest,
+      quantidade: Number(rest.quantidade) || 0,
+      valor_unitario: Number(rest.valor_unitario) || 0,
+      frete: Number(rest.frete) || 0,
+      desconto: Number(rest.desconto) || 0,
+      subtotal: Number(rest.subtotal) || 0,
+      total: Number(rest.total) || 0,
+    };
+    setForm(calcularValores(normalized));
     setCurrentId(id ?? null);
   };
 
@@ -272,8 +282,10 @@ function App() {
     window.open(url, '_blank');
   };
 
-  const fmtCurrency = (v: number) =>
-    v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const fmtCurrency = (v: number | string | null | undefined) => {
+    const n = Number(v) || 0;
+    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
 
   return (
     <>
