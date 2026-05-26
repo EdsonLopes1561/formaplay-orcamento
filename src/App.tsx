@@ -722,7 +722,10 @@ function App() {
               {/* Company card */}
               <div className="bg-gradient-to-br from-blue-700 to-blue-900 rounded-2xl p-5 text-white shadow-sm">
                 <img src="/logocircular.png" alt="FormaPlay" className="h-12 object-contain mb-3" />
-                <p className="font-bold text-sm"><FormaPlayBrand /> Jogos Educacionais</p>
+                <p className="font-black text-base leading-tight tracking-tight">
+                  <FormaPlayBrand />
+                  <span className="block text-xs font-bold text-blue-100 tracking-wide uppercase mt-0.5">Jogos Educacionais</span>
+                </p>
                 <div className="mt-2 space-y-1 text-blue-100 text-xs">
                   <p>CNPJ: {EMPRESA.cnpj}</p>
                   <p>WhatsApp: {EMPRESA.whatsapp}</p>
