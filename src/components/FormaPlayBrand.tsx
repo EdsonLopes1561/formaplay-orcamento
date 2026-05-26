@@ -4,7 +4,7 @@
 export function FormaPlayBrand() {
   return (
     <span translate="no" className="notranslate formaplay-brand" style={{ whiteSpace: 'nowrap', fontWeight: 'inherit' }}>
-      <span style={{ color: '#ffffff' }}>Forma</span>
+      <span style={{ color: 'inherit' }}>Forma</span>
       <span style={{ color: '#facc15' }}>P</span>
       <span style={{ color: '#3b82f6' }}>l</span>
       <span style={{ color: '#22c55e' }}>a</span>
