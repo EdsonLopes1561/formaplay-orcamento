@@ -560,8 +560,8 @@
     width: 110%;
     max-width: none;
     object-fit: contain;
-    filter: contrast(2) brightness(0.7) saturate(1.2);
-    mix-blend-mode: multiply;
+    background: transparent;
+    mix-blend-mode: darken;
     position: relative;
     z-index: 2;
     -webkit-print-color-adjust: exact !important;
