@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Save, Printer, MessageCircle, FolderOpen,
   Trash2, RotateCcw, ChevronDown, CheckCircle, AlertCircle,
-  FileText, Users, Tag, Sparkles, Check, Package
+  FileText, Users, Tag, Sparkles, Check, Package, LogOut
 } from 'lucide-react';
 import { supabase } from './supabase.ts';
 import { Orcamento, EMPRESA, PRODUTOS, emptyOrcamento } from './types';
@@ -338,12 +338,23 @@ function App() {
         </div>
 
       </div>
+      <div className="flex items-center gap-3">
               {form.numero && (
                 <div className="text-right bg-gradient-to-r from-green-500 to-green-600 px-5 py-3 rounded-xl border-2 border-green-300 shadow-lg transform hover:scale-105 transition-all">
                   <span className="text-xs text-green-900 font-black uppercase tracking-widest block">Orçamento</span>
                   <p className="font-black text-white text-2xl leading-tight mt-1">{form.numero}</p>
                 </div>
               )}
+        <button
+          onClick={() => {
+            localStorage.removeItem('auth_session');
+            window.location.reload();
+          }}
+          className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm"
+        >
+          <LogOut size={18} /> Sair
+        </button>
+      </div>
             </div>
           </div>
         </header>
