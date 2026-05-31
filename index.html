@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="google" content="notranslate" />
   <title>Orçamento FormaPlay — Jogos Educacionais</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0c4a6e" />
 
   <meta property="og:title" content="FormaPlay - Jogos Educacionais" />
 <meta property="og:description" content="Sistema de orçamento da FormaPlay." />
@@ -21,5 +23,18 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('Service Worker registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('Service Worker registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
   </body>
 </html>
