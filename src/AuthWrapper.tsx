@@ -58,8 +58,15 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50/30 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-800">FormaPlay</h1>
-            <p className="text-gray-600">Sistema de Orçamentos</p>
+            <div className="flex justify-center mb-4">
+              <img
+                src="/logocircular.png"
+                alt="FormaPlay"
+                className="h-24 w-24 rounded-full border-4 border-green-400 shadow-lg"
+              />
+            </div>
+            <h1 className="text-2xl font-bold text-blue-900">FormaPlay</h1>
+            <p className="text-green-600 font-semibold">Jogos Educacionais</p>
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
@@ -68,7 +75,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
                 type="text"
                 value={loginUsername}
                 onChange={(e) => setLoginUsername(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-900 focus:border-transparent"
                 placeholder="Digite seu usuário"
                 required
               />
@@ -79,7 +86,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
                 type="password"
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-900 focus:border-transparent"
                 placeholder="Digite sua senha"
                 required
               />
@@ -92,7 +99,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
             <button
               type="submit"
               disabled={loginLoading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-gradient-to-r from-blue-950 to-blue-900 text-white py-3 rounded-lg font-medium hover:from-blue-900 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loginLoading ? 'Entrando...' : 'Entrar'}
             </button>
