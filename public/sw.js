@@ -1,5 +1,5 @@
-const CACHE_NAME = 'formaplay-orcamentos-v2';
-const STATIC_CACHE = 'formaplay-static-v2';
+const CACHE_NAME = 'formaplay-orcamentos-v3';
+const STATIC_CACHE = 'formaplay-static-v3';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
