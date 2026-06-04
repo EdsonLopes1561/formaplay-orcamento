@@ -43,13 +43,13 @@ export function PrintView({ orcamento }: PrintViewProps) {
   return (
     <div id="print-area" className="print-area">
       {/* Watermark */}
-      <div className="print-watermark" style={{ backgroundImage: 'url(' + '/logocircular-nova.png' + ')' }} aria-hidden="true" />
+      <div className="print-watermark" style={{ backgroundImage: 'url(' + '/logocircular.png' + ')' }} aria-hidden="true" />
       {/* Premium Header */}
       <div className="print-header-premium">
         <div className="print-header-top">
           <div className="print-header-logo-box">
             <img
-              src={'/logocircular-nova.png'}
+              src={'/logocircular.png'}
               alt="FormaPlay"
               style={{
                 width: '80px',

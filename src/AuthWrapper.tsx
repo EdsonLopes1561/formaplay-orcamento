@@ -60,9 +60,9 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <img
-                src="/logocircular-nova.png"
+                src="/logocircular.png"
                 alt="FormaPlay"
-                className="h-24 w-24 rounded-full border-4 border-green-400 shadow-lg"
+                className="h-24 w-24 rounded-full border-4 border-green-400 shadow-lg object-contain bg-white"
               />
             </div>
             <h1 className="text-2xl font-bold text-blue-900">FormaPlay</h1>

@@ -9,7 +9,7 @@ self.addEventListener('install', (event) => {
         '/',
         '/index.html',
         '/manifest.json',
-        '/logocircular-nova.png',
+        '/logocircular.png',
         '/icon-192x192.png',
         '/icon-512x512.png'
       ]))

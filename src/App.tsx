@@ -315,11 +315,11 @@ function App() {
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-5">
 
-        <div className="h-16 w-16 rounded-full overflow-hidden border-2 border-green-400 shadow-2xl bg-blue-900 flex items-center justify-center">
+        <div className="h-16 w-16 rounded-full border-2 border-green-400 shadow-2xl flex items-center justify-center bg-white">
           <img
-            src="/logocircular-nova.png"
+            src="/logocircular.png"
             alt="FormaPlay"
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain"
           />
         </div>
 
@@ -732,7 +732,7 @@ function App() {
 
               {/* Company card */}
               <div className="bg-gradient-to-br from-blue-700 to-blue-900 rounded-2xl p-5 text-white shadow-sm">
-                <img src="/logocircular-nova.png" alt="FormaPlay" className="h-12 object-contain mb-3" />
+                <img src="/logocircular.png" alt="FormaPlay" className="h-12 w-12 object-contain mb-3 rounded-full border-2 border-green-400 bg-white" />
                 <p className="font-black text-base leading-tight tracking-tight">
                   <FormaPlayBrand />
                   <span className="block text-xs font-bold text-blue-100 tracking-wide uppercase mt-0.5">Jogos Educacionais</span>
