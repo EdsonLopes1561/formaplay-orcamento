@@ -33,12 +33,20 @@ export function ClientesModal({ onClose, onSelectCliente }: ClientesModalProps) 
 
   const loadClientes = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('clientes')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (!error && data) {
-      setClientes(data as Cliente[]);
+    try {
+      const { data, error } = await supabase
+        .from('clientes')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Erro ao carregar clientes:', error);
+        alert('Erro ao carregar clientes: ' + error.message);
+      } else if (data) {
+        setClientes(data as Cliente[]);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar clientes:', err);
+      alert('Erro ao carregar clientes');
     }
     setLoading(false);
   };
@@ -68,10 +76,20 @@ export function ClientesModal({ onClose, onSelectCliente }: ClientesModalProps) 
           .from('clientes')
           .update(formData)
           .eq('id', editingCliente.id);
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao atualizar cliente:', error);
+          alert('Erro ao atualizar cliente: ' + error.message);
+          return;
+        }
       } else {
-        const { error } = await supabase.from('clientes').insert(formData);
-        if (error) throw error;
+        console.log('Salvando novo cliente:', formData);
+        const { error, data } = await supabase.from('clientes').insert(formData).select();
+        if (error) {
+          console.error('Erro ao salvar cliente:', error);
+          alert('Erro ao salvar cliente: ' + error.message);
+          return;
+        }
+        console.log('Cliente salvo com sucesso:', data);
       }
       await loadClientes();
       setShowForm(false);
@@ -93,6 +111,7 @@ export function ClientesModal({ onClose, onSelectCliente }: ClientesModalProps) 
         observacoes: '',
       });
     } catch (error) {
+      console.error('Erro ao salvar cliente:', error);
       alert('Erro ao salvar cliente');
     }
     setLoading(false);
@@ -110,9 +129,14 @@ export function ClientesModal({ onClose, onSelectCliente }: ClientesModalProps) 
     setLoading(true);
     try {
       const { error } = await supabase.from('clientes').delete().eq('id', id);
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao excluir cliente:', error);
+        alert('Erro ao excluir cliente: ' + error.message);
+        return;
+      }
       await loadClientes();
     } catch (error) {
+      console.error('Erro ao excluir cliente:', error);
       alert('Erro ao excluir cliente');
     }
     setLoading(false);
