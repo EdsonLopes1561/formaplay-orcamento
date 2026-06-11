@@ -6,9 +6,10 @@ import { supabase } from '../supabase';
 interface ClientesModalProps {
   onClose: () => void;
   onSelectCliente?: (cliente: Cliente) => void;
+  isOpen?: boolean;
 }
 
-export function ClientesModal({ onClose, onSelectCliente }: ClientesModalProps) {
+export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModalProps) {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -53,7 +54,7 @@ export function ClientesModal({ onClose, onSelectCliente }: ClientesModalProps) 
 
   useEffect(() => {
     loadClientes();
-  }, []);
+  }, [isOpen]);
 
   const filteredClientes = clientes.filter(
     (c) =>

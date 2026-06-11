@@ -773,6 +773,7 @@ function App() {
       {/* Clientes Modal */}
       {showClientes && (
         <ClientesModal
+          isOpen={showClientes}
           onClose={() => setShowClientes(false)}
           onSelectCliente={(cliente) => {
             setForm({
