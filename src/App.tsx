@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Save, Printer, MessageCircle, FolderOpen,
   Trash2, RotateCcw, ChevronDown, CheckCircle, AlertCircle,
-  FileText, Users, Tag, Sparkles, Check, Package, LogOut
+  FileText, Users, Tag, Sparkles, Check, Package, LogOut, User
 } from 'lucide-react';
 import { supabase } from './supabase.ts';
-import { Orcamento, EMPRESA, PRODUTOS, emptyOrcamento } from './types';
+import { Orcamento, Cliente, EMPRESA, PRODUTOS, emptyOrcamento } from './types';
 import { PrintView } from './components/PrintView';
 import { HistoricoModal } from './components/HistoricoModal';
+import { ClientesModal } from './components/ClientesModal';
 import { FormaPlayBrand } from './components/FormaPlayBrand';
 
 type Toast = { type: 'success' | 'error'; message: string };
@@ -109,6 +110,7 @@ function App() {
   const [loadingHistorico, setLoadingHistorico] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [showClientes, setShowClientes] = useState(false);
 
   const showToast = (type: Toast['type'], message: string) => {
     setToast({ type, message });
@@ -223,6 +225,7 @@ function App() {
       desconto: Number(rest.desconto) || 0,
       subtotal: Number(rest.subtotal) || 0,
       total: Number(rest.total) || 0,
+      cliente_id: rest.cliente_id,
     };
     setForm(calcularValores(normalized));
     setCurrentId(id ?? null);
@@ -403,6 +406,13 @@ function App() {
                   {historico.length}
                 </span>
               )}
+            </button>
+            <button
+              onClick={() => setShowClientes(true)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-blue-900 text-blue-900 rounded-lg hover:bg-blue-50 active:scale-95 transition-all font-bold text-sm shadow-md"
+            >
+              <User size={18} />
+              Clientes
             </button>
             {currentId && (
               <button
@@ -757,6 +767,25 @@ function App() {
           onExcluir={excluirOrcamento}
           onLimpar={limparHistorico}
           loading={loadingHistorico}
+        />
+      )}
+
+      {/* Clientes Modal */}
+      {showClientes && (
+        <ClientesModal
+          onClose={() => setShowClientes(false)}
+          onSelectCliente={(cliente) => {
+            setForm({
+              ...form,
+              cliente: cliente.nome,
+              telefone: cliente.telefone,
+              cidade: cliente.cidade,
+              email: cliente.email,
+              cliente_id: cliente.id,
+            });
+            setShowClientes(false);
+            showToast('success', 'Cliente selecionado com sucesso!');
+          }}
         />
       )}
     </>

@@ -1,3 +1,22 @@
+export interface Cliente {
+  id?: string;
+  nome: string;
+  documento: string;
+  inscricao_estadual: string;
+  email: string;
+  telefone: string;
+  cep: string;
+  endereco: string;
+  numero: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  complemento: string;
+  tipo_cliente: string;
+  observacoes: string;
+  created_at?: string;
+}
+
 export interface Orcamento {
   id?: string;
   numero: string;
@@ -17,6 +36,7 @@ export interface Orcamento {
   pagamento: string;
   observacoes: string;
   data_orcamento: string;
+  cliente_id?: string;
   created_at?: string;
 }
 
