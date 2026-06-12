@@ -33,17 +33,23 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
   });
 
   const loadClientes = async () => {
+    console.log('Buscando clientes no Supabase...');
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('clientes')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('nome', { ascending: true });
       if (error) {
         console.error('Erro ao carregar clientes:', error);
         alert('Erro ao carregar clientes: ' + error.message);
       } else if (data) {
+        console.log(`Clientes retornados: ${data.length}`);
+        console.log('Nomes dos clientes:', data.map((c: any) => c.nome));
         setClientes(data as Cliente[]);
+      } else {
+        console.log('Nenhum cliente retornado do Supabase');
+        setClientes([]);
       }
     } catch (err) {
       console.error('Erro ao carregar clientes:', err);
