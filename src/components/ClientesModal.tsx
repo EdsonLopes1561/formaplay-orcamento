@@ -79,6 +79,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
     setLoading(true);
     try {
       if (editingCliente?.id) {
+        console.log('Atualizando cliente:', editingCliente.id, formData);
         const { error } = await supabase
           .from('clientes')
           .update(formData)
@@ -86,19 +87,24 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
         if (error) {
           console.error('Erro ao atualizar cliente:', error);
           alert('Erro ao atualizar cliente: ' + error.message);
+          setLoading(false);
           return;
         }
+        console.log('Cliente atualizado com sucesso');
       } else {
         console.log('Salvando novo cliente:', formData);
         const { error, data } = await supabase.from('clientes').insert(formData).select();
         if (error) {
           console.error('Erro ao salvar cliente:', error);
           alert('Erro ao salvar cliente: ' + error.message);
+          setLoading(false);
           return;
         }
         console.log('Cliente salvo com sucesso:', data);
       }
+      console.log('Recarregando lista de clientes...');
       await loadClientes();
+      console.log('Lista de clientes recarregada');
       setShowForm(false);
       setEditingCliente(null);
       setFormData({
@@ -132,16 +138,38 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este cliente?')) return;
-    
+
+    console.log('Verificando orçamentos vinculados ao cliente:', id);
+    const { data: orcamentos, error: checkError } = await supabase
+      .from('orcamentos')
+      .select('id')
+      .eq('cliente_id', id);
+
+    if (checkError) {
+      console.error('Erro ao verificar orçamentos:', checkError);
+      alert('Erro ao verificar orçamentos: ' + checkError.message);
+      return;
+    }
+
+    if (orcamentos && orcamentos.length > 0) {
+      alert(`Este cliente possui ${orcamentos.length} orçamento(s) vinculado(s). Não é possível excluir clientes com orçamentos para preservar o histórico.`);
+      return;
+    }
+
+    console.log('Excluindo cliente:', id);
     setLoading(true);
     try {
       const { error } = await supabase.from('clientes').delete().eq('id', id);
       if (error) {
         console.error('Erro ao excluir cliente:', error);
         alert('Erro ao excluir cliente: ' + error.message);
+        setLoading(false);
         return;
       }
+      console.log('Cliente excluído com sucesso');
+      console.log('Recarregando lista de clientes...');
       await loadClientes();
+      console.log('Lista de clientes recarregada');
     } catch (error) {
       console.error('Erro ao excluir cliente:', error);
       alert('Erro ao excluir cliente');
