@@ -1,25 +1,28 @@
 import { useState, useEffect } from 'react';
+import { supabase } from './supabase';
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [loginUsername, setLoginUsername] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
   useEffect(() => {
-    const session = localStorage.getItem('auth_session');
-    if (session) {
-      const sessionData = JSON.parse(session);
-      const now = new Date().getTime();
-      if (now < sessionData.expiresAt) {
-        setIsAuthenticated(true);
-      } else {
-        localStorage.removeItem('auth_session');
-      }
-    }
-    setIsLoading(false);
+    // 4. Usar getSession() ao carregar o app
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+      setIsLoading(false);
+    });
+
+    // 5. Usar onAuthStateChange() para manter o estado logado/deslogado
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -27,32 +30,30 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     setLoginLoading(true);
     setLoginError('');
 
-    if (loginUsername === 'formaplay' && loginPassword === 'H@racio1561') {
-      const expiresAt = new Date().getTime() + (30 * 24 * 60 * 60 * 1000); // 30 days
-      localStorage.setItem('auth_session', JSON.stringify({ expiresAt }));
-      setIsAuthenticated(true);
-    } else {
-      setLoginError('Usuário ou senha inválidos');
+    // 3. Usar signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signInWithPassword({
+      email: loginEmail,
+      password: loginPassword,
+    });
+
+    if (error) {
+      setLoginError(error.message === 'Invalid login credentials' ? 'E-mail ou senha inválidos' : 'Erro ao fazer login. Verifique suas credenciais.');
     }
 
     setLoginLoading(false);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('auth_session');
-    setIsAuthenticated(false);
-    setLoginUsername('');
-    setLoginPassword('');
-  };
-
+  // 6. Mensagem enquanto a sessão carrega
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50/30 flex items-center justify-center">
-        <div className="text-gray-600">Carregando...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50/30 flex flex-col items-center justify-center">
+        <div className="w-8 h-8 border-4 border-blue-900 border-t-transparent rounded-full animate-spin mb-4" />
+        <div className="text-gray-600 font-medium">Verificando acesso...</div>
       </div>
     );
   }
 
+  // 7. Se não estiver logado, tela de login (email e senha)
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50/30 flex items-center justify-center p-4">
@@ -70,13 +71,13 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Usuário</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
               <input
-                type="text"
-                value={loginUsername}
-                onChange={(e) => setLoginUsername(e.target.value)}
+                type="email"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-900 focus:border-transparent"
-                placeholder="Digite seu usuário"
+                placeholder="Digite seu e-mail"
                 required
               />
             </div>
@@ -99,8 +100,9 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
             <button
               type="submit"
               disabled={loginLoading}
-              className="w-full bg-gradient-to-r from-blue-950 to-blue-900 text-white py-3 rounded-lg font-medium hover:from-blue-900 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-gradient-to-r from-blue-950 to-blue-900 text-white py-3 rounded-lg font-medium hover:from-blue-900 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
+              {loginLoading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
               {loginLoading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
@@ -109,5 +111,6 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // 8. Se estiver logado, libera a aplicação
   return <>{children}</>;
 }

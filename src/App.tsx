@@ -370,9 +370,16 @@ function App() {
                 </div>
               )}
         <button
-          onClick={() => {
-            localStorage.removeItem('auth_session');
-            window.location.reload();
+          onClick={async () => {
+            try {
+              // Limpeza forçada primeiro (garante que vamos sair, mesmo se a API der erro)
+              Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('sb-')) localStorage.removeItem(key);
+              });
+              await supabase.auth.signOut();
+            } finally {
+              window.location.reload();
+            }
           }}
           className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm"
         >
