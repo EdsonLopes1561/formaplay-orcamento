@@ -39,6 +39,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
       const { data, error } = await supabase
         .from('clientes')
         .select('*')
+        .eq('ativo', true)
         .order('nome', { ascending: true });
       if (error) {
         console.error('Erro ao carregar clientes:', error);
@@ -137,42 +138,31 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir este cliente?')) return;
+    if (!confirm('Tem certeza que deseja inativar este cliente?')) return;
 
-    console.log('Verificando orçamentos vinculados ao cliente:', id);
-    const { data: orcamentos, error: checkError } = await supabase
-      .from('orcamentos')
-      .select('id')
-      .eq('cliente_id', id);
-
-    if (checkError) {
-      console.error('Erro ao verificar orçamentos:', checkError);
-      alert('Erro ao verificar orçamentos: ' + checkError.message);
-      return;
-    }
-
-    if (orcamentos && orcamentos.length > 0) {
-      alert(`Este cliente possui ${orcamentos.length} orçamento(s) vinculado(s). Não é possível excluir clientes com orçamentos para preservar o histórico.`);
-      return;
-    }
-
-    console.log('Excluindo cliente:', id);
+    console.log('Inativando cliente:', id);
     setLoading(true);
     try {
-      const { error } = await supabase.from('clientes').delete().eq('id', id);
+      const { error } = await supabase
+        .from('clientes')
+        .update({
+          ativo: false,
+          deleted_at: new Date().toISOString()
+        })
+        .eq('id', id);
       if (error) {
-        console.error('Erro ao excluir cliente:', error);
-        alert('Erro ao excluir cliente: ' + error.message);
+        console.error('Erro ao inativar cliente:', error);
+        alert('Erro ao inativar cliente: ' + error.message);
         setLoading(false);
         return;
       }
-      console.log('Cliente excluído com sucesso');
+      console.log('Cliente inativado com sucesso');
       console.log('Recarregando lista de clientes...');
       await loadClientes();
       console.log('Lista de clientes recarregada');
     } catch (error) {
-      console.error('Erro ao excluir cliente:', error);
-      alert('Erro ao excluir cliente');
+      console.error('Erro ao inativar cliente:', error);
+      alert('Erro ao inativar cliente');
     }
     setLoading(false);
   };
