@@ -40,18 +40,16 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
         .from('clientes')
         .select('*')
         .eq('ativo', true)
-        .order('nome', { ascending: true });
+        .order('created_at', { ascending: false });
+      console.log('Clientes carregados:', data);
+      console.log('Erro loadClientes:', error);
       if (error) {
         console.error('Erro ao carregar clientes:', error);
-        alert('Erro ao carregar clientes: ' + error.message);
-      } else if (data) {
-        console.log(`Clientes retornados: ${data.length}`);
-        console.log('Nomes dos clientes:', data.map((c: any) => c.nome));
-        setClientes(data as Cliente[]);
-      } else {
-        console.log('Nenhum cliente retornado do Supabase');
-        setClientes([]);
+        alert(`Erro ao carregar clientes: ${error.message}`);
+        return;
       }
+      setClientes(data ?? []);
+      console.log(`Clientes definidos no state: ${data?.length ?? 0}`);
     } catch (err) {
       console.error('Erro ao carregar clientes:', err);
       alert('Erro ao carregar clientes');
