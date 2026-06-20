@@ -21,6 +21,17 @@ export function HistoricoModal({
   const fmt = (val: number) =>
     val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+  const getStatusBadge = (status: string | undefined) => {
+    const s = status || 'Aberto';
+    switch (s) {
+      case 'Aprovado': return <span className="bg-green-100 text-green-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider border border-green-200">{s}</span>;
+      case 'Enviado': return <span className="bg-blue-100 text-blue-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider border border-blue-200">{s}</span>;
+      case 'Recusado': return <span className="bg-red-100 text-red-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider border border-red-200">{s}</span>;
+      case 'Cancelado': return <span className="bg-gray-100 text-gray-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider border border-gray-200">{s}</span>;
+      default: return <span className="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider border border-amber-200">{s}</span>;
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border-t-4 border-green-500">
@@ -62,6 +73,7 @@ export function HistoricoModal({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-black text-green-700 text-base">{orc.numero}</span>
+                    {getStatusBadge(orc.status)}
                     <span className="text-gray-300">•</span>
                     <span className="text-xs font-semibold text-gray-500">{orc.data_orcamento}</span>
                   </div>

@@ -289,6 +289,7 @@ function App() {
       `Orçamento ${form.numero} — ${form.data_orcamento}`,
       ``,
       `*Cliente:* ${form.cliente}`,
+      `*Status:* ${form.status || 'Aberto'}`,
       `*Produto:* ${form.produto}`,
       `*Qtd:* ${form.quantidade} x ${fmtVal(form.valor_unitario)}`,
       `*Subtotal:* ${fmtVal(form.subtotal)}`,
@@ -614,6 +615,20 @@ function App() {
                     <label className="form-label">Data</label>
                     <input name="data_orcamento" value={form.data_orcamento} onChange={handleChange}
                       className="form-input" placeholder="dd/mm/aaaa" />
+                  </div>
+                  <div>
+                    <label className="form-label">Status do Orçamento</label>
+                    <div className="relative">
+                      <select name="status" value={form.status || 'Aberto'} onChange={handleChange}
+                        className="form-input appearance-none pr-10 font-bold text-gray-700">
+                        <option value="Aberto">Aberto</option>
+                        <option value="Enviado">Enviado</option>
+                        <option value="Aprovado">Aprovado</option>
+                        <option value="Recusado">Recusado</option>
+                        <option value="Cancelado">Cancelado</option>
+                      </select>
+                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    </div>
                   </div>
                 </div>
               </div>

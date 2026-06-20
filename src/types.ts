@@ -36,6 +36,7 @@ export interface Orcamento {
   pagamento: string;
   observacoes: string;
   data_orcamento: string;
+  status: string;
   cliente_id?: string;
   created_at?: string;
 }
@@ -72,4 +73,5 @@ export const emptyOrcamento = (): Omit<Orcamento, 'id' | 'created_at'> => ({
   pagamento: '',
   observacoes: '',
   data_orcamento: new Date().toLocaleDateString('pt-BR'),
+  status: 'Aberto',
 });

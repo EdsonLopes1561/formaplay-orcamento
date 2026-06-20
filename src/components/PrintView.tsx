@@ -78,6 +78,10 @@ export function PrintView({ orcamento }: PrintViewProps) {
             <span className="print-info-label">Validade</span>
             <span className="print-info-value">{orcamento.validade}</span>
           </div>
+          <div className="print-header-info">
+            <span className="print-info-label">Status</span>
+            <span className="print-info-value" style={{ textTransform: 'uppercase', color: orcamento.status === 'Aprovado' ? '#166534' : 'inherit' }}>{orcamento.status || 'Aberto'}</span>
+          </div>
         </div>
       </div>
 
