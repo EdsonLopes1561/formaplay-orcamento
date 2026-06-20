@@ -163,7 +163,13 @@ function App() {
   }, []);
 
   useEffect(() => {
-    carregarHistorico();
+    const init = async () => {
+      await carregarHistorico();
+      // Busca o próximo número correto ao iniciar o app
+      const numero = await calcularNumeroOrcamento();
+      setForm((prev) => ({ ...prev, numero }));
+    };
+    init();
   }, [carregarHistorico]);
 
   const novoOrcamento = async () => {
