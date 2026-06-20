@@ -224,8 +224,9 @@ function App() {
         showToast('success', 'Orçamento salvo com sucesso!');
       }
       await carregarHistorico();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Erro ao salvar orçamento. Tente novamente.';
+    } catch (err: any) {
+      console.error('[salvar] Erro completo:', err);
+      const msg = err?.message || 'Erro ao salvar orçamento. Tente novamente.';
       showToast('error', msg);
     } finally {
       setSaving(false);
