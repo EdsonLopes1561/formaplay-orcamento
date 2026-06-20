@@ -173,6 +173,12 @@ function App() {
   }, [carregarHistorico]);
 
   const novoOrcamento = async () => {
+    if (currentId) {
+      const confirmar = window.confirm(
+        'Você está editando um orçamento. Deseja descartar as alterações e criar um novo orçamento?'
+      );
+      if (!confirmar) return;
+    }
     const numero = await calcularNumeroOrcamento();
     setForm({
       ...emptyOrcamento(),
@@ -191,11 +197,17 @@ function App() {
     try {
       const payload = { ...form };
       if (currentId) {
-        const { error } = await supabase
+        const { data: updatedData, error: updateError } = await supabase
           .from('orcamentos')
           .update(payload)
-          .eq('id', currentId);
-        if (error) throw error;
+          .eq('id', currentId)
+          .select();
+        if (updateError) throw updateError;
+        if (!updatedData || updatedData.length === 0) {
+          throw new Error(
+            'Nenhum orçamento foi atualizado. Verifique permissões RLS no Supabase ou se o ID do orçamento é válido.'
+          );
+        }
         showToast('success', 'Orçamento atualizado com sucesso!');
       } else {
         const numero = form.numero || await calcularNumeroOrcamento();
@@ -212,8 +224,9 @@ function App() {
         showToast('success', 'Orçamento salvo com sucesso!');
       }
       await carregarHistorico();
-    } catch {
-      showToast('error', 'Erro ao salvar orçamento. Tente novamente.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar orçamento. Tente novamente.';
+      showToast('error', msg);
     } finally {
       setSaving(false);
     }
@@ -369,6 +382,21 @@ function App() {
         </header>
 
         <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+          {/* Edit mode banner */}
+          {currentId && (
+            <div className="flex items-center gap-3 px-5 py-3.5 bg-amber-50 border-2 border-amber-400 rounded-xl shadow-sm">
+              <span className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center text-white font-black text-base">✏</span>
+              <div className="min-w-0">
+                <p className="font-black text-amber-800 text-sm leading-tight">
+                  Editando orçamento {form.numero}
+                  {form.cliente ? ` · ${form.cliente}` : ''}
+                </p>
+                <p className="text-xs text-amber-600 font-medium mt-0.5">
+                  As alterações substituirão o orçamento salvo ao clicar em &ldquo;Atualizar Orçamento&rdquo;.
+                </p>
+              </div>
+            </div>
+          )}
           {/* Action Bar */}
           <div className="flex flex-wrap gap-3">
             <button
@@ -380,14 +408,18 @@ function App() {
             <button
               onClick={salvarOrcamento}
               disabled={saving}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 active:scale-95 transition-all font-bold text-sm shadow-md disabled:opacity-60"
+              className={`flex items-center gap-2 px-5 py-2.5 text-white rounded-lg active:scale-95 transition-all font-bold text-sm shadow-md disabled:opacity-60 ${
+                currentId
+                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700'
+                  : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+              }`}
             >
               {saving ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <Save size={18} />
               )}
-              Salvar
+              {currentId ? 'Atualizar Orçamento' : 'Salvar'}
             </button>
             <button
               onClick={imprimirOrcamento}
@@ -564,8 +596,19 @@ function App() {
                 <div className="space-y-4">
                   <div>
                     <label className="form-label">Número do Orçamento</label>
-                    <input name="numero" value={form.numero} onChange={handleChange}
-                      className="form-input font-bold text-green-600 bg-green-50" placeholder="#0001" />
+                    <input
+                      name="numero"
+                      value={form.numero}
+                      onChange={handleChange}
+                      readOnly={!!currentId}
+                      className={`form-input font-bold ${
+                        currentId
+                          ? 'text-amber-700 bg-amber-50 cursor-not-allowed opacity-80'
+                          : 'text-green-600 bg-green-50'
+                      }`}
+                      placeholder="#0001"
+                      title={currentId ? 'O número não pode ser alterado durante a edição' : ''}
+                    />
                   </div>
                   <div>
                     <label className="form-label">Data</label>
