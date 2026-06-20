@@ -74,9 +74,9 @@ export function HistoricoModal({
                 <div className="flex gap-2 flex-shrink-0">
                   <button
                     onClick={() => { onCarregar(orc); onClose(); }}
-                    className="px-4 py-1.5 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 transition-all active:scale-95 shadow-sm"
+                    className="px-4 py-1.5 bg-blue-700 text-white text-xs font-bold rounded-lg hover:bg-blue-800 transition-all active:scale-95 shadow-sm"
                   >
-                    Carregar
+                    Editar
                   </button>
                   <button
                     onClick={() => orc.id && onExcluir(orc.id)}
