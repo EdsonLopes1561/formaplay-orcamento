@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { X, FileText, Trash2, AlertTriangle } from 'lucide-react';
 import { Orcamento } from '../types';
 
@@ -20,6 +21,19 @@ export function HistoricoModal({
 }: HistoricoModalProps) {
   const fmt = (val: number) =>
     val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  const [filtro, setFiltro] = useState<string>('Todos');
+
+  const counts = {
+    Todos: orcamentos.length,
+    Aberto: orcamentos.filter(o => (o.status || 'Aberto') === 'Aberto').length,
+    Enviado: orcamentos.filter(o => o.status === 'Enviado').length,
+    Aprovado: orcamentos.filter(o => o.status === 'Aprovado').length,
+    Recusado: orcamentos.filter(o => o.status === 'Recusado').length,
+    Cancelado: orcamentos.filter(o => o.status === 'Cancelado').length,
+  };
+
+  const orcamentosFiltrados = orcamentos.filter(o => filtro === 'Todos' || (o.status || 'Aberto') === filtro);
 
   const getStatusBadge = (status: string | undefined) => {
     const s = status || 'Aberto';
@@ -49,20 +63,44 @@ export function HistoricoModal({
           </button>
         </div>
 
+        {/* Filters */}
+        <div className="px-6 py-3 bg-white border-b border-gray-100 flex gap-2 overflow-x-auto hide-scrollbar">
+          {Object.entries(counts).map(([key, count]) => (
+            <button
+              key={key}
+              onClick={() => setFiltro(key)}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+                filtro === key 
+                  ? 'bg-gray-900 text-white shadow-md' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {key}
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                filtro === key ? 'bg-white/20 text-white' : 'bg-white text-gray-500 shadow-sm'
+              }`}>
+                {count}
+              </span>
+            </button>
+          ))}
+        </div>
+
         {/* List */}
         <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-gray-50">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : orcamentos.length === 0 ? (
+          ) : orcamentosFiltrados.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
               <FileText size={48} className="mx-auto mb-3 opacity-30" />
-              <p className="text-lg font-bold">Nenhum orçamento salvo</p>
-              <p className="text-sm">Salve um orçamento para vê-lo aqui</p>
+              <p className="text-lg font-bold">Nenhum orçamento encontrado</p>
+              <p className="text-sm">
+                {filtro === 'Todos' ? 'Salve um orçamento para vê-lo aqui' : `Nenhum orçamento com status "${filtro}"`}
+              </p>
             </div>
           ) : (
-            orcamentos.map((orc) => (
+            orcamentosFiltrados.map((orc) => (
               <div
                 key={orc.id}
                 className="flex items-center gap-4 p-4 rounded-lg bg-white border-l-4 border-green-500 shadow-sm hover:shadow-md hover:border-blue-600 transition-all group"
