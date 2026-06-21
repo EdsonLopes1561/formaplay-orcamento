@@ -45,6 +45,33 @@ export interface Orcamento {
   created_at?: string;
 }
 
+export interface SolicitacaoOrcamento {
+  id: string;
+  codigo: string;
+  nome_razao: string;
+  cpf_cnpj: string | null;
+  telefone: string;
+  email: string | null;
+  cep: string | null;
+  endereco: string | null;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  estado: string | null;
+  jogo_escolhido: string;
+  quantidade: number;
+  valor_estimado: number;
+  frete_estimado: number;
+  desconto_pix: number;
+  total_estimado: number;
+  forma_pagamento: string;
+  embrulho_presente: boolean;
+  status: string;
+  observacoes_cliente: string | null;
+  created_at: string;
+}
+
 export const EMPRESA = {
   nome: 'FormaPlay Jogos Educacionais',
   cnpj: '66.710.107/0001-31',

@@ -2,15 +2,16 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Save, Printer, MessageCircle, FolderOpen,
   Trash2, RotateCcw, ChevronDown, CheckCircle, AlertCircle,
-  FileText, Users, Tag, Sparkles, Check, Package, LogOut, User, BarChart2
+  FileText, Users, Tag, Sparkles, Check, Package, LogOut, User, BarChart2, Mailbox
 } from 'lucide-react';
 import { supabase } from './supabase.ts';
-import { Orcamento, Cliente, EMPRESA, PRODUTOS, emptyOrcamento } from './types';
+import { Orcamento, Cliente, EMPRESA, PRODUTOS, emptyOrcamento, SolicitacaoOrcamento } from './types';
 import { PrintView } from './components/PrintView';
 import { HistoricoModal } from './components/HistoricoModal';
 import { ClientesModal } from './components/ClientesModal';
 import { DashboardModal } from './components/DashboardModal';
 import { FormaPlayBrand } from './components/FormaPlayBrand';
+import { SolicitacoesModal } from './components/SolicitacoesModal';
 
 type Toast = { type: 'success' | 'error'; message: string };
 
@@ -113,6 +114,31 @@ function App() {
   const [toast, setToast] = useState<Toast | null>(null);
   const [showClientes, setShowClientes] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
+
+  const [solicitacoes, setSolicitacoes] = useState<SolicitacaoOrcamento[]>([]);
+  const [showSolicitacoes, setShowSolicitacoes] = useState(false);
+  const [loadingSolicitacoes, setLoadingSolicitacoes] = useState(false);
+
+  const carregarSolicitacoes = async () => {
+    setLoadingSolicitacoes(true);
+    try {
+      const { data, error } = await supabase
+        .from('solicitacoes_orcamento')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setSolicitacoes(data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingSolicitacoes(false);
+    }
+  };
+
+  useEffect(() => {
+    carregarSolicitacoes();
+  }, []);
+
   const showToast = (type: Toast['type'], message: string) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3500);
@@ -468,6 +494,18 @@ function App() {
             >
               <User size={18} />
               Clientes
+            </button>
+            <button
+              onClick={() => { setShowSolicitacoes(true); carregarSolicitacoes(); }}
+              className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-indigo-500 text-indigo-700 rounded-lg hover:bg-indigo-50 active:scale-95 transition-all font-bold text-sm shadow-md"
+            >
+              <Mailbox size={18} />
+              Solicitações
+              {solicitacoes.filter(s => s.status === 'Pendente').length > 0 && (
+                <span className="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-1 animate-pulse">
+                  {solicitacoes.filter(s => s.status === 'Pendente').length}
+                </span>
+              )}
             </button>
             {currentId && (
               <button
@@ -916,6 +954,16 @@ function App() {
         <DashboardModal
           orcamentos={historico}
           onClose={() => setShowDashboard(false)}
+        />
+      )}
+
+      {/* Solicitacoes Modal */}
+      {showSolicitacoes && (
+        <SolicitacoesModal
+          solicitacoes={solicitacoes}
+          onClose={() => setShowSolicitacoes(false)}
+          onRefresh={carregarSolicitacoes}
+          loading={loadingSolicitacoes}
         />
       )}
     </>
