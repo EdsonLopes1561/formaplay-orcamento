@@ -74,7 +74,8 @@ export function DashboardModal({ orcamentos, onClose }: DashboardModalProps) {
     const headers = [
       'Número', 'Data', 'Cliente', 'Telefone', 'E-mail', 'Cidade/UF',
       'Produto', 'Quantidade', 'Valor Unitário', 'Subtotal', 'Frete',
-      'Desconto', 'Total', 'Status', 'Prazo', 'Pagamento', 'Observações'
+      'Desconto', 'Total', 'Status', 'Prazo', 'Pagamento', 'Observações',
+      'Prioridade', 'Próxima Ação', 'Data Retorno', 'Observação Interna'
     ];
 
     const formatNumber = (num: any) => {
@@ -101,7 +102,11 @@ export function DashboardModal({ orcamentos, onClose }: DashboardModalProps) {
         orc.status || 'Aberto',
         orc.prazo_entrega || '',
         orc.pagamento || '',
-        orc.observacoes || ''
+        orc.observacoes || '',
+        orc.prioridade || 'Baixa',
+        orc.proxima_acao || '',
+        orc.data_retorno || '',
+        orc.observacao_interna || ''
       ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(';');
     });
 

@@ -46,6 +46,16 @@ export function HistoricoModal({
     }
   };
 
+  const getPrioridadeBadge = (prioridade: string | undefined) => {
+    const p = prioridade || 'Baixa';
+    switch (p) {
+      case 'Alta': return <span className="bg-red-100 text-red-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider border border-red-200">{p}</span>;
+      case 'Média': return <span className="bg-orange-100 text-orange-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider border border-orange-200">{p}</span>;
+      case 'Baixa': return <span className="bg-gray-100 text-gray-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider border border-gray-200">{p}</span>;
+      default: return null;
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border-t-4 border-green-500">
@@ -112,12 +122,20 @@ export function HistoricoModal({
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-black text-green-700 text-base">{orc.numero}</span>
                     {getStatusBadge(orc.status)}
+                    {getPrioridadeBadge(orc.prioridade)}
                     <span className="text-gray-300">•</span>
                     <span className="text-xs font-semibold text-gray-500">{orc.data_orcamento}</span>
                   </div>
                   <p className="font-bold text-gray-900 truncate">{orc.cliente || 'Cliente não informado'}</p>
                   <div className="flex justify-between items-start mt-2">
-                    <p className="text-sm text-gray-600">{orc.produto || 'Produto não informado'}</p>
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm text-gray-600">{orc.produto || 'Produto não informado'}</p>
+                      {(orc.proxima_acao || orc.data_retorno) && (
+                        <p className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded border border-amber-100 max-w-xs truncate" title={`${orc.proxima_acao} ${orc.data_retorno}`}>
+                          <span className="font-bold">Follow-up:</span> {orc.proxima_acao} {orc.data_retorno && `(${orc.data_retorno})`}
+                        </p>
+                      )}
+                    </div>
                     <span className="text-sm font-black text-green-700">{fmt(orc.total)}</span>
                   </div>
                 </div>

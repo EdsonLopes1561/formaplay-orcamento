@@ -603,6 +603,47 @@ function App() {
                   </div>
                 </div>
               </div>
+
+              {/* Follow-up / CRM Interno */}
+              <div className="bg-white rounded-xl shadow-md border-l-4 border-amber-500 p-6">
+                <h2 className="font-black text-gray-900 mb-2 flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 text-white text-xs font-bold flex items-center justify-center">4</span>
+                  Controle Comercial Interno
+                </h2>
+                <p className="text-xs text-amber-700 font-semibold mb-5 bg-amber-50 p-2 rounded border border-amber-200">
+                  ⚠️ Não aparece no PDF do cliente
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className="form-label">Prioridade</label>
+                    <div className="relative">
+                      <select name="prioridade" value={form.prioridade || 'Baixa'} onChange={handleChange}
+                        className="form-input appearance-none pr-10 font-bold text-gray-700">
+                        <option value="Baixa">Baixa</option>
+                        <option value="Média">Média</option>
+                        <option value="Alta">Alta</option>
+                      </select>
+                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="form-label">Data de Retorno</label>
+                    <input name="data_retorno" type="date" value={form.data_retorno || ''} onChange={handleChange}
+                      className="form-input" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="form-label">Próxima Ação</label>
+                    <input name="proxima_acao" value={form.proxima_acao || ''} onChange={handleChange}
+                      className="form-input" placeholder="Ex: Ligar para confirmar recebimento" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="form-label">Observação Interna</label>
+                    <textarea name="observacao_interna" value={form.observacao_interna || ''} onChange={handleChange}
+                      rows={2} className="form-input resize-none"
+                      placeholder="Informações confidenciais, detalhes de negociação..." />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Right column */}
