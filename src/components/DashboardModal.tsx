@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { 
   X, BarChart2, DollarSign, CheckCircle, 
-  Clock, Send, XCircle, TrendingUp, AlertTriangle
+  Clock, Send, XCircle, TrendingUp, AlertTriangle, Download
 } from 'lucide-react';
 import { Orcamento } from '../types';
 
@@ -70,6 +70,54 @@ export function DashboardModal({ orcamentos, onClose }: DashboardModalProps) {
     }).format(value);
   };
 
+  const exportarCSV = () => {
+    const headers = [
+      'Número', 'Data', 'Cliente', 'Telefone', 'E-mail', 'Cidade/UF',
+      'Produto', 'Quantidade', 'Valor Unitário', 'Subtotal', 'Frete',
+      'Desconto', 'Total', 'Status', 'Prazo', 'Pagamento', 'Observações'
+    ];
+
+    const formatNumber = (num: any) => {
+      const parsed = Number(num);
+      if (isNaN(parsed) || !parsed) return '0,00';
+      return parsed.toFixed(2).replace('.', ',');
+    };
+
+    const rows = orcamentos.map(orc => {
+      return [
+        orc.numero || '',
+        orc.data_orcamento || '',
+        orc.cliente || '',
+        orc.telefone || '',
+        orc.email || '',
+        orc.cidade || '',
+        orc.produto || '',
+        orc.quantidade || 0,
+        formatNumber(orc.valor_unitario),
+        formatNumber(orc.subtotal),
+        formatNumber(orc.frete),
+        formatNumber(orc.desconto),
+        formatNumber(orc.total),
+        orc.status || 'Aberto',
+        orc.prazo_entrega || '',
+        orc.pagamento || '',
+        orc.observacoes || ''
+      ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(';');
+    });
+
+    const csvContent = '\uFEFF' + headers.join(';') + '\n' + rows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    
+    const date = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `formaplay-orcamentos-${date}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl">
@@ -83,12 +131,21 @@ export function DashboardModal({ orcamentos, onClose }: DashboardModalProps) {
               <p className="text-sm text-gray-500">Resumo de desempenho e métricas</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
-          >
-            <X size={24} />
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={exportarCSV}
+              className="flex items-center gap-2 px-4 py-2 bg-[#217346] text-white rounded-lg hover:bg-[#1e6b41] active:scale-95 transition-all font-bold text-sm shadow-sm"
+            >
+              <Download size={18} />
+              Exportar Planilha
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
+            >
+              <X size={24} />
+            </button>
+          </div>
         </div>
 
         <div className="p-6 overflow-y-auto bg-gray-50 flex-1">
