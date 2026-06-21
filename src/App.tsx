@@ -17,6 +17,7 @@ type Toast = { type: 'success' | 'error'; message: string };
 
 const getProdutoImagem = (nome: string): string | null => {
   const n = (nome || '').toLowerCase();
+  if (n.includes('premium')) return '/desafio-logistico-premium.png';
   if (n.includes('logístico') || n.includes('logistico')) return '/desafio-logistico.png';
   if (n.includes('kids')) return '/desafio-kids.png';
   if (n.includes('professor')) return '/edicao-professor.png';
@@ -34,6 +35,28 @@ type ProdutoInfo = {
 
 const getProdutoInfo = (nome: string): ProdutoInfo | null => {
   const n = (nome || '').toLowerCase();
+  if (n.includes('premium')) {
+    return {
+      titulo: 'Desafio Logístico Premium',
+      descricao: 'Versão especial do Desafio Logístico com apresentação premium, ideal para instituições, eventos, premiações e experiências educacionais diferenciadas.',
+      publico: 'Instituições de ensino, empresas, eventos, professores e profissionais que desejam uma experiência educacional com acabamento superior.',
+      categoria: 'Educacional Premium',
+      diferenciais: [
+        'Apresentação diferenciada',
+        'Ideal para eventos e premiações',
+        'Experiência educacional com acabamento superior',
+        'Mesma base pedagógica do Desafio Logístico',
+      ],
+      conteudo: [
+        'Tabuleiro premium',
+        'Cartas operacionais premium',
+        'Peões personalizados',
+        'Dados',
+        'Manual especial do jogo',
+        'Caixa rígida premium',
+      ],
+    };
+  }
   if (n.includes('kids')) {
     return {
       titulo: 'Desafio Kids',
