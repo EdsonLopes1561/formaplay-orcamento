@@ -82,6 +82,7 @@ export const EMPRESA = {
 
 export const PRODUTOS = [
   { nome: 'Desafio Logístico', preco: 290 },
+  { nome: 'Desafio Logístico Premium', preco: 390 },
   { nome: 'Desafio Kids', preco: 190 },
   { nome: 'Edição Professor', preco: 390 },
 ];

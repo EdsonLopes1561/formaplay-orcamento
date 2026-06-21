@@ -14,6 +14,7 @@ const fmt = (val: number | string | null | undefined) => {
 
 const getProdutoImagem = (nome: string): string | null => {
   const n = (nome || '').toLowerCase();
+  if (n.includes('premium')) return '/desafio-logistico-premium.png';
   if (n.includes('logístico') || n.includes('logistico')) return '/desafio-logistico.png';
   if (n.includes('kids')) return '/desafio-kids.png';
   if (n.includes('professor')) return '/edicao-professor.png';
@@ -22,6 +23,7 @@ const getProdutoImagem = (nome: string): string | null => {
 
 const getProdutoDiferenciais = (nome: string): string[] => {
   const k = (nome || '').toLowerCase();
+  if (k.includes('premium')) return ['Apresentação diferenciada', 'Ideal para eventos e premiações', 'Experiência educacional com acabamento superior', 'Mesma base pedagógica do Desafio Logístico'];
   if (k.includes('kids')) return ['Aprendizado divertido', 'Desenvolvimento lógico', 'Interação infantil', 'Estímulo criativo'];
   if (k.includes('logístico') || k.includes('logistico')) return ['Aprendizado prático', 'Estratégia e tomada de decisão', 'Aplicação educacional', 'Dinâmica em grupo'];
   if (k.includes('professor')) return ['Aplicação em sala de aula', 'Material de apoio educacional', 'Dinâmicas pedagógicas', 'Treinamentos e workshops'];
@@ -30,6 +32,7 @@ const getProdutoDiferenciais = (nome: string): string[] => {
 
 const getProdutoConteudo = (nome: string): string[] => {
   const k = (nome || '').toLowerCase();
+  if (k.includes('premium')) return ['Tabuleiro premium', 'Cartas operacionais premium', 'Peões personalizados', 'Dados', 'Manual especial do jogo', 'Caixa rígida premium'];
   if (k.includes('kids')) return ['Tabuleiro infantil', 'Cartas coloridas', 'Peças educativas', 'Manual infantil', 'Dinâmicas lúdicas'];
   if (k.includes('logístico') || k.includes('logistico')) return ['Tabuleiro premium', 'Cartas operacionais', 'Peões personalizados', 'Dados', 'Manual do jogo', 'Dinâmicas educacionais'];
   if (k.includes('professor')) return ['Material pedagógico', 'Cartas avançadas', 'Guia do educador', 'Dinâmicas em grupo', 'Aplicação em sala'];
