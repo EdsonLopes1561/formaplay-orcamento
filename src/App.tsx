@@ -2,13 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Save, Printer, MessageCircle, FolderOpen,
   Trash2, RotateCcw, ChevronDown, CheckCircle, AlertCircle,
-  FileText, Users, Tag, Sparkles, Check, Package, LogOut, User
+  FileText, Users, Tag, Sparkles, Check, Package, LogOut, User, BarChart2
 } from 'lucide-react';
 import { supabase } from './supabase.ts';
 import { Orcamento, Cliente, EMPRESA, PRODUTOS, emptyOrcamento } from './types';
 import { PrintView } from './components/PrintView';
 import { HistoricoModal } from './components/HistoricoModal';
 import { ClientesModal } from './components/ClientesModal';
+import { DashboardModal } from './components/DashboardModal';
 import { FormaPlayBrand } from './components/FormaPlayBrand';
 
 type Toast = { type: 'success' | 'error'; message: string };
@@ -111,7 +112,7 @@ function App() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
   const [showClientes, setShowClientes] = useState(false);
-
+  const [showDashboard, setShowDashboard] = useState(false);
   const showToast = (type: Toast['type'], message: string) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3500);
@@ -453,6 +454,13 @@ function App() {
                   {historico.length}
                 </span>
               )}
+            </button>
+            <button
+              onClick={() => { setShowDashboard(true); carregarHistorico(); }}
+              className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-blue-900 text-blue-900 rounded-lg hover:bg-blue-50 active:scale-95 transition-all font-bold text-sm shadow-md"
+            >
+              <BarChart2 size={18} />
+              Painel Comercial
             </button>
             <button
               onClick={() => setShowClientes(true)}
@@ -859,6 +867,14 @@ function App() {
             setShowClientes(false);
             showToast('success', 'Cliente selecionado com sucesso!');
           }}
+        />
+      )}
+
+      {/* Dashboard Modal */}
+      {showDashboard && (
+        <DashboardModal
+          orcamentos={historico}
+          onClose={() => setShowDashboard(false)}
         />
       )}
     </>
