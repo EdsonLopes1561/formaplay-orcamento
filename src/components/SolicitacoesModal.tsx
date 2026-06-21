@@ -7,6 +7,7 @@ interface SolicitacoesModalProps {
   solicitacoes: SolicitacaoOrcamento[];
   onClose: () => void;
   onRefresh: () => void;
+  onConverter: (solicitacao: SolicitacaoOrcamento) => void;
   loading: boolean;
 }
 
@@ -14,6 +15,7 @@ export function SolicitacoesModal({
   solicitacoes,
   onClose,
   onRefresh,
+  onConverter,
   loading,
 }: SolicitacoesModalProps) {
   const fmt = (val: number) =>
@@ -169,12 +171,12 @@ export function SolicitacoesModal({
                     </button>
                     {sol.status === 'Pendente' && (
                       <button
-                        onClick={() => atualizarStatus(sol.id, 'Convertida')}
+                        onClick={() => onConverter(sol)}
                         disabled={updating === sol.id}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 transition-all shadow-sm disabled:opacity-50"
-                        title="Marcar como Convertida"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-all shadow-sm disabled:opacity-50"
+                        title="Preencher no Painel de Orçamentos"
                       >
-                        <Check size={14} />
+                        <Check size={14} /> Converter em Orçamento
                       </button>
                     )}
                     {sol.status === 'Pendente' && (

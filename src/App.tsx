@@ -118,6 +118,44 @@ function App() {
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoOrcamento[]>([]);
   const [showSolicitacoes, setShowSolicitacoes] = useState(false);
   const [loadingSolicitacoes, setLoadingSolicitacoes] = useState(false);
+  const [solicitacaoOrigemId, setSolicitacaoOrigemId] = useState<string | null>(null);
+
+  const converterSolicitacao = async (s: SolicitacaoOrcamento) => {
+    const unitPrice = PRODUTOS.find((p) => p.nome === s.jogo_escolhido)?.preco || 0;
+    const numeroAtual = form.numero || await calcularNumeroOrcamento();
+    
+    let obs = `Origem: Solicitação pública ${s.codigo}.\n`;
+    obs += `Endereço de entrega: ${s.endereco || ''}, nº ${s.numero || ''}, ${s.complemento ? s.complemento + ', ' : ''}${s.bairro || ''}, ${s.cidade || ''}/${s.estado || ''} - CEP ${s.cep || ''}.\n`;
+    obs += `Forma de pagamento pretendida: ${s.forma_pagamento}.\n`;
+    obs += `Embrulho para presente: ${s.embrulho_presente ? 'SIM' : 'NÃO'}.\n`;
+    obs += `Observações do cliente: ${s.observacoes_cliente || 'Nenhuma'}.`;
+
+    const novo = {
+      ...emptyOrcamento(),
+      numero: numeroAtual,
+      data_orcamento: form.data_orcamento || new Date().toLocaleDateString('pt-BR'),
+      cliente: s.nome_razao,
+      telefone: s.telefone,
+      email: s.email || '',
+      cidade: `${s.cidade || ''}/${s.estado || ''}`,
+      produto: s.jogo_escolhido,
+      quantidade: s.quantidade,
+      valor_unitario: unitPrice,
+      frete: s.frete_estimado,
+      pagamento: s.forma_pagamento,
+      observacoes: obs,
+    };
+    
+    if (s.forma_pagamento === 'Pix com desconto') {
+      novo.desconto = s.desconto_pix;
+    }
+
+    setForm(calcularValores(novo));
+    setCurrentId(null);
+    setSolicitacaoOrigemId(s.id);
+    setShowSolicitacoes(false);
+    showToast('success', 'Dados preenchidos. Revise e clique em Salvar Orçamento.');
+  };
 
   const carregarSolicitacoes = async () => {
     setLoadingSolicitacoes(true);
@@ -250,6 +288,16 @@ function App() {
         }
         showToast('success', 'Orçamento salvo com sucesso!');
       }
+
+      if (solicitacaoOrigemId && !currentId) {
+        await supabase
+          .from('solicitacoes_orcamento')
+          .update({ status: 'Convertida' })
+          .eq('id', solicitacaoOrigemId);
+        setSolicitacaoOrigemId(null);
+        await carregarSolicitacoes();
+      }
+
       await carregarHistorico();
     } catch (err: any) {
       console.error('[salvar] Erro completo:', err);
@@ -963,6 +1011,7 @@ function App() {
           solicitacoes={solicitacoes}
           onClose={() => setShowSolicitacoes(false)}
           onRefresh={carregarSolicitacoes}
+          onConverter={converterSolicitacao}
           loading={loadingSolicitacoes}
         />
       )}
