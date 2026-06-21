@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { 
   X, BarChart2, DollarSign, CheckCircle, 
   Clock, Send, XCircle, TrendingUp, AlertTriangle, Download,
-  Calendar, Filter, Phone, CheckSquare
+  Calendar, Filter, Phone, CheckSquare, MessageCircle
 } from 'lucide-react';
 import { Orcamento } from '../types';
 
@@ -156,6 +156,42 @@ export function DashboardModal({ orcamentos, onClose }: DashboardModalProps) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const sendWhatsApp = (orc: Orcamento) => {
+    if (!orc.telefone) return;
+    let fone = String(orc.telefone).replace(/\D/g, '');
+    if (!fone) return;
+    if (!fone.startsWith('55')) {
+      fone = '55' + fone;
+    }
+
+    const cli = orc.cliente || '';
+    const prod = orc.produto || '';
+
+    const msg = `Olá ${cli}, tudo bem? Aqui é o Edson da FormaPlay.\n\nEstou passando para saber se ficou alguma dúvida sobre o jogo educacional ${prod}.\n\nSerá um prazer te ajudar com as informações e, se fizer sentido, avançamos com a proposta.`;
+
+    const textEncoded = encodeURIComponent(msg);
+    const desktopUrl = `whatsapp://send?phone=${fone}&text=${textEncoded}`;
+    const webUrl = `https://wa.me/${fone}?text=${textEncoded}`;
+
+    window.location.href = desktopUrl;
+
+    let fallbackTimeout: NodeJS.Timeout;
+    
+    const handleVisibilityChange = () => {
+      if (document.hidden || document.visibilityState === 'hidden') {
+        clearTimeout(fallbackTimeout);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    fallbackTimeout = setTimeout(() => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.open(webUrl, '_blank');
+    }, 1500);
   };
 
   return (
@@ -361,10 +397,13 @@ export function DashboardModal({ orcamentos, onClose }: DashboardModalProps) {
                         )}
                         
                         {orc.telefone && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
-                            <Phone size={16} className="text-green-600" />
-                            <span className="font-medium">{orc.telefone}</span>
-                          </div>
+                          <button 
+                            onClick={() => sendWhatsApp(orc)}
+                            className="flex items-center gap-2 text-sm text-white bg-green-600 hover:bg-green-700 w-full p-2.5 rounded-lg mt-3 transition-colors justify-center font-bold active:scale-95 shadow-sm"
+                          >
+                            <MessageCircle size={18} />
+                            WhatsApp: {orc.telefone}
+                          </button>
                         )}
                       </div>
                     </div>
