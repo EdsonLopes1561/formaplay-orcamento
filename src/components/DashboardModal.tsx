@@ -13,6 +13,51 @@ interface DashboardModalProps {
 
 export function DashboardModal({ orcamentos, onClose }: DashboardModalProps) {
   const [filtroAgenda, setFiltroAgenda] = useState('Todos');
+  const [filtroPeriodo, setFiltroPeriodo] = useState('Todos');
+  const [dataInicial, setDataInicial] = useState('');
+  const [dataFinal, setDataFinal] = useState('');
+
+  const parseDataBrasileira = (dataStr: string | undefined, fallbackStr: string | undefined) => {
+    const d = dataStr || fallbackStr || '';
+    if (!d) return '';
+    if (d.includes('-') && d.length >= 10) return d.substring(0, 10);
+    const parts = d.split('/');
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    }
+    return '';
+  };
+
+  const orcamentosFiltrados = useMemo(() => {
+    if (filtroPeriodo === 'Todos') return orcamentos;
+
+    const hoje = new Date();
+    const hojeStr = hoje.toISOString().split('T')[0];
+
+    const inicioSemana = new Date(hoje);
+    inicioSemana.setDate(hoje.getDate() - hoje.getDay());
+    const inicioSemanaStr = inicioSemana.toISOString().split('T')[0];
+
+    const inicioMesStr = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-01`;
+    const inicioAnoStr = `${hoje.getFullYear()}-01-01`;
+
+    return orcamentos.filter(orc => {
+      const dataIso = parseDataBrasileira(orc.data_orcamento, orc.created_at);
+      if (!dataIso) return true;
+
+      switch (filtroPeriodo) {
+        case 'Hoje': return dataIso === hojeStr;
+        case 'Esta Semana': return dataIso >= inicioSemanaStr && dataIso <= hojeStr;
+        case 'Este Mês': return dataIso >= inicioMesStr && dataIso <= hojeStr;
+        case 'Este Ano': return dataIso >= inicioAnoStr && dataIso <= hojeStr;
+        case 'Personalizado':
+          if (dataInicial && dataIso < dataInicial) return false;
+          if (dataFinal && dataIso > dataFinal) return false;
+          return true;
+        default: return true;
+      }
+    });
+  }, [orcamentos, filtroPeriodo, dataInicial, dataFinal]);
 
   const agenda = useMemo(() => {
     const ativos = orcamentos.filter(o => o.status === 'Aberto' || o.status === 'Enviado');
@@ -58,7 +103,7 @@ export function DashboardModal({ orcamentos, onClose }: DashboardModalProps) {
     let valorTotalAprovado = 0;
     let valorNegociacao = 0;
 
-    orcamentos.forEach(orc => {
+    orcamentosFiltrados.forEach(orc => {
       totalOrçamentos++;
       
       const status = orc.status || 'Aberto';
@@ -96,7 +141,7 @@ export function DashboardModal({ orcamentos, onClose }: DashboardModalProps) {
       valorNegociacao,
       taxaAprovacao
     };
-  }, [orcamentos]);
+  }, [orcamentosFiltrados]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -119,7 +164,7 @@ export function DashboardModal({ orcamentos, onClose }: DashboardModalProps) {
       return parsed.toFixed(2).replace('.', ',');
     };
 
-    const rows = orcamentos.map(orc => {
+    const rows = orcamentosFiltrados.map(orc => {
       return [
         orc.numero || '',
         orc.data_orcamento || '',
@@ -217,15 +262,63 @@ export function DashboardModal({ orcamentos, onClose }: DashboardModalProps) {
             </button>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
+              className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
             >
-              <X size={24} />
+              <X size={20} />
             </button>
           </div>
         </div>
 
-        <div className="p-6 overflow-y-auto bg-gray-50 flex-1">
-          {/* Top Cards - Financial Values */}
+        <div className="flex-1 overflow-y-auto p-8 bg-gray-50/50">
+
+          {/* Filtros de Período */}
+          <div className="mb-8">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 text-gray-500 font-semibold mr-2">
+                <Calendar size={20} />
+                <span>Período:</span>
+              </div>
+              
+              {['Todos', 'Hoje', 'Esta Semana', 'Este Mês', 'Este Ano', 'Personalizado'].map(f => (
+                <button
+                  key={f}
+                  onClick={() => setFiltroPeriodo(f)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${
+                    filtroPeriodo === f
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+            
+            {filtroPeriodo === 'Personalizado' && (
+              <div className="flex items-center gap-4 mt-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm w-max animate-fade-in">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1">Data Inicial</label>
+                  <input 
+                    type="date" 
+                    value={dataInicial} 
+                    onChange={e => setDataInicial(e.target.value)}
+                    className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1">Data Final</label>
+                  <input 
+                    type="date" 
+                    value={dataFinal} 
+                    onChange={e => setDataFinal(e.target.value)}
+                    className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-medium outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Revenue Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
               <div className="p-4 bg-gray-100 text-gray-600 rounded-full">
