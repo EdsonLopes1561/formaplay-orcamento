@@ -6,9 +6,56 @@ type Jogo = 'Desafio Logístico' | 'Desafio Logístico Premium' | 'Desafio Kids'
 const PRECOS: Record<Jogo, number> = {
   'Desafio Logístico': 290,
   'Desafio Logístico Premium': 390,
-  'Desafio Kids': 290,
+  'Desafio Kids': 190,
   'Edição do Professor': 390,
 };
+
+const PRODUTOS_INFO = [
+  {
+    nome: 'Desafio Logístico' as Jogo,
+    imagem: '/desafio-logistico.png',
+    descricao: 'Jogo educacional de logística para desenvolver planejamento, tomada de decisão, custos, rotas e estratégia.',
+    diferenciais: [
+      'Simula situações reais da logística',
+      'Trabalha custos, imprevistos e decisões',
+      'Ideal para cursos técnicos, escolas e treinamentos',
+      'Estimula participação e aprendizado prático'
+    ]
+  },
+  {
+    nome: 'Desafio Logístico Premium' as Jogo,
+    imagem: '/desafio-logistico-premium.png',
+    descricao: 'Versão especial do Desafio Logístico com apresentação diferenciada e acabamento superior.',
+    diferenciais: [
+      'Apresentação mais premium',
+      'Ideal para presentes, eventos e instituições',
+      'Maior impacto visual na entrega',
+      'Experiência mais marcante para o cliente'
+    ]
+  },
+  {
+    nome: 'Desafio Kids' as Jogo,
+    imagem: '/desafio-kids.png',
+    descricao: 'Versão infantil em desenvolvimento, com proposta lúdica e educativa para crianças.',
+    diferenciais: [
+      'Linguagem mais simples e visual',
+      'Foco em aprendizado lúdico',
+      'Ideal para crianças e atividades educativas',
+      'Proposta mais acessível'
+    ]
+  },
+  {
+    nome: 'Edição do Professor' as Jogo,
+    imagem: '/edicao-professor.png',
+    descricao: 'Versão voltada para o educador com materiais de apoio e facilitação de dinâmicas.',
+    diferenciais: [
+      'Material de apoio ao professor',
+      'Facilita a aplicação de dinâmicas',
+      'Guia prático de turmas',
+      'Versão ampliada para sala de aula'
+    ]
+  }
+];
 
 const SUL_SUDESTE = ['PR', 'SC', 'RS', 'RJ', 'MG', 'ES'];
 
@@ -272,7 +319,7 @@ export const SolicitacaoPublica: React.FC = () => {
                     <option value="" disabled>Selecione uma opção...</option>
                     <option value="Desafio Logístico">Desafio Logístico (R$ 290,00)</option>
                     <option value="Desafio Logístico Premium">Desafio Logístico Premium (R$ 390,00)</option>
-                    <option value="Desafio Kids">Desafio Kids (R$ 290,00)</option>
+                    <option value="Desafio Kids">Desafio Kids (R$ 190,00)</option>
                     <option value="Edição do Professor">Edição do Professor (R$ 390,00)</option>
                   </select>
                 </div>
@@ -280,6 +327,66 @@ export const SolicitacaoPublica: React.FC = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Quantidade *</label>
                   <input type="number" required min="1" name="quantidade" value={form.quantidade} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
                 </div>
+
+                {form.jogo && (
+                  <div className="md:col-span-4 mt-4 animate-fade-in-up">
+                    {PRODUTOS_INFO.filter(p => p.nome === form.jogo).map(produto => (
+                      <div key={produto.nome} className="bg-white border-2 border-blue-100 rounded-xl overflow-hidden shadow-md">
+                        <div className="flex flex-col md:flex-row">
+                          <div className="md:w-1/3 bg-slate-50 p-4 flex items-center justify-center border-b md:border-b-0 md:border-r border-blue-100">
+                            <img src={produto.imagem} alt={produto.nome} className="max-w-full h-auto rounded-lg shadow-sm" style={{ maxHeight: '200px', objectFit: 'contain' }} />
+                          </div>
+                          <div className="md:w-2/3 p-6">
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="text-xl font-black text-gray-800">{produto.nome}</h3>
+                              <span className="bg-blue-100 text-blue-800 font-bold px-3 py-1 rounded-full text-sm whitespace-nowrap ml-2">
+                                {fmtCurrency(PRECOS[produto.nome])}
+                              </span>
+                            </div>
+                            <p className="text-gray-600 mb-4">{produto.descricao}</p>
+                            <div className="mb-4">
+                              <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Diferenciais:</h4>
+                              <ul className="space-y-1">
+                                {produto.diferenciais.map((dif, idx) => (
+                                  <li key={idx} className="flex items-start text-sm text-gray-600">
+                                    <span className="text-green-500 mr-2">✓</span>
+                                    {dif}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg text-xs text-blue-800 flex gap-2">
+                              <span className="text-blue-500 text-base leading-none">ℹ️</span>
+                              <p>O valor estimado será confirmado pela FormaPlay.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {PRODUTOS_INFO.filter(p => p.nome !== form.jogo).length > 0 && (
+                      <div className="mt-6">
+                        <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-3">Outras opções FormaPlay</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                          {PRODUTOS_INFO.filter(p => p.nome !== form.jogo).map(outraOpcao => (
+                            <button
+                              type="button"
+                              key={outraOpcao.nome}
+                              onClick={() => setForm(prev => ({ ...prev, jogo: outraOpcao.nome }))}
+                              className="text-left bg-white border border-gray-200 rounded-lg p-3 hover:border-blue-400 hover:shadow-md transition-all group cursor-pointer flex flex-col h-full"
+                            >
+                              <div className="h-24 mb-2 flex items-center justify-center overflow-hidden rounded bg-slate-50 relative group-hover:bg-blue-50 transition-colors">
+                                <img src={outraOpcao.imagem} alt={outraOpcao.nome} className="max-h-full object-contain transition-transform group-hover:scale-110" />
+                              </div>
+                              <h5 className="font-bold text-gray-800 text-sm mb-1 leading-tight">{outraOpcao.nome}</h5>
+                              <span className="text-blue-600 font-semibold text-sm mt-auto">{fmtCurrency(PRECOS[outraOpcao.nome])}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="md:col-span-4 bg-blue-50/50 p-4 rounded-lg border border-blue-100 flex items-start gap-3 mt-2 mb-2">
                   <div className="flex items-center h-5 mt-0.5">
                     <input id="embrulho_presente" name="embrulho_presente" type="checkbox" checked={form.embrulho_presente} onChange={handleChange} className="w-5 h-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2 transition-all cursor-pointer" />
