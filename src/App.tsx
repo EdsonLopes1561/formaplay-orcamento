@@ -142,6 +142,7 @@ function App() {
   const [showSolicitacoes, setShowSolicitacoes] = useState(false);
   const [loadingSolicitacoes, setLoadingSolicitacoes] = useState(false);
   const [solicitacaoOrigemId, setSolicitacaoOrigemId] = useState<string | null>(null);
+  const [clienteData, setClienteData] = useState<Cliente | null>(null);
 
   const converterSolicitacao = async (s: SolicitacaoOrcamento) => {
     const unitPrice = PRODUTOS.find((p) => p.nome === s.jogo_escolhido)?.preco || 0;
@@ -222,12 +223,14 @@ function App() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    const isCheckbox = type === 'checkbox';
+    const finalValue = isCheckbox ? (e.target as HTMLInputElement).checked : value;
     const numeric = ['quantidade', 'valor_unitario', 'frete', 'desconto'];
 
     let updated = {
       ...form,
-      [name]: numeric.includes(name) ? parseFloat(value) || 0 : value,
+      [name]: numeric.includes(name) ? parseFloat(value) || 0 : finalValue,
     };
 
     if (name === 'produto') {
@@ -274,6 +277,7 @@ function App() {
       data_orcamento: new Date().toLocaleDateString('pt-BR'),
     });
     setCurrentId(null);
+    setClienteData(null);
   };
 
   const salvarOrcamento = async () => {
@@ -347,6 +351,15 @@ function App() {
     };
     setForm(calcularValores(normalized));
     setCurrentId(id ?? null);
+    
+    if (rest.cliente_id) {
+      supabase.from('clientes').select('*').eq('id', rest.cliente_id).maybeSingle()
+        .then(({ data }) => {
+          if (data) setClienteData(data as Cliente);
+        });
+    } else {
+      setClienteData(null);
+    }
   };
 
   const excluirOrcamento = async (id: string) => {
@@ -414,7 +427,7 @@ function App() {
     <>
       {/* Print-only area */}
       <div className="hidden print:block">
-        <PrintView orcamento={{ ...form, id: currentId ?? undefined }} />
+        <PrintView orcamento={{ ...form, id: currentId ?? undefined }} clienteData={clienteData} />
       </div>
 
       {/* Screen UI */}
@@ -603,6 +616,18 @@ function App() {
                   <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-900 to-blue-800 text-white text-xs font-bold flex items-center justify-center">1</span>
                   Dados do Cliente
                 </h2>
+
+                {form.cliente_nome && (
+                  <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg text-sm text-gray-800 shadow-inner">
+                    <p className="font-bold text-blue-900 mb-2 border-b border-blue-200 pb-1">Resumo do Cliente Vinculado (Snapshot)</p>
+                    <p><strong>Razão Social/Nome:</strong> {form.cliente_razao_social || form.cliente_nome}</p>
+                    {form.cliente_nome_fantasia && <p><strong>Fantasia:</strong> {form.cliente_nome_fantasia}</p>}
+                    {form.cliente_documento && <p><strong>Documento:</strong> {form.cliente_documento}</p>}
+                    {form.cliente_contato_responsavel && <p><strong>Contato:</strong> {form.cliente_contato_responsavel}</p>}
+                    {form.cliente_endereco_completo && <p className="mt-1"><strong>Endereço:</strong> {form.cliente_endereco_completo}</p>}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <label className="form-label">Cliente *</label>
@@ -687,7 +712,39 @@ function App() {
                       className="form-input" placeholder="Ex: 15 dias" />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="form-label">Forma de Pagamento</label>
+                    <label className="form-label">Tipo de Frete</label>
+                    <div className="relative">
+                      <select name="tipo_frete" value={form.tipo_frete || 'A combinar'} onChange={handleChange}
+                        className="form-input appearance-none pr-10">
+                        <option value="A combinar">A combinar</option>
+                        <option value="CIF">CIF (Por conta do Remetente)</option>
+                        <option value="FOB">FOB (Por conta do Destinatário)</option>
+                        <option value="Retirada">Retirada</option>
+                      </select>
+                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  <div className="sm:col-span-2 flex items-center gap-2">
+                    <input 
+                      type="checkbox" 
+                      name="frete_incluso" 
+                      id="frete_incluso"
+                      checked={form.frete_incluso || false} 
+                      onChange={handleChange}
+                      className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                    />
+                    <label htmlFor="frete_incluso" className="text-sm font-bold text-gray-700">Frete contemplado no valor total (sem cobrança separada)</label>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="form-label">Observação sobre Frete</label>
+                    <input name="observacao_frete" value={form.observacao_frete || ''} onChange={handleChange}
+                      className="form-input" placeholder="Ex: Entrega via transportadora XYZ" />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="form-label">Forma de Pagamento Base</label>
                     <div className="relative">
                       <select name="pagamento" value={form.pagamento} onChange={handleChange}
                         className="form-input appearance-none pr-10">
@@ -700,15 +757,40 @@ function App() {
                         <option>Cartão de crédito — 2x sem juros</option>
                         <option>Cartão de crédito — 3x sem juros</option>
                         <option>50% entrada + 50% na entrega</option>
+                        <option>Personalizado</option>
                       </select>
                       <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                     </div>
                   </div>
+
+                  {form.pagamento === 'Personalizado' && (
+                    <div className="sm:col-span-2">
+                      <label className="form-label">Forma de Pagamento (Personalizada)</label>
+                      <textarea name="forma_pagamento_personalizada" value={form.forma_pagamento_personalizada || ''} onChange={handleChange}
+                        rows={2} className="form-input resize-none"
+                        placeholder="Descreva a forma de pagamento que aparecerá no PDF..." />
+                    </div>
+                  )}
+
                   <div className="sm:col-span-2">
-                    <label className="form-label">Observações</label>
+                    <label className="form-label">Condições de Pagamento (Detalhes)</label>
+                    <textarea name="condicoes_pagamento" value={form.condicoes_pagamento || ''} onChange={handleChange}
+                      rows={3} className="form-input resize-none"
+                      placeholder="Ex: pagamento contra entrega, via depósito bancário..." />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="form-label">Informações Complementares</label>
+                    <textarea name="informacoes_complementares" value={form.informacoes_complementares || ''} onChange={handleChange}
+                      rows={3} className="form-input resize-none"
+                      placeholder="Outras informações pertinentes à proposta..." />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="form-label">Observações Internas (Não sai no PDF)</label>
                     <textarea name="observacoes" value={form.observacoes} onChange={handleChange}
                       rows={3} className="form-input resize-none"
-                      placeholder="Informações adicionais, condições especiais..." />
+                      placeholder="Informações adicionais..." />
                   </div>
                 </div>
               </div>
@@ -1006,14 +1088,32 @@ function App() {
           isOpen={showClientes}
           onClose={() => setShowClientes(false)}
           onSelectCliente={(cliente) => {
+            const enderecoCompleto = cliente.endereco ? `${cliente.endereco}, ${cliente.numero || 'S/N'}${cliente.complemento ? `, ${cliente.complemento}` : ''}, ${cliente.bairro || ''}, ${cliente.cidade || ''}/${cliente.estado || ''}, CEP: ${cliente.cep || ''}` : '';
             setForm({
               ...form,
               cliente: cliente.nome,
               telefone: cliente.telefone,
-              cidade: cliente.cidade,
+              cidade: `${cliente.cidade || ''}/${cliente.estado || ''}`,
               email: cliente.email,
               cliente_id: cliente.id,
+              cliente_nome: cliente.nome,
+              cliente_razao_social: cliente.razao_social || '',
+              cliente_nome_fantasia: cliente.nome_fantasia || '',
+              cliente_documento: cliente.documento || '',
+              cliente_inscricao_estadual: cliente.inscricao_estadual || '',
+              cliente_contato_responsavel: cliente.contato_responsavel || '',
+              cliente_telefone: cliente.telefone || '',
+              cliente_email: cliente.email || '',
+              cliente_cep: cliente.cep || '',
+              cliente_logradouro: cliente.endereco || '',
+              cliente_numero: cliente.numero || '',
+              cliente_complemento: cliente.complemento || '',
+              cliente_bairro: cliente.bairro || '',
+              cliente_cidade: cliente.cidade || '',
+              cliente_uf: cliente.estado || '',
+              cliente_endereco_completo: enderecoCompleto,
             });
+            setClienteData(cliente);
             setShowClientes(false);
             showToast('success', 'Cliente selecionado com sucesso!');
           }}

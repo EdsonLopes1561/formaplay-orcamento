@@ -1,6 +1,8 @@
 export interface Cliente {
   id?: string;
   nome: string;
+  razao_social?: string;
+  nome_fantasia?: string;
   documento: string;
   inscricao_estadual: string;
   email: string;
@@ -12,6 +14,7 @@ export interface Cliente {
   cidade: string;
   estado: string;
   complemento: string;
+  contato_responsavel?: string;
   tipo_cliente: string;
   observacoes: string;
   created_at?: string;
@@ -34,10 +37,32 @@ export interface Orcamento {
   prazo_entrega: string;
   validade: string;
   pagamento: string;
+  tipo_frete?: string;
+  frete_incluso?: boolean;
+  observacao_frete?: string;
+  forma_pagamento_personalizada?: string;
+  condicoes_pagamento?: string;
+  informacoes_complementares?: string;
   observacoes: string;
   data_orcamento: string;
   status: string;
   cliente_id?: string;
+  cliente_nome?: string;
+  cliente_razao_social?: string;
+  cliente_nome_fantasia?: string;
+  cliente_documento?: string;
+  cliente_inscricao_estadual?: string;
+  cliente_contato_responsavel?: string;
+  cliente_telefone?: string;
+  cliente_email?: string;
+  cliente_cep?: string;
+  cliente_logradouro?: string;
+  cliente_numero?: string;
+  cliente_complemento?: string;
+  cliente_bairro?: string;
+  cliente_cidade?: string;
+  cliente_uf?: string;
+  cliente_endereco_completo?: string;
   proxima_acao?: string;
   data_retorno?: string;
   observacao_interna?: string;
@@ -103,6 +128,12 @@ export const emptyOrcamento = (): Omit<Orcamento, 'id' | 'created_at'> => ({
   prazo_entrega: 'A combinar',
   validade: '15 dias',
   pagamento: '',
+  tipo_frete: 'A combinar',
+  frete_incluso: false,
+  observacao_frete: '',
+  forma_pagamento_personalizada: '',
+  condicoes_pagamento: '',
+  informacoes_complementares: '',
   observacoes: '',
   data_orcamento: new Date().toLocaleDateString('pt-BR'),
   status: 'Aberto',

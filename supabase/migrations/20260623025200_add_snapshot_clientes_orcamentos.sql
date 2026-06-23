@@ -1,0 +1,16 @@
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_nome text;
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_razao_social text;
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_nome_fantasia text;
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_documento text;
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_inscricao_estadual text;
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_contato_responsavel text;
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_telefone text;
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_email text;
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_cep text;
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_logradouro text;
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_numero text;
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_complemento text;
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_bairro text;
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_cidade text;
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_uf text;
+ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS cliente_endereco_completo text;

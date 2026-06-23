@@ -1,10 +1,10 @@
-import { Orcamento, EMPRESA } from '../types';
+import { Orcamento, Cliente, EMPRESA } from '../types';
 import { Building2, MessageCircle, Mail } from 'lucide-react';
 import { FormaPlayBrand } from './FormaPlayBrand';
 
-
 interface PrintViewProps {
   orcamento: Orcamento;
+  clienteData?: Cliente | null;
 }
 
 const fmt = (val: number | string | null | undefined) => {
@@ -39,7 +39,7 @@ const getProdutoConteudo = (nome: string): string[] => {
   return [];
 };
 
-export function PrintView({ orcamento }: PrintViewProps) {
+export function PrintView({ orcamento, clienteData }: PrintViewProps) {
   const produtoImagem = getProdutoImagem(orcamento.produto);
   const diferenciais = getProdutoDiferenciais(orcamento.produto);
   const conteudo = getProdutoConteudo(orcamento.produto);
@@ -83,7 +83,7 @@ export function PrintView({ orcamento }: PrintViewProps) {
           </div>
           <div className="print-header-info">
             <span className="print-info-label">Status</span>
-            <span className="print-info-value" style={{ textTransform: 'uppercase', color: orcamento.status === 'Aprovado' ? '#166534' : 'inherit' }}>{orcamento.status || 'Aberto'}</span>
+            <span className="print-status-badge" data-status={(orcamento.status || 'Aberto').toLowerCase()}>{orcamento.status || 'Aberto'}</span>
           </div>
         </div>
       </div>
@@ -93,22 +93,61 @@ export function PrintView({ orcamento }: PrintViewProps) {
       {/* Client */}
       <div className="print-section">
         <h2 className="print-section-title">Dados do Cliente</h2>
-        <div className="print-client-grid">
-          <div className="print-field">
-            <span className="print-label">Cliente:</span>
-            <span className="print-value">{orcamento.cliente}</span>
+        <div className="print-client-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px' }}>
+          {/* Coluna 1 */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div className="print-field">
+              <span className="print-label">Razão Social:</span>
+              <span className="print-value">{orcamento.cliente_razao_social || orcamento.cliente_nome || clienteData?.razao_social || clienteData?.nome || orcamento.cliente}</span>
+            </div>
+            {(orcamento.cliente_nome_fantasia || clienteData?.nome_fantasia) && (
+              <div className="print-field">
+                <span className="print-label">Nome Fantasia:</span>
+                <span className="print-value">{orcamento.cliente_nome_fantasia || clienteData?.nome_fantasia}</span>
+              </div>
+            )}
+            {(orcamento.cliente_documento || clienteData?.documento) && (
+              <div className="print-field">
+                <span className="print-label">CNPJ:</span>
+                <span className="print-value">{orcamento.cliente_documento || clienteData?.documento}</span>
+              </div>
+            )}
+            {(orcamento.cliente_inscricao_estadual || clienteData?.inscricao_estadual) && (
+              <div className="print-field">
+                <span className="print-label">Inscrição Estadual:</span>
+                <span className="print-value">{orcamento.cliente_inscricao_estadual || clienteData?.inscricao_estadual}</span>
+              </div>
+            )}
           </div>
-          <div className="print-field">
-            <span className="print-label">Telefone:</span>
-            <span className="print-value">{orcamento.telefone}</span>
-          </div>
-          <div className="print-field">
-            <span className="print-label">Cidade/UF:</span>
-            <span className="print-value">{orcamento.cidade}</span>
-          </div>
-          <div className="print-field">
-            <span className="print-label">E-mail:</span>
-            <span className="print-value">{orcamento.email}</span>
+
+          {/* Coluna 2 */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {(orcamento.cliente_contato_responsavel || clienteData?.contato_responsavel) && (
+              <div className="print-field">
+                <span className="print-label">Contato:</span>
+                <span className="print-value">{orcamento.cliente_contato_responsavel || clienteData?.contato_responsavel}</span>
+              </div>
+            )}
+            <div className="print-field">
+              <span className="print-label">Telefone:</span>
+              <span className="print-value">{orcamento.cliente_telefone || clienteData?.telefone || orcamento.telefone}</span>
+            </div>
+            <div className="print-field">
+              <span className="print-label">E-mail:</span>
+              <span className="print-value">{orcamento.cliente_email || clienteData?.email || orcamento.email}</span>
+            </div>
+            <div className="print-field">
+              <span className="print-label">Endereço:</span>
+              <span className="print-value">
+                {orcamento.cliente_logradouro 
+                  ? `${orcamento.cliente_logradouro}, ${orcamento.cliente_numero || 'S/N'}${orcamento.cliente_complemento ? `, ${orcamento.cliente_complemento}` : ''}, ${orcamento.cliente_bairro || ''}, ${orcamento.cliente_cidade || ''}/${orcamento.cliente_uf || ''}, CEP: ${orcamento.cliente_cep || ''}` 
+                  : orcamento.cliente_endereco_completo 
+                    ? orcamento.cliente_endereco_completo 
+                    : clienteData?.endereco 
+                      ? `${clienteData.endereco}, ${clienteData.numero || 'S/N'}${clienteData.complemento ? `, ${clienteData.complemento}` : ''}, ${clienteData.bairro || ''}, ${clienteData.cidade || ''}/${clienteData.estado || ''}, CEP: ${clienteData.cep || ''}` 
+                      : orcamento.cidade}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -200,25 +239,62 @@ export function PrintView({ orcamento }: PrintViewProps) {
       {/* Conditions */}
       <div className="print-section">
         <h2 className="print-section-title">Condições Comerciais</h2>
-        <div className="print-conditions-grid">
-          <div className="print-field">
-            <span className="print-label">Prazo de Entrega:</span>
-            <span className="print-value">{orcamento.prazo_entrega}</span>
-          </div>
-          <div className="print-field">
-            <span className="print-label">Validade:</span>
-            <span className="print-value">{orcamento.validade}</span>
-          </div>
-          <div className="print-field print-field-full">
-            <span className="print-label">Forma de Pagamento:</span>
-            <span className="print-value">{orcamento.pagamento}</span>
-          </div>
-          {orcamento.observacoes && (
-            <div className="print-field print-field-full">
-              <span className="print-label">Observações:</span>
-              <span className="print-value print-value-observacoes">{orcamento.observacoes}</span>
+        <div className="print-conditions-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div className="print-field">
+              <span className="print-label">Prazo de Entrega:</span>
+              <span className="print-value">{orcamento.prazo_entrega}</span>
             </div>
-          )}
+            <div className="print-field">
+              <span className="print-label">Tipo de Frete:</span>
+              <span className="print-value">{orcamento.tipo_frete || 'A combinar'}</span>
+            </div>
+            {orcamento.observacao_frete && (
+              <div className="print-field print-field-full">
+                <span className="print-label">Observação sobre Frete:</span>
+                <span className="print-value">{orcamento.observacao_frete}</span>
+              </div>
+            )}
+            <div className="print-field print-field-full">
+              <span className="print-label">Forma de Pagamento:</span>
+              <span className="print-value">
+                {orcamento.pagamento === 'Personalizado' ? orcamento.forma_pagamento_personalizada : orcamento.pagamento}
+              </span>
+            </div>
+            {orcamento.condicoes_pagamento && (
+              <div className="print-field print-field-full">
+                <span className="print-label">Condições de Pagamento:</span>
+                <span className="print-value print-value-observacoes">{orcamento.condicoes_pagamento}</span>
+              </div>
+            )}
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div className="print-field">
+              <span className="print-label">Validade da Proposta:</span>
+              <span className="print-value">{orcamento.validade}</span>
+            </div>
+            <div className="print-field">
+              <span className="print-label">Frete:</span>
+              <span className="print-value">
+                {orcamento.frete_incluso 
+                  ? 'Contemplado no valor total, sem cobrança em separado' 
+                  : fmt(orcamento.frete)}
+              </span>
+            </div>
+            {orcamento.informacoes_complementares && (
+              <div className="print-field print-field-full">
+                <span className="print-label">Informações Complementares:</span>
+                <span className="print-value print-value-observacoes">{orcamento.informacoes_complementares}</span>
+              </div>
+            )}
+            {orcamento.observacoes && (
+              <div className="print-field print-field-full">
+                <span className="print-label">Observações:</span>
+                <span className="print-value print-value-observacoes">{orcamento.observacoes}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
