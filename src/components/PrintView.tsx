@@ -50,19 +50,111 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
     return match ? match[1].trim().replace(/\.$/, '') : '';
   }
 
-  const enderecoEntrega = 
-    (orcamento as any).enderecoEntrega ||
-    (orcamento as any).endereco_entrega ||
-    orcamento.cliente_endereco_completo ||
-    extrairEnderecoDasObservacoes(orcamento.observacoes);
+  interface EnderecoParsed {
+    rua?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    cidadeUF?: string;
+    cep?: string;
+  }
 
-  const enderecoCliente = 
-    (orcamento.cliente_logradouro 
-      ? `${orcamento.cliente_logradouro}, ${orcamento.cliente_numero || 'S/N'}${orcamento.cliente_complemento ? `, ${orcamento.cliente_complemento}` : ''}, ${orcamento.cliente_bairro || ''}, ${orcamento.cliente_cidade || ''}/${orcamento.cliente_uf || ''} - CEP ${orcamento.cliente_cep || ''}` 
-      : null) ||
-    (clienteData?.endereco 
-      ? `${clienteData.endereco}, ${clienteData.numero || 'S/N'}${clienteData.complemento ? `, ${clienteData.complemento}` : ''}, ${clienteData.bairro || ''}, ${clienteData.cidade || ''}/${clienteData.estado || ''} - CEP ${clienteData.cep || ''}` 
-      : null);
+  function parseEnderecoLegacy(str: string): EnderecoParsed {
+    if (!str) return {};
+    let temp = str.replace(/- CEP /i, ',');
+    const parts = temp.split(',').map(s => s.trim());
+    if (parts.length >= 4) {
+      return {
+        rua: parts[0],
+        numero: parts[1],
+        bairro: parts[2],
+        cidadeUF: parts[3],
+        cep: parts.length > 4 ? parts[4] : ''
+      };
+    }
+    return { rua: str };
+  }
+
+  let endEntrega: EnderecoParsed | null = null;
+  const legacyEntregaStr = extrairEnderecoDasObservacoes(orcamento.observacoes);
+
+  if (orcamento.cliente_logradouro) {
+    endEntrega = {
+      rua: orcamento.cliente_logradouro,
+      numero: orcamento.cliente_numero || 'S/N',
+      complemento: orcamento.cliente_complemento,
+      bairro: orcamento.cliente_bairro,
+      cidadeUF: `${orcamento.cliente_cidade || ''}/${orcamento.cliente_uf || ''}`.replace(/^\/|\/$/g, ''),
+      cep: orcamento.cliente_cep
+    };
+  } else if (legacyEntregaStr) {
+    endEntrega = parseEnderecoLegacy(legacyEntregaStr);
+  } else if (orcamento.cliente_endereco_completo) {
+    endEntrega = parseEnderecoLegacy(orcamento.cliente_endereco_completo);
+  }
+
+  let endCliente: EnderecoParsed | null = endEntrega;
+  if (!endEntrega && clienteData?.endereco) {
+    endCliente = {
+      rua: clienteData.endereco,
+      numero: clienteData.numero || 'S/N',
+      complemento: clienteData.complemento,
+      bairro: clienteData.bairro,
+      cidadeUF: `${clienteData.cidade || ''}/${clienteData.estado || ''}`.replace(/^\/|\/$/g, ''),
+      cep: clienteData.cep
+    };
+  }
+
+  if (!endCliente) {
+    endCliente = { cidadeUF: orcamento.cidade || (orcamento.cliente_cidade ? `${orcamento.cliente_cidade}/${orcamento.cliente_uf}`.replace(/^\/|\/$/g, '') : '') };
+  }
+
+  // Oculta bloco de entrega se for exatamente igual ao endereço do cliente
+  if (endEntrega && endCliente && JSON.stringify(endEntrega) === JSON.stringify(endCliente)) {
+    endEntrega = null;
+  }
+
+  const RenderAddressFields = ({ end }: { end: EnderecoParsed }) => {
+    let enderecoLinha = '';
+    if (end.rua) {
+      enderecoLinha += end.rua;
+      if (end.numero) enderecoLinha += `, nº ${end.numero}`;
+      if (end.complemento) enderecoLinha += ` - ${end.complemento}`;
+      if (end.bairro) enderecoLinha += ` - ${end.bairro}`;
+    }
+
+    const formatCep = (cep: string) => {
+      if (!cep) return '';
+      const clean = cep.replace(/\D/g, '');
+      if (clean.length === 8) {
+        return `${clean.slice(0, 5)}-${clean.slice(5)}`;
+      }
+      return cep;
+    };
+
+    return (
+      <>
+        {enderecoLinha && (
+          <div className="print-field">
+            <span className="print-label">Endereço:</span>
+            <span className="print-value" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{enderecoLinha}</span>
+          </div>
+        )}
+        {end.cidadeUF && end.cidadeUF !== '/' && (
+          <div className="print-field">
+            <span className="print-label">Cidade/UF:</span>
+            <span className="print-value">{end.cidadeUF}</span>
+          </div>
+        )}
+        {end.cep && (
+          <div className="print-field">
+            <span className="print-label">CEP:</span>
+            <span className="print-value">{formatCep(end.cep)}</span>
+          </div>
+        )}
+      </>
+    );
+  };
 
   const cleanObservacoes = (obs: string) => {
     if (!obs) return null;
@@ -128,11 +220,10 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
 
       <div className="print-divider-premium" />
 
-      {/* Client */}
       <div className="print-section">
         <h2 className="print-section-title">Dados do Cliente</h2>
-        <div className="print-client-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px' }}>
-          {/* Coluna 1 */}
+        <div className="print-client-grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.4fr', gap: '4px 16px' }}>
+          {/* Coluna 1: Documentos */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div className="print-field">
               <span className="print-label">Razão Social:</span>
@@ -158,7 +249,7 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
             )}
           </div>
 
-          {/* Coluna 2 */}
+          {/* Coluna 2: Contato */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {(orcamento.cliente_contato_responsavel || clienteData?.contato_responsavel) && (
               <div className="print-field">
@@ -174,37 +265,22 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
               <span className="print-label">E-mail:</span>
               <span className="print-value">{orcamento.cliente_email || clienteData?.email || orcamento.email}</span>
             </div>
-            
-            {enderecoCliente && (
-              <div className="print-field print-field-full">
-                <span className="print-label">Endereço:</span>
-                <span className="print-value" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                  {enderecoCliente}
-                </span>
-              </div>
-            )}
-            {!enderecoCliente && (
-              <div className="print-field">
-                <span className="print-label">Cidade/UF:</span>
-                <span className="print-value">
-                  {orcamento.cidade || (orcamento.cliente_cidade ? `${orcamento.cliente_cidade}/${orcamento.cliente_uf}` : clienteData?.cidade ? `${clienteData.cidade}/${clienteData.estado}` : '')}
-                </span>
-              </div>
-            )}
+          </div>
+          
+          {/* Coluna 3: Endereço */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {endCliente && <RenderAddressFields end={endCliente} />}
           </div>
         </div>
       </div>
 
       {/* Delivery */}
-      {enderecoEntrega && (
+      {endEntrega && Object.keys(endEntrega).length > 0 && (
         <div className="print-section">
           <h2 className="print-section-title">Dados de Entrega</h2>
-          <div className="print-client-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '4px' }}>
-            <div className="print-field print-field-full">
-              <span className="print-label">Endereço de Entrega:</span>
-              <span className="print-value" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                {enderecoEntrega}
-              </span>
+          <div className="print-client-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <RenderAddressFields end={endEntrega} />
             </div>
           </div>
         </div>
@@ -297,8 +373,9 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
       {/* Conditions */}
       <div className="print-section">
         <h2 className="print-section-title">Condições Comerciais</h2>
-        <div className="print-conditions-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div className="print-conditions-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 16px' }}>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <div className="print-field">
               <span className="print-label">Prazo de Entrega:</span>
               <span className="print-value">{orcamento.prazo_entrega}</span>
@@ -308,26 +385,20 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
               <span className="print-value">{orcamento.tipo_frete || 'A combinar'}</span>
             </div>
             {orcamento.observacao_frete && (
-              <div className="print-field print-field-full">
+              <div className="print-field">
                 <span className="print-label">Observação sobre Frete:</span>
                 <span className="print-value">{orcamento.observacao_frete}</span>
               </div>
             )}
-            <div className="print-field print-field-full">
+            <div className="print-field">
               <span className="print-label">Forma de Pagamento:</span>
               <span className="print-value">
                 {orcamento.pagamento === 'Personalizado' ? orcamento.forma_pagamento_personalizada : orcamento.pagamento}
               </span>
             </div>
-            {orcamento.condicoes_pagamento && (
-              <div className="print-field print-field-full">
-                <span className="print-label">Condições de Pagamento:</span>
-                <span className="print-value print-value-observacoes">{orcamento.condicoes_pagamento}</span>
-              </div>
-            )}
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <div className="print-field">
               <span className="print-label">Validade da Proposta:</span>
               <span className="print-value">{orcamento.validade}</span>
@@ -340,19 +411,32 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
                   : fmt(orcamento.frete)}
               </span>
             </div>
-            {orcamento.informacoes_complementares && (
-              <div className="print-field print-field-full">
-                <span className="print-label">Informações Complementares:</span>
-                <span className="print-value print-value-observacoes">{orcamento.informacoes_complementares}</span>
+            {orcamento.desconto > 0 && (
+              <div className="print-field">
+                <span className="print-label">Desconto:</span>
+                <span className="print-value">{fmt(orcamento.desconto)}</span>
               </div>
             )}
-            {obsFiltrada && (
-              <div className="print-field print-field-full">
-                <span className="print-label">Observações:</span>
-                <span className="print-value print-value-observacoes">{obsFiltrada}</span>
+            {orcamento.condicoes_pagamento && (
+              <div className="print-field">
+                <span className="print-label">Condições de Pagamento:</span>
+                <span className="print-value print-value-observacoes">{orcamento.condicoes_pagamento}</span>
               </div>
             )}
           </div>
+
+          {orcamento.informacoes_complementares && (
+            <div className="print-field print-field-full" style={{ gridColumn: 'span 2', marginTop: '2px' }}>
+              <span className="print-label">Informações Complementares:</span>
+              <span className="print-value print-value-observacoes">{orcamento.informacoes_complementares}</span>
+            </div>
+          )}
+          {obsFiltrada && (
+            <div className="print-field print-field-full" style={{ gridColumn: 'span 2', marginTop: '2px' }}>
+              <span className="print-label">Observações:</span>
+              <span className="print-value print-value-observacoes">{obsFiltrada}</span>
+            </div>
+          )}
         </div>
       </div>
 

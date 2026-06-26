@@ -298,7 +298,7 @@
     margin: 4px 0;
   }/* Section */
   .print-section {
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     page-break-inside: avoid;
   }
 
@@ -308,7 +308,7 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: #1e40af;
-    margin: 0 0 4px 0;
+    margin: 0 0 3px 0;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -318,11 +318,11 @@
   .print-client-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 4px 16px;
+    gap: 2px 16px;
     background: #f8fafc;
     border: 1px solid #dbeafe;
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: 6px 10px;
     box-shadow: 0 1px 3px rgba(30, 58, 138, 0.06);
   }
 
