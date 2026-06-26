@@ -379,28 +379,17 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
         <div className="print-conditions-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 16px' }}>
           
           {(() => {
-            const clienteName = orcamento.cliente_razao_social || orcamento.cliente_nome || clienteData?.razao_social || clienteData?.nome || orcamento.cliente || '';
-            const isInstitucional = /senac|senai|escola|faculdade|universidade|instituto|colegio|colégio|prefeitura/i.test(clienteName);
-            
-            const clearSenac = (text: string | null | undefined) => {
-              if (!text) return '';
-              if (/(senac|senai)/i.test(clienteName)) return text; 
-              return text.replace(/do (SENAC|SENAI)/gi, 'da instituição').replace(/(SENAC|SENAI)/gi, 'instituição');
-            };
-
             const getPagamento = () => {
               let pag = orcamento.pagamento === 'Personalizado' ? orcamento.forma_pagamento_personalizada : orcamento.pagamento;
-              pag = clearSenac(pag);
+              if (pag === 'conforme processo de pagamento do SENAC') pag = ''; // Limpa velho default
               if (!pag || pag.trim() === '' || pag.toLowerCase() === 'a combinar') {
-                return isInstitucional 
-                  ? "Depósito bancário para 20/30 dias, conforme processo de pagamento da instituição."
-                  : "Forma de pagamento conforme combinado com o cliente.";
+                return "Conforme combinado com o cliente.";
               }
               return pag;
             };
 
             const getPrazoEntrega = () => {
-              let prazo = clearSenac(orcamento.prazo_entrega);
+              let prazo = orcamento.prazo_entrega;
               if (!prazo || prazo.trim() === '' || prazo.toLowerCase() === 'a combinar') {
                 return "Até 15 dias úteis após confirmação do pedido.";
               }
@@ -408,7 +397,7 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
             };
 
             const getObsFrete = () => {
-              let obs = clearSenac(orcamento.observacao_frete);
+              let obs = orcamento.observacao_frete;
               if (!obs || obs.trim() === '') {
                 return "Frete ou entrega conforme localidade informada e condição acordada no orçamento.";
               }
@@ -416,16 +405,16 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
             };
 
             const getValidade = () => {
-              let val = clearSenac(orcamento.validade);
+              let val = orcamento.validade;
               if (!val || val.trim() === '') val = "15 dias";
               // Impede duplicar a frase se já estiver salva
               if (val.includes('Valores válidos para as condições')) return val;
               return `${val}. Valores válidos para as condições descritas neste orçamento.`;
             };
 
-            const condicoesPag = clearSenac(orcamento.condicoes_pagamento);
-            const infoComp = clearSenac(orcamento.informacoes_complementares);
-            const finalObs = clearSenac(obsFiltrada) || "Orçamento sujeito à confirmação de disponibilidade e condições comerciais no momento da aprovação.";
+            const condicoesPag = orcamento.condicoes_pagamento;
+            const infoComp = orcamento.informacoes_complementares;
+            const finalObs = obsFiltrada || "Orçamento sujeito à confirmação de disponibilidade e condições comerciais no momento da aprovação.";
 
             return (
               <>
