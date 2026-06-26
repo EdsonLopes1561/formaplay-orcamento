@@ -378,68 +378,122 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
         <h2 className="print-section-title">Condições Comerciais</h2>
         <div className="print-conditions-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 16px' }}>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <div className="print-field">
-              <span className="print-label">Prazo de Entrega:</span>
-              <span className="print-value">{orcamento.prazo_entrega}</span>
-            </div>
-            <div className="print-field">
-              <span className="print-label">Tipo de Frete:</span>
-              <span className="print-value">{orcamento.tipo_frete || 'A combinar'}</span>
-            </div>
-            {orcamento.observacao_frete && (
-              <div className="print-field">
-                <span className="print-label">Observação sobre Frete:</span>
-                <span className="print-value">{orcamento.observacao_frete}</span>
-              </div>
-            )}
-            <div className="print-field">
-              <span className="print-label">Forma de Pagamento:</span>
-              <span className="print-value">
-                {orcamento.pagamento === 'Personalizado' ? orcamento.forma_pagamento_personalizada : orcamento.pagamento}
-              </span>
-            </div>
-          </div>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <div className="print-field">
-              <span className="print-label">Validade da Proposta:</span>
-              <span className="print-value">{orcamento.validade}</span>
-            </div>
-            <div className="print-field">
-              <span className="print-label">Frete:</span>
-              <span className="print-value">
-                {orcamento.frete_incluso 
-                  ? 'Contemplado no valor total, sem cobrança em separado' 
-                  : fmt(orcamento.frete)}
-              </span>
-            </div>
-            {orcamento.desconto > 0 && (
-              <div className="print-field">
-                <span className="print-label">Desconto:</span>
-                <span className="print-value">{fmt(orcamento.desconto)}</span>
-              </div>
-            )}
-            {orcamento.condicoes_pagamento && (
-              <div className="print-field">
-                <span className="print-label">Condições de Pagamento:</span>
-                <span className="print-value print-value-observacoes">{orcamento.condicoes_pagamento}</span>
-              </div>
-            )}
-          </div>
+          {(() => {
+            const clienteName = orcamento.cliente_razao_social || orcamento.cliente_nome || clienteData?.razao_social || clienteData?.nome || orcamento.cliente || '';
+            const isInstitucional = /senac|senai|escola|faculdade|universidade|instituto|colegio|colégio|prefeitura/i.test(clienteName);
+            
+            const clearSenac = (text: string | null | undefined) => {
+              if (!text) return '';
+              if (/(senac|senai)/i.test(clienteName)) return text; 
+              return text.replace(/do (SENAC|SENAI)/gi, 'da instituição').replace(/(SENAC|SENAI)/gi, 'instituição');
+            };
 
-          {orcamento.informacoes_complementares && (
-            <div className="print-field print-field-full" style={{ gridColumn: 'span 2', marginTop: '2px' }}>
-              <span className="print-label">Informações Complementares:</span>
-              <span className="print-value print-value-observacoes">{orcamento.informacoes_complementares}</span>
-            </div>
-          )}
-          {obsFiltrada && (
-            <div className="print-field print-field-full" style={{ gridColumn: 'span 2', marginTop: '2px' }}>
-              <span className="print-label">Observações:</span>
-              <span className="print-value print-value-observacoes">{obsFiltrada}</span>
-            </div>
-          )}
+            const getPagamento = () => {
+              let pag = orcamento.pagamento === 'Personalizado' ? orcamento.forma_pagamento_personalizada : orcamento.pagamento;
+              pag = clearSenac(pag);
+              if (!pag || pag.trim() === '' || pag.toLowerCase() === 'a combinar') {
+                return isInstitucional 
+                  ? "Depósito bancário para 20/30 dias, conforme processo de pagamento da instituição."
+                  : "Forma de pagamento conforme combinado com o cliente.";
+              }
+              return pag;
+            };
+
+            const getPrazoEntrega = () => {
+              let prazo = clearSenac(orcamento.prazo_entrega);
+              if (!prazo || prazo.trim() === '' || prazo.toLowerCase() === 'a combinar') {
+                return "Até 15 dias úteis após confirmação do pedido.";
+              }
+              return prazo;
+            };
+
+            const getObsFrete = () => {
+              let obs = clearSenac(orcamento.observacao_frete);
+              if (!obs || obs.trim() === '') {
+                return "Frete ou entrega conforme localidade informada e condição acordada no orçamento.";
+              }
+              return obs;
+            };
+
+            const getValidade = () => {
+              let val = clearSenac(orcamento.validade);
+              if (!val || val.trim() === '') val = "15 dias";
+              // Impede duplicar a frase se já estiver salva
+              if (val.includes('Valores válidos para as condições')) return val;
+              return `${val}. Valores válidos para as condições descritas neste orçamento.`;
+            };
+
+            const condicoesPag = clearSenac(orcamento.condicoes_pagamento);
+            const infoComp = clearSenac(orcamento.informacoes_complementares);
+            const finalObs = clearSenac(obsFiltrada) || "Orçamento sujeito à confirmação de disponibilidade e condições comerciais no momento da aprovação.";
+
+            return (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div className="print-field">
+                    <span className="print-label">Prazo de Entrega:</span>
+                    <span className="print-value">{getPrazoEntrega()}</span>
+                  </div>
+                  <div className="print-field">
+                    <span className="print-label">Tipo de Frete:</span>
+                    <span className="print-value">{orcamento.tipo_frete || 'A combinar'}</span>
+                  </div>
+                  <div className="print-field">
+                    <span className="print-label">Observação sobre Frete:</span>
+                    <span className="print-value">{getObsFrete()}</span>
+                  </div>
+                  <div className="print-field">
+                    <span className="print-label">Forma de Pagamento:</span>
+                    <span className="print-value">{getPagamento()}</span>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div className="print-field">
+                    <span className="print-label">Validade da Proposta:</span>
+                    <span className="print-value">{getValidade()}</span>
+                  </div>
+                  <div className="print-field">
+                    <span className="print-label">Frete:</span>
+                    <span className="print-value">
+                      {orcamento.frete_incluso 
+                        ? 'Contemplado no valor total, sem cobrança em separado' 
+                        : fmt(orcamento.frete)}
+                    </span>
+                  </div>
+                  {orcamento.desconto > 0 && (
+                    <div className="print-field">
+                      <span className="print-label">Desconto:</span>
+                      <span className="print-value">{fmt(orcamento.desconto)}</span>
+                    </div>
+                  )}
+                  <div className="print-field">
+                    <span className="print-label">Nota Fiscal:</span>
+                    <span className="print-value">Sim, emitida pela FormaPlay Jogos Educacionais.</span>
+                  </div>
+                  {condicoesPag && (
+                    <div className="print-field">
+                      <span className="print-label">Condições de Pagamento:</span>
+                      <span className="print-value print-value-observacoes">{condicoesPag}</span>
+                    </div>
+                  )}
+                </div>
+
+                {infoComp && (
+                  <div className="print-field print-field-full" style={{ gridColumn: 'span 2', marginTop: '2px' }}>
+                    <span className="print-label">Informações Complementares:</span>
+                    <span className="print-value print-value-observacoes">{infoComp}</span>
+                  </div>
+                )}
+                {finalObs && (
+                  <div className="print-field print-field-full" style={{ gridColumn: 'span 2', marginTop: '2px' }}>
+                    <span className="print-label">Observações:</span>
+                    <span className="print-value print-value-observacoes">{finalObs}</span>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       </div>
 
