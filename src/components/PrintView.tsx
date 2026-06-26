@@ -46,7 +46,7 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
 
   function extrairEnderecoDasObservacoes(texto?: string): string {
     if (!texto) return '';
-    const match = texto.match(/Endereço de entrega:\s*(.*?)(?:\n|Forma de pagamento pretendida:|Embrulho para presente:|Observações do cliente:|$)/i);
+    const match = texto.match(/Endereço de entrega:\s*(.*?)(?=\n|Forma de pagamento pretendida:|Embrulho para presente:|Observações do cliente:|$)/i);
     return match ? match[1].trim().replace(/\.$/, '') : '';
   }
 
@@ -67,16 +67,17 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
   const cleanObservacoes = (obs: string) => {
     if (!obs) return null;
     let clean = obs;
-    const match = obs.match(/Observações do cliente:\s*(.*)/is);
-    if (match) {
-      clean = match[1].trim();
-    } else {
-      clean = clean.replace(/Origem: Solicitação pública.*?\n/g, '');
-      clean = clean.replace(/Forma de pagamento pretendida:.*?\n/g, '');
-      clean = clean.replace(/Embrulho para presente:.*?\n/g, '');
-      clean = clean.replace(/Endereço de entrega:.*?(?=\n|$)/g, '');
-    }
-    return (!clean.trim() || clean.trim() === 'Nenhuma') ? null : clean.trim();
+    // Tira os blocos sistêmicos indesejados
+    clean = clean.replace(/Origem: Solicitação pública.*?(?=\n|$)/ig, '');
+    clean = clean.replace(/Forma de pagamento pretendida:.*?(?=\n|$)/ig, '');
+    clean = clean.replace(/Embrulho para presente:.*?(?=\n|$)/ig, '');
+    clean = clean.replace(/Endereço de entrega:.*?(?=\n|$)/ig, '');
+    clean = clean.replace(/Observações do cliente:\s*/ig, '');
+    
+    // Limpa quebras de linha múltiplas ou espaços finais
+    clean = clean.replace(/\n{2,}/g, '\n').trim();
+    
+    return (!clean || clean === 'Nenhuma' || clean === 'Nenhuma.') ? null : clean;
   };
 
   const obsFiltrada = cleanObservacoes(orcamento.observacoes);
