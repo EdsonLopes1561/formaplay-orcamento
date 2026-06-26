@@ -765,10 +765,14 @@ function App() {
                         <option>À vista — Transferência</option>
                         <option>À vista — Dinheiro</option>
                         <option>Boleto bancário</option>
+                        <option>Boleto bancário — 20/30 dias</option>
+                        <option>Depósito bancário — 20/30 dias</option>
                         <option>Cartão de crédito — 1x</option>
                         <option>Cartão de crédito — 2x sem juros</option>
                         <option>Cartão de crédito — 3x sem juros</option>
                         <option>50% entrada + 50% na entrega</option>
+                        <option>Conforme processo de pagamento da instituição</option>
+                        <option>A combinar</option>
                         <option>Personalizado</option>
                       </select>
                       <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -780,7 +784,7 @@ function App() {
                       <label className="form-label">Forma de Pagamento (Personalizada)</label>
                       <textarea name="forma_pagamento_personalizada" value={form.forma_pagamento_personalizada || ''} onChange={handleChange}
                         rows={2} className="form-input resize-none"
-                        placeholder="Descreva a forma de pagamento que aparecerá no PDF..." />
+                        placeholder="Digite exatamente a forma de pagamento que deverá aparecer no PDF..." />
                     </div>
                   )}
 
