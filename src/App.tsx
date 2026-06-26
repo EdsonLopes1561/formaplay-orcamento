@@ -149,7 +149,6 @@ function App() {
     const numeroAtual = form.numero || await calcularNumeroOrcamento();
     
     let obs = `Origem: Solicitação pública ${s.codigo}.\n`;
-    obs += `Endereço de entrega: ${s.endereco || ''}, nº ${s.numero || ''}, ${s.complemento ? s.complemento + ', ' : ''}${s.bairro || ''}, ${s.cidade || ''}/${s.estado || ''} - CEP ${s.cep || ''}.\n`;
     obs += `Forma de pagamento pretendida: ${s.forma_pagamento}.\n`;
     obs += `Embrulho para presente: ${s.embrulho_presente ? 'SIM' : 'NÃO'}.\n`;
     obs += `Observações do cliente: ${s.observacoes_cliente || 'Nenhuma'}.`;
@@ -168,6 +167,13 @@ function App() {
       frete: s.frete_estimado,
       pagamento: s.forma_pagamento,
       observacoes: obs,
+      cliente_logradouro: s.endereco || '',
+      cliente_numero: s.numero || '',
+      cliente_complemento: s.complemento || '',
+      cliente_bairro: s.bairro || '',
+      cliente_cidade: s.cidade || '',
+      cliente_uf: s.estado || '',
+      cliente_cep: s.cep || '',
     };
     
     if (s.forma_pagamento === 'Pix com desconto') {

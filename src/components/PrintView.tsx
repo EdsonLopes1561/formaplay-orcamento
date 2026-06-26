@@ -137,17 +137,31 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
               <span className="print-value">{orcamento.cliente_email || clienteData?.email || orcamento.email}</span>
             </div>
             <div className="print-field">
-              <span className="print-label">Endereço:</span>
+              <span className="print-label">Cidade/UF:</span>
               <span className="print-value">
-                {orcamento.cliente_logradouro 
-                  ? `${orcamento.cliente_logradouro}, ${orcamento.cliente_numero || 'S/N'}${orcamento.cliente_complemento ? `, ${orcamento.cliente_complemento}` : ''}, ${orcamento.cliente_bairro || ''}, ${orcamento.cliente_cidade || ''}/${orcamento.cliente_uf || ''}, CEP: ${orcamento.cliente_cep || ''}` 
-                  : orcamento.cliente_endereco_completo 
-                    ? orcamento.cliente_endereco_completo 
-                    : clienteData?.endereco 
-                      ? `${clienteData.endereco}, ${clienteData.numero || 'S/N'}${clienteData.complemento ? `, ${clienteData.complemento}` : ''}, ${clienteData.bairro || ''}, ${clienteData.cidade || ''}/${clienteData.estado || ''}, CEP: ${clienteData.cep || ''}` 
-                      : orcamento.cidade}
+                {orcamento.cidade || (orcamento.cliente_cidade ? `${orcamento.cliente_cidade}/${orcamento.cliente_uf}` : clienteData?.cidade ? `${clienteData.cidade}/${clienteData.estado}` : '')}
               </span>
             </div>
+            {(() => {
+              const enderecoEntrega = orcamento.cliente_logradouro 
+                ? `${orcamento.cliente_logradouro}, ${orcamento.cliente_numero || 'S/N'}${orcamento.cliente_complemento ? `, ${orcamento.cliente_complemento}` : ''}, ${orcamento.cliente_bairro || ''}, ${orcamento.cliente_cidade || ''}/${orcamento.cliente_uf || ''} - CEP ${orcamento.cliente_cep || ''}` 
+                : orcamento.cliente_endereco_completo 
+                  ? orcamento.cliente_endereco_completo 
+                  : clienteData?.endereco 
+                    ? `${clienteData.endereco}, ${clienteData.numero || 'S/N'}${clienteData.complemento ? `, ${clienteData.complemento}` : ''}, ${clienteData.bairro || ''}, ${clienteData.cidade || ''}/${clienteData.estado || ''} - CEP ${clienteData.cep || ''}` 
+                    : null;
+              
+              if (!enderecoEntrega) return null;
+              
+              return (
+                <div className="print-field print-field-full">
+                  <span className="print-label">Endereço de Entrega:</span>
+                  <span className="print-value" style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                    {enderecoEntrega}
+                  </span>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>
