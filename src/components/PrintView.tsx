@@ -43,6 +43,43 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
   const produtoImagem = getProdutoImagem(orcamento.produto);
   const diferenciais = getProdutoDiferenciais(orcamento.produto);
   const conteudo = getProdutoConteudo(orcamento.produto);
+
+  function extrairEnderecoDasObservacoes(texto?: string): string {
+    if (!texto) return '';
+    const match = texto.match(/Endereço de entrega:\s*(.*?)(?:\n|Forma de pagamento pretendida:|Embrulho para presente:|Observações do cliente:|$)/i);
+    return match ? match[1].trim().replace(/\.$/, '') : '';
+  }
+
+  const enderecoEntrega = 
+    (orcamento as any).enderecoEntrega ||
+    (orcamento as any).endereco_entrega ||
+    orcamento.cliente_endereco_completo ||
+    extrairEnderecoDasObservacoes(orcamento.observacoes);
+
+  const enderecoCliente = 
+    (orcamento.cliente_logradouro 
+      ? `${orcamento.cliente_logradouro}, ${orcamento.cliente_numero || 'S/N'}${orcamento.cliente_complemento ? `, ${orcamento.cliente_complemento}` : ''}, ${orcamento.cliente_bairro || ''}, ${orcamento.cliente_cidade || ''}/${orcamento.cliente_uf || ''} - CEP ${orcamento.cliente_cep || ''}` 
+      : null) ||
+    (clienteData?.endereco 
+      ? `${clienteData.endereco}, ${clienteData.numero || 'S/N'}${clienteData.complemento ? `, ${clienteData.complemento}` : ''}, ${clienteData.bairro || ''}, ${clienteData.cidade || ''}/${clienteData.estado || ''} - CEP ${clienteData.cep || ''}` 
+      : null);
+
+  const cleanObservacoes = (obs: string) => {
+    if (!obs) return null;
+    let clean = obs;
+    const match = obs.match(/Observações do cliente:\s*(.*)/is);
+    if (match) {
+      clean = match[1].trim();
+    } else {
+      clean = clean.replace(/Origem: Solicitação pública.*?\n/g, '');
+      clean = clean.replace(/Forma de pagamento pretendida:.*?\n/g, '');
+      clean = clean.replace(/Embrulho para presente:.*?\n/g, '');
+      clean = clean.replace(/Endereço de entrega:.*?(?=\n|$)/g, '');
+    }
+    return (!clean.trim() || clean.trim() === 'Nenhuma') ? null : clean.trim();
+  };
+
+  const obsFiltrada = cleanObservacoes(orcamento.observacoes);
   return (
     <div id="print-area" className="print-area">
       {/* Watermark */}
@@ -136,51 +173,41 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
               <span className="print-label">E-mail:</span>
               <span className="print-value">{orcamento.cliente_email || clienteData?.email || orcamento.email}</span>
             </div>
-            <div className="print-field">
-              <span className="print-label">Cidade/UF:</span>
-              <span className="print-value">
-                {orcamento.cidade || (orcamento.cliente_cidade ? `${orcamento.cliente_cidade}/${orcamento.cliente_uf}` : clienteData?.cidade ? `${clienteData.cidade}/${clienteData.estado}` : '')}
-              </span>
-            </div>
-            {(() => {
-              function extrairEnderecoDasObservacoes(texto?: string): string {
-                if (!texto) return '';
-                const match = texto.match(/Endereço de entrega:\s*(.*?)(?:\n|Forma de pagamento pretendida:|Embrulho para presente:|Observações do cliente:|$)/i);
-                return match ? match[1].trim().replace(/\.$/, '') : '';
-              }
-
-              const enderecoEntrega = 
-                (orcamento as any).enderecoEntrega ||
-                (orcamento as any).endereco_entrega ||
-                (orcamento as any).enderecoCompleto ||
-                (orcamento as any).endereco_completo ||
-                orcamento.cliente_endereco_completo ||
-                (clienteData as any)?.enderecoEntrega ||
-                (clienteData as any)?.endereco_entrega ||
-                (clienteData as any)?.enderecoCompleto ||
-                (clienteData as any)?.endereco_completo ||
-                (orcamento.cliente_logradouro 
-                  ? `${orcamento.cliente_logradouro}, ${orcamento.cliente_numero || 'S/N'}${orcamento.cliente_complemento ? `, ${orcamento.cliente_complemento}` : ''}, ${orcamento.cliente_bairro || ''}, ${orcamento.cliente_cidade || ''}/${orcamento.cliente_uf || ''} - CEP ${orcamento.cliente_cep || ''}` 
-                  : null) ||
-                (clienteData?.endereco 
-                  ? `${clienteData.endereco}, ${clienteData.numero || 'S/N'}${clienteData.complemento ? `, ${clienteData.complemento}` : ''}, ${clienteData.bairro || ''}, ${clienteData.cidade || ''}/${clienteData.estado || ''} - CEP ${clienteData.cep || ''}` 
-                  : null) ||
-                extrairEnderecoDasObservacoes(orcamento.observacoes);
-              
-              if (!enderecoEntrega) return null;
-              
-              return (
-                <div className="print-field print-field-full">
-                  <span className="print-label">ENDEREÇO DE ENTREGA:</span>
-                  <span className="print-value" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                    {enderecoEntrega}
-                  </span>
-                </div>
-              );
-            })()}
+            
+            {enderecoCliente && (
+              <div className="print-field print-field-full">
+                <span className="print-label">Endereço:</span>
+                <span className="print-value" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  {enderecoCliente}
+                </span>
+              </div>
+            )}
+            {!enderecoCliente && (
+              <div className="print-field">
+                <span className="print-label">Cidade/UF:</span>
+                <span className="print-value">
+                  {orcamento.cidade || (orcamento.cliente_cidade ? `${orcamento.cliente_cidade}/${orcamento.cliente_uf}` : clienteData?.cidade ? `${clienteData.cidade}/${clienteData.estado}` : '')}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Delivery */}
+      {enderecoEntrega && (
+        <div className="print-section">
+          <h2 className="print-section-title">Dados de Entrega</h2>
+          <div className="print-client-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '4px' }}>
+            <div className="print-field print-field-full">
+              <span className="print-label">Endereço de Entrega:</span>
+              <span className="print-value" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                {enderecoEntrega}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Products */}
       <div className="print-section">
@@ -318,10 +345,10 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
                 <span className="print-value print-value-observacoes">{orcamento.informacoes_complementares}</span>
               </div>
             )}
-            {orcamento.observacoes && (
+            {obsFiltrada && (
               <div className="print-field print-field-full">
                 <span className="print-label">Observações:</span>
-                <span className="print-value print-value-observacoes">{orcamento.observacoes}</span>
+                <span className="print-value print-value-observacoes">{obsFiltrada}</span>
               </div>
             )}
           </div>

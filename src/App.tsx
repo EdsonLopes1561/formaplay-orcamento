@@ -148,10 +148,10 @@ function App() {
     const unitPrice = PRODUTOS.find((p) => p.nome === s.jogo_escolhido)?.preco || 0;
     const numeroAtual = form.numero || await calcularNumeroOrcamento();
     
-    let obs = `Origem: Solicitação pública ${s.codigo}.\n`;
-    obs += `Forma de pagamento pretendida: ${s.forma_pagamento}.\n`;
-    obs += `Embrulho para presente: ${s.embrulho_presente ? 'SIM' : 'NÃO'}.\n`;
-    obs += `Observações do cliente: ${s.observacoes_cliente || 'Nenhuma'}.`;
+    let infoComple = `Origem: Solicitação pública ${s.codigo}`;
+    if (s.embrulho_presente) {
+      infoComple += `\nEmbrulho para presente: SIM`;
+    }
 
     const enderecoCompleto = s.endereco 
       ? `${s.endereco}, ${s.numero || 'S/N'}${s.complemento ? `, ${s.complemento}` : ''}, ${s.bairro || ''}, ${s.cidade || ''}/${s.estado || ''} - CEP ${s.cep || ''}`
@@ -170,7 +170,8 @@ function App() {
       valor_unitario: unitPrice,
       frete: s.frete_estimado,
       pagamento: s.forma_pagamento,
-      observacoes: obs,
+      observacoes: s.observacoes_cliente && s.observacoes_cliente !== 'Nenhuma' ? s.observacoes_cliente : '',
+      informacoes_complementares: infoComple,
       cliente_logradouro: s.endereco || '',
       cliente_numero: s.numero || '',
       cliente_complemento: s.complemento || '',
