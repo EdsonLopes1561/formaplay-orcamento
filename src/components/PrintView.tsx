@@ -143,20 +143,36 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
               </span>
             </div>
             {(() => {
-              const enderecoEntrega = orcamento.cliente_logradouro 
-                ? `${orcamento.cliente_logradouro}, ${orcamento.cliente_numero || 'S/N'}${orcamento.cliente_complemento ? `, ${orcamento.cliente_complemento}` : ''}, ${orcamento.cliente_bairro || ''}, ${orcamento.cliente_cidade || ''}/${orcamento.cliente_uf || ''} - CEP ${orcamento.cliente_cep || ''}` 
-                : orcamento.cliente_endereco_completo 
-                  ? orcamento.cliente_endereco_completo 
-                  : clienteData?.endereco 
-                    ? `${clienteData.endereco}, ${clienteData.numero || 'S/N'}${clienteData.complemento ? `, ${clienteData.complemento}` : ''}, ${clienteData.bairro || ''}, ${clienteData.cidade || ''}/${clienteData.estado || ''} - CEP ${clienteData.cep || ''}` 
-                    : null;
+              function extrairEnderecoDasObservacoes(texto?: string): string {
+                if (!texto) return '';
+                const match = texto.match(/Endereço de entrega:\s*(.*?)(?:\n|Forma de pagamento pretendida:|Embrulho para presente:|Observações do cliente:|$)/i);
+                return match ? match[1].trim().replace(/\.$/, '') : '';
+              }
+
+              const enderecoEntrega = 
+                (orcamento as any).enderecoEntrega ||
+                (orcamento as any).endereco_entrega ||
+                (orcamento as any).enderecoCompleto ||
+                (orcamento as any).endereco_completo ||
+                orcamento.cliente_endereco_completo ||
+                (clienteData as any)?.enderecoEntrega ||
+                (clienteData as any)?.endereco_entrega ||
+                (clienteData as any)?.enderecoCompleto ||
+                (clienteData as any)?.endereco_completo ||
+                (orcamento.cliente_logradouro 
+                  ? `${orcamento.cliente_logradouro}, ${orcamento.cliente_numero || 'S/N'}${orcamento.cliente_complemento ? `, ${orcamento.cliente_complemento}` : ''}, ${orcamento.cliente_bairro || ''}, ${orcamento.cliente_cidade || ''}/${orcamento.cliente_uf || ''} - CEP ${orcamento.cliente_cep || ''}` 
+                  : null) ||
+                (clienteData?.endereco 
+                  ? `${clienteData.endereco}, ${clienteData.numero || 'S/N'}${clienteData.complemento ? `, ${clienteData.complemento}` : ''}, ${clienteData.bairro || ''}, ${clienteData.cidade || ''}/${clienteData.estado || ''} - CEP ${clienteData.cep || ''}` 
+                  : null) ||
+                extrairEnderecoDasObservacoes(orcamento.observacoes);
               
               if (!enderecoEntrega) return null;
               
               return (
                 <div className="print-field print-field-full">
-                  <span className="print-label">Endereço de Entrega:</span>
-                  <span className="print-value" style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                  <span className="print-label">ENDEREÇO DE ENTREGA:</span>
+                  <span className="print-value" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                     {enderecoEntrega}
                   </span>
                 </div>

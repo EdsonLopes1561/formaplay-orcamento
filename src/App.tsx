@@ -153,6 +153,10 @@ function App() {
     obs += `Embrulho para presente: ${s.embrulho_presente ? 'SIM' : 'NÃO'}.\n`;
     obs += `Observações do cliente: ${s.observacoes_cliente || 'Nenhuma'}.`;
 
+    const enderecoCompleto = s.endereco 
+      ? `${s.endereco}, ${s.numero || 'S/N'}${s.complemento ? `, ${s.complemento}` : ''}, ${s.bairro || ''}, ${s.cidade || ''}/${s.estado || ''} - CEP ${s.cep || ''}`
+      : '';
+
     const novo = {
       ...emptyOrcamento(),
       numero: numeroAtual,
@@ -174,6 +178,7 @@ function App() {
       cliente_cidade: s.cidade || '',
       cliente_uf: s.estado || '',
       cliente_cep: s.cep || '',
+      cliente_endereco_completo: enderecoCompleto,
     };
     
     if (s.forma_pagamento === 'Pix com desconto') {
