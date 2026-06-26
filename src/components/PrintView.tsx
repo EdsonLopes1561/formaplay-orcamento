@@ -118,7 +118,10 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
     let enderecoLinha = '';
     if (end.rua) {
       enderecoLinha += end.rua;
-      if (end.numero) enderecoLinha += `, nº ${end.numero}`;
+      if (end.numero) {
+        const numLimpo = end.numero.replace(/^(?:n[º°o]\.?|n[úu]mero)\s*/i, '').trim();
+        enderecoLinha += `, nº ${numLimpo}`;
+      }
       if (end.complemento) enderecoLinha += ` - ${end.complemento}`;
       if (end.bairro) enderecoLinha += ` - ${end.bairro}`;
     }
