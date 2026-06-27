@@ -336,12 +336,12 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
     
     return (
       <div className="mb-4">
-        <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1.5">
+        <div className="flex justify-between text-xs font-semibold text-slate-300 mb-1.5">
           <span className="truncate pr-2">{String(label)}</span>
-          <span className="whitespace-nowrap font-bold text-slate-900">{formatCurrency(safeValue)} {subValue && <span className="text-slate-400 font-medium ml-1">({subValue})</span>}</span>
+          <span className="whitespace-nowrap font-bold text-white">{formatCurrency(safeValue)} {subValue && <span className="text-slate-500 font-medium ml-1">({subValue})</span>}</span>
         </div>
-        <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 rounded-full shadow-inner" style={{ width: `${Math.min(percent, 100)}%` }}></div>
+        <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/50">
+          <div className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full rounded-full shadow-[0_0_10px_rgba(16,185,129,0.4)]" style={{ width: `${Math.min(percent, 100)}%` }}></div>
         </div>
       </div>
     );
@@ -350,22 +350,22 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
   const FunnelGraphic = ({ data }: { data: any }) => {
     const max = Math.max(Number(data?.solicitacoes) || 0, Number(data?.orcamentos) || 0, Number(data?.enviados) || 0, Number(data?.aprovados) || 0, 1);
     const steps = [
-      { label: 'Solicitações (Site)', value: Number(data?.solicitacoes) || 0, from: 'from-blue-400', to: 'to-blue-500' },
-      { label: 'Orçamentos Gerados', value: Number(data?.orcamentos) || 0, from: 'from-indigo-400', to: 'to-indigo-500' },
-      { label: 'Orçamentos Enviados', value: Number(data?.enviados) || 0, from: 'from-purple-400', to: 'to-purple-500' },
-      { label: 'Orçamentos Aprovados', value: Number(data?.aprovados) || 0, from: 'from-emerald-400', to: 'to-emerald-500' },
+      { label: 'Solicitações (Site)', value: Number(data?.solicitacoes) || 0, from: 'from-blue-600', to: 'to-blue-400', shadow: 'shadow-blue-500/20' },
+      { label: 'Orçamentos Gerados', value: Number(data?.orcamentos) || 0, from: 'from-indigo-600', to: 'to-indigo-400', shadow: 'shadow-indigo-500/20' },
+      { label: 'Orçamentos Enviados', value: Number(data?.enviados) || 0, from: 'from-purple-600', to: 'to-purple-400', shadow: 'shadow-purple-500/20' },
+      { label: 'Orçamentos Aprovados', value: Number(data?.aprovados) || 0, from: 'from-emerald-600', to: 'to-emerald-400', shadow: 'shadow-emerald-500/30' },
     ];
     
     return (
       <div className="flex flex-col gap-4 py-2">
         {steps.map((step, idx) => (
           <div key={idx} className="relative group">
-            <div className="flex justify-between text-xs mb-1.5 font-bold text-slate-600 uppercase tracking-wide">
+            <div className="flex justify-between text-xs mb-1.5 font-bold text-slate-400 uppercase tracking-wide">
               <span>{step.label}</span>
-              <span className="text-slate-800">{step.value}</span>
+              <span className="text-white">{step.value}</span>
             </div>
             <div className="w-full flex justify-center">
-              <div className={`bg-gradient-to-r ${step.from} ${step.to} h-8 rounded-lg shadow-sm transition-all duration-700 ease-out group-hover:brightness-110`} style={{ width: `${Math.max((step.value / max) * 100, 5)}%` }}></div>
+              <div className={`bg-gradient-to-r ${step.from} ${step.to} h-8 rounded-lg shadow-lg ${step.shadow} transition-all duration-700 ease-out group-hover:brightness-125 border border-white/5`} style={{ width: `${Math.max((step.value / max) * 100, 5)}%` }}></div>
             </div>
           </div>
         ))}
@@ -374,97 +374,97 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50 transition-opacity">
-      <div className="bg-[#f8fafc] rounded-3xl w-full max-w-[1400px] max-h-[95vh] flex flex-col shadow-2xl border border-white/40 overflow-hidden animate-fade-in">
+    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 transition-opacity">
+      <div className="bg-slate-900 rounded-3xl w-full max-w-[1400px] max-h-[95vh] flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-slate-700/50 overflow-hidden animate-fade-in text-slate-200">
         
-        {/* Cabeçalho Premium */}
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between p-6 bg-white border-b border-slate-200 shadow-sm relative z-10 gap-6">
+        {/* Cabeçalho Premium Dark */}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between p-6 bg-slate-900 border-b border-slate-800 shadow-sm relative z-10 gap-6">
           <div className="flex items-center gap-5">
-            <div className="p-3.5 bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-2xl shadow-lg shadow-slate-900/20">
+            <div className="p-3.5 bg-gradient-to-br from-emerald-600 to-emerald-400 text-slate-950 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)]">
               <Activity size={28} strokeWidth={2.5} />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-slate-800 tracking-tight">Torre de Controle <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400">FormaPlay</span></h2>
-              <p className="text-sm text-slate-500 font-medium mt-0.5">Visão analítica de orçamentos e inteligência comercial de alto impacto.</p>
+              <h2 className="text-3xl font-black text-white tracking-tight">Torre de Controle <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-200">FormaPlay</span></h2>
+              <p className="text-sm text-slate-400 font-medium mt-0.5">Inteligência comercial e monitoramento estratégico.</p>
             </div>
           </div>
           
           <div className="flex items-center gap-3">
             {!detalheVisivel && (
               <div className="flex flex-wrap gap-2 justify-end mr-2">
-                <div className="flex items-center bg-slate-50 hover:bg-slate-100 transition-colors rounded-xl p-1.5 border border-slate-200 shadow-sm">
-                  <Calendar size={16} className="text-indigo-500 ml-2" />
-                  <select value={periodo} onChange={(e) => setPeriodo(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-700 py-1 pl-2 pr-6 focus:ring-0 cursor-pointer">
-                    {['Todos', 'Hoje', 'Esta semana', 'Este mês', 'Este ano'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                <div className="flex items-center bg-slate-800/80 hover:bg-slate-800 transition-colors rounded-xl p-1.5 border border-slate-700 shadow-inner">
+                  <Calendar size={16} className="text-emerald-400 ml-2" />
+                  <select value={periodo} onChange={(e) => setPeriodo(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-200 py-1 pl-2 pr-6 focus:ring-0 cursor-pointer outline-none">
+                    {['Todos', 'Hoje', 'Esta semana', 'Este mês', 'Este ano'].map(opt => <option key={opt} value={opt} className="bg-slate-800">{opt}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center bg-slate-50 hover:bg-slate-100 transition-colors rounded-xl p-1.5 border border-slate-200 shadow-sm">
-                  <Filter size={14} className="text-slate-400 ml-2" />
-                  <select value={fStatus} onChange={(e) => setFStatus(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-700 py-1 pl-2 pr-6 focus:ring-0 cursor-pointer">
-                    <option value="Todos">Status (Todos)</option>
-                    {['Aberto', 'Enviado', 'Aprovado', 'Recusado', 'Cancelado'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                <div className="flex items-center bg-slate-800/80 hover:bg-slate-800 transition-colors rounded-xl p-1.5 border border-slate-700 shadow-inner">
+                  <Filter size={14} className="text-slate-500 ml-2" />
+                  <select value={fStatus} onChange={(e) => setFStatus(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-200 py-1 pl-2 pr-6 focus:ring-0 cursor-pointer outline-none">
+                    <option value="Todos" className="bg-slate-800">Status (Todos)</option>
+                    {['Aberto', 'Enviado', 'Aprovado', 'Recusado', 'Cancelado'].map(opt => <option key={opt} value={opt} className="bg-slate-800">{opt}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center bg-slate-50 hover:bg-slate-100 transition-colors rounded-xl p-1.5 border border-slate-200 shadow-sm hidden sm:flex">
-                  <select value={fPrioridade} onChange={(e) => setFPrioridade(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-700 py-1 px-3 focus:ring-0 cursor-pointer">
-                    <option value="Todas">Prioridade (Todas)</option>
-                    {['Baixa', 'Média', 'Alta'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                <div className="flex items-center bg-slate-800/80 hover:bg-slate-800 transition-colors rounded-xl p-1.5 border border-slate-700 shadow-inner hidden sm:flex">
+                  <select value={fPrioridade} onChange={(e) => setFPrioridade(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-200 py-1 px-3 focus:ring-0 cursor-pointer outline-none">
+                    <option value="Todas" className="bg-slate-800">Prioridade (Todas)</option>
+                    {['Baixa', 'Média', 'Alta'].map(opt => <option key={opt} value={opt} className="bg-slate-800">{opt}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center bg-slate-50 hover:bg-slate-100 transition-colors rounded-xl p-1.5 border border-slate-200 shadow-sm hidden md:flex">
-                  <select value={fProduto} onChange={(e) => setFProduto(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-700 py-1 px-3 focus:ring-0 cursor-pointer max-w-[140px]">
-                    <option value="Todos">Produto (Todos)</option>
-                    {uniqueProdutos.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                <div className="flex items-center bg-slate-800/80 hover:bg-slate-800 transition-colors rounded-xl p-1.5 border border-slate-700 shadow-inner hidden md:flex">
+                  <select value={fProduto} onChange={(e) => setFProduto(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-200 py-1 px-3 focus:ring-0 cursor-pointer max-w-[140px] outline-none">
+                    <option value="Todos" className="bg-slate-800">Produto (Todos)</option>
+                    {uniqueProdutos.map(opt => <option key={opt} value={opt} className="bg-slate-800">{opt}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center bg-slate-50 hover:bg-slate-100 transition-colors rounded-xl p-1.5 border border-slate-200 shadow-sm hidden lg:flex">
-                  <select value={fCidade} onChange={(e) => setFCidade(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-700 py-1 px-3 focus:ring-0 cursor-pointer max-w-[140px]">
-                    <option value="Todas">Região (Todas)</option>
-                    {uniqueCidades.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                <div className="flex items-center bg-slate-800/80 hover:bg-slate-800 transition-colors rounded-xl p-1.5 border border-slate-700 shadow-inner hidden lg:flex">
+                  <select value={fCidade} onChange={(e) => setFCidade(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-200 py-1 px-3 focus:ring-0 cursor-pointer max-w-[140px] outline-none">
+                    <option value="Todas" className="bg-slate-800">Região (Todas)</option>
+                    {uniqueCidades.map(opt => <option key={opt} value={opt} className="bg-slate-800">{opt}</option>)}
                   </select>
                 </div>
               </div>
             )}
 
-            <button onClick={onClose} className="p-2.5 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-600 transition-all shadow-sm">
+            <button onClick={onClose} className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 hover:text-white transition-all border border-slate-700 text-slate-400">
               <X size={22} strokeWidth={2.5} />
             </button>
           </div>
         </div>
 
         {loading ? (
-          <div className="flex-1 flex flex-col items-center justify-center min-h-[500px]">
-            <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-5"></div>
-            <p className="text-slate-500 font-bold text-sm tracking-wide uppercase">Carregando inteligência comercial...</p>
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[500px] bg-slate-950/50">
+            <div className="w-12 h-12 border-4 border-slate-800 border-t-emerald-500 rounded-full animate-spin mb-5 shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
+            <p className="text-slate-400 font-bold text-sm tracking-wide uppercase">Carregando painel...</p>
           </div>
         ) : error ? (
-          <div className="flex-1 flex flex-col items-center justify-center min-h-[500px] text-center p-8">
-            <AlertTriangle size={56} className="text-rose-500 mb-5" />
-            <h3 className="text-2xl font-black text-slate-800">Falha ao processar os dados.</h3>
-            <p className="text-slate-500 mt-2 font-medium">Não foi possível carregar as informações da Torre de Controle no momento.</p>
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[500px] text-center p-8 bg-slate-950/50">
+            <AlertTriangle size={56} className="text-rose-500 mb-5 drop-shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
+            <h3 className="text-2xl font-black text-white">Falha ao processar os dados.</h3>
+            <p className="text-slate-400 mt-2 font-medium">Não foi possível carregar as informações no momento.</p>
           </div>
         ) : detalheVisivel ? (
           
           /* VISÃO DETALHADA (DRILL-DOWN) */
-          <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50 flex flex-col animate-fade-in">
+          <div className="flex-1 overflow-y-auto p-8 bg-slate-950/50 flex flex-col animate-fade-in">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
-                <button onClick={() => setDetalheVisivel(null)} className="flex items-center justify-center p-2.5 bg-white border border-slate-200 shadow-sm rounded-xl hover:bg-slate-800 hover:text-white transition-all text-slate-600 group">
+                <button onClick={() => setDetalheVisivel(null)} className="flex items-center justify-center p-2.5 bg-slate-800 border border-slate-700 shadow-sm rounded-xl hover:bg-slate-700 hover:border-slate-500 hover:text-white transition-all text-slate-400 group">
                   <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                 </button>
                 <div>
-                  <h3 className="text-2xl font-black text-slate-800">{tituloDetalhe}</h3>
-                  <p className="text-sm font-medium text-slate-500 mt-0.5">{detalheVisivel.length} orçamentos encontrados nesta visão.</p>
+                  <h3 className="text-2xl font-black text-white">{tituloDetalhe}</h3>
+                  <p className="text-sm font-medium text-emerald-400 mt-0.5">{detalheVisivel.length} orçamentos listados</p>
                 </div>
               </div>
             </div>
 
             {detalheVisivel.length > 0 ? (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-1">
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex-1">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200">
+                      <tr className="bg-slate-950/80 border-b border-slate-800">
                         <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Orçamento</th>
                         <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Cliente</th>
                         <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
@@ -472,24 +472,24 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                         <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Ações</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-slate-800">
                       {detalheVisivel.map((orc, idx) => (
-                        <tr key={idx} className="border-b border-slate-100 hover:bg-indigo-50/30 transition-colors">
-                          <td className="py-4 px-6 text-sm font-black text-slate-700">#{orc?.numero_sequencial || orc?.id?.slice(0,6)}</td>
-                          <td className="py-4 px-6 text-sm font-bold text-slate-800">{orc?.cliente || 'Não informado'}</td>
+                        <tr key={idx} className="hover:bg-slate-800/60 transition-colors">
+                          <td className="py-4 px-6 text-sm font-black text-slate-300">#{orc?.numero_sequencial || orc?.id?.slice(0,6)}</td>
+                          <td className="py-4 px-6 text-sm font-bold text-slate-100">{orc?.cliente || 'Não informado'}</td>
                           <td className="py-4 px-6 text-xs font-bold">
-                            <span className={`px-3 py-1.5 rounded-lg ${
-                              orc?.status === 'Aprovado' ? 'bg-emerald-100 text-emerald-800' :
-                              orc?.status === 'Enviado' ? 'bg-blue-100 text-blue-800' :
-                              orc?.status === 'Recusado' ? 'bg-red-100 text-red-800' :
-                              'bg-slate-100 text-slate-800'
+                            <span className={`px-3 py-1.5 rounded-lg border ${
+                              orc?.status === 'Aprovado' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                              orc?.status === 'Enviado' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                              orc?.status === 'Recusado' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                              'bg-slate-800 text-slate-400 border-slate-700'
                             }`}>
                               {orc?.status || 'Aberto'}
                             </span>
                           </td>
-                          <td className="py-4 px-6 text-sm font-black text-slate-900 text-right">{formatCurrency(orc?.total)}</td>
+                          <td className="py-4 px-6 text-sm font-black text-emerald-400 text-right">{formatCurrency(orc?.total)}</td>
                           <td className="py-4 px-6 text-center">
-                            <button onClick={() => sendWhatsApp(orc)} className="inline-flex text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 p-2 rounded-xl transition-colors shadow-sm" title="Chamar no WhatsApp">
+                            <button onClick={() => sendWhatsApp(orc)} className="inline-flex text-emerald-400 hover:text-white bg-emerald-500/10 hover:bg-emerald-500/30 border border-emerald-500/20 p-2 rounded-xl transition-all shadow-sm" title="Chamar no WhatsApp">
                               <MessageCircle size={18} />
                             </button>
                           </td>
@@ -500,9 +500,9 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-300">
-                <AlertTriangle size={48} className="mb-4 opacity-50 text-slate-300" />
-                <p className="font-medium text-slate-500">Nenhum registro corresponde ao filtro atual.</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-slate-500 bg-slate-900 rounded-2xl border border-dashed border-slate-800">
+                <AlertTriangle size={48} className="mb-4 opacity-50" />
+                <p className="font-medium">Nenhum registro corresponde ao filtro atual.</p>
               </div>
             )}
           </div>
@@ -510,58 +510,63 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
         ) : (
           
           /* VISÃO GERAL (CARDS & GRAFICOS) */
-          <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
+          <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 bg-slate-950/30">
             
             {/* Linha 1: Cards Principais */}
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-5">
-              <div onClick={() => openDetalhe('Total Orçado', orcamentosFiltrados)} className="group cursor-pointer bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-indigo-300 hover:-translate-y-1 transition-all flex flex-col justify-between">
-                <div className="flex items-center justify-between text-slate-500 mb-3">
+              
+              <div onClick={() => openDetalhe('Total Orçado', orcamentosFiltrados)} className="group cursor-pointer bg-slate-800/80 p-5 rounded-2xl border border-slate-700 shadow-lg hover:shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:border-indigo-500/50 hover:-translate-y-1 transition-all flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-600 to-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="flex items-center justify-between text-slate-400 mb-3">
                   <span className="text-xs font-bold uppercase tracking-wider">Total Orçado</span>
-                  <Layers size={18} className="text-indigo-500 opacity-80 group-hover:opacity-100 transition-opacity" />
+                  <Layers size={18} className="text-indigo-400 opacity-60 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div className="text-2xl font-black text-slate-800 truncate" title={formatCurrency(cardsData.totalOrcado)}>{formatCurrency(cardsData.totalOrcado)}</div>
+                <div className="text-2xl font-black text-white truncate" title={formatCurrency(cardsData.totalOrcado)}>{formatCurrency(cardsData.totalOrcado)}</div>
               </div>
               
-              <div onClick={() => openDetalhe('Orçamentos Aprovados', cardsData.aprovadosArr)} className="group cursor-pointer bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-emerald-300 hover:-translate-y-1 transition-all flex flex-col justify-between relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
-                <div className="flex items-center justify-between text-slate-500 mb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">Aprovado</span>
+              <div onClick={() => openDetalhe('Orçamentos Aprovados', cardsData.aprovadosArr)} className="group cursor-pointer bg-slate-800/80 p-5 rounded-2xl border border-slate-700 shadow-lg hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:border-emerald-500/50 hover:-translate-y-1 transition-all flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-600 to-emerald-400"></div>
+                <div className="flex items-center justify-between text-slate-400 mb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Aprovado</span>
                   <CheckCircle size={18} className="text-emerald-500 opacity-80 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div className="text-2xl font-black text-emerald-700 truncate" title={formatCurrency(cardsData.totalAprovado)}>{formatCurrency(cardsData.totalAprovado)}</div>
+                <div className="text-2xl font-black text-emerald-400 truncate drop-shadow-[0_0_5px_rgba(16,185,129,0.3)]" title={formatCurrency(cardsData.totalAprovado)}>{formatCurrency(cardsData.totalAprovado)}</div>
               </div>
               
-              <div onClick={() => openDetalhe('Orçamentos em Negociação', cardsData.negociacaoArr)} className="group cursor-pointer bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-amber-300 hover:-translate-y-1 transition-all flex flex-col justify-between relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-amber-500"></div>
-                <div className="flex items-center justify-between text-slate-500 mb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-amber-800">Negociação</span>
+              <div onClick={() => openDetalhe('Orçamentos em Negociação', cardsData.negociacaoArr)} className="group cursor-pointer bg-slate-800/80 p-5 rounded-2xl border border-slate-700 shadow-lg hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:border-amber-500/50 hover:-translate-y-1 transition-all flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-amber-300"></div>
+                <div className="flex items-center justify-between text-slate-400 mb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Negociação</span>
                   <TrendingUp size={18} className="text-amber-500 opacity-80 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div className="text-2xl font-black text-amber-700 truncate" title={formatCurrency(cardsData.totalNegociacao)}>{formatCurrency(cardsData.totalNegociacao)}</div>
+                <div className="text-2xl font-black text-amber-400 truncate" title={formatCurrency(cardsData.totalNegociacao)}>{formatCurrency(cardsData.totalNegociacao)}</div>
               </div>
               
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                <div className="flex items-center justify-between text-slate-500 mb-3">
+              <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 shadow-lg flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-blue-400 opacity-50"></div>
+                <div className="flex items-center justify-between text-slate-400 mb-3">
                   <span className="text-xs font-bold uppercase tracking-wider">Ticket Médio</span>
-                  <DollarSign size={18} className="text-blue-500 opacity-80" />
+                  <DollarSign size={18} className="text-blue-400 opacity-60" />
                 </div>
-                <div className="text-2xl font-black text-slate-800 truncate" title={formatCurrency(cardsData.ticketMedio)}>{formatCurrency(cardsData.ticketMedio)}</div>
+                <div className="text-2xl font-black text-white truncate" title={formatCurrency(cardsData.ticketMedio)}>{formatCurrency(cardsData.ticketMedio)}</div>
               </div>
               
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                <div className="flex items-center justify-between text-slate-500 mb-3">
+              <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 shadow-lg flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-600 to-purple-400 opacity-50"></div>
+                <div className="flex items-center justify-between text-slate-400 mb-3">
                   <span className="text-xs font-bold uppercase tracking-wider">Aprovação</span>
-                  <Target size={18} className="text-purple-500 opacity-80" />
+                  <Target size={18} className="text-purple-400 opacity-60" />
                 </div>
-                <div className="text-2xl font-black text-slate-800">{Number(cardsData.taxa || 0).toFixed(1)}%</div>
+                <div className="text-2xl font-black text-white">{Number(cardsData.taxa || 0).toFixed(1)}%</div>
               </div>
               
-              <div onClick={() => openDetalhe('Volume Total', orcamentosFiltrados)} className="group cursor-pointer p-5 rounded-2xl border border-slate-700 shadow-md hover:shadow-xl hover:-translate-y-1 bg-gradient-to-br from-slate-800 to-slate-900 text-white transition-all flex flex-col justify-between">
-                <div className="flex items-center justify-between text-slate-300 mb-3">
+              <div onClick={() => openDetalhe('Volume Total', orcamentosFiltrados)} className="group cursor-pointer p-5 rounded-2xl border border-slate-600 shadow-lg hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:-translate-y-1 bg-gradient-to-br from-slate-700 to-slate-800 text-white transition-all flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="flex items-center justify-between text-slate-300 mb-3 relative z-10">
                   <span className="text-xs font-bold uppercase tracking-wider">Volume</span>
                   <FileText size={18} className="text-slate-400 group-hover:text-white transition-colors" />
                 </div>
-                <div className="flex items-baseline gap-2">
+                <div className="flex items-baseline gap-2 relative z-10">
                   <span className="text-3xl font-black">{cardsData.qtd}</span>
                   <span className="text-sm font-medium text-slate-400">orçamentos</span>
                 </div>
@@ -571,31 +576,31 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
             {/* Linha 2: Funil e Saúde do Follow-up */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm col-span-1 xl:col-span-2 flex flex-col">
-                <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-widest"><BarChart2 size={20} className="text-indigo-500"/> Funil Comercial de Conversão</h3>
+              <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl col-span-1 xl:col-span-2 flex flex-col">
+                <h3 className="text-sm font-black text-white mb-6 flex items-center gap-2 uppercase tracking-widest"><BarChart2 size={20} className="text-emerald-500"/> Funil Comercial</h3>
                 <div className="px-2 flex-1 flex flex-col justify-center">
                   <FunnelGraphic data={funnel} />
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm col-span-1 flex flex-col">
-                <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-widest"><Activity size={20} className="text-rose-500"/> Saúde do Follow-up</h3>
+              <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl col-span-1 flex flex-col">
+                <h3 className="text-sm font-black text-white mb-6 flex items-center gap-2 uppercase tracking-widest"><Activity size={20} className="text-rose-500"/> Follow-up Status</h3>
                 <div className="grid grid-cols-2 gap-4 flex-1">
-                  <div onClick={() => openDetalhe('Retornos Atrasados', rankings.followUp.atrasados)} className="group cursor-pointer hover:bg-rose-50 bg-white border-2 border-rose-100 hover:border-rose-300 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all">
-                    <span className="text-3xl font-black text-rose-600 group-hover:scale-110 transition-transform">{rankings.followUp.atrasados.length}</span>
-                    <span className="text-[10px] font-bold text-rose-800 uppercase tracking-wider mt-2">Atrasados</span>
+                  <div onClick={() => openDetalhe('Retornos Atrasados', rankings.followUp.atrasados)} className="group cursor-pointer hover:bg-rose-500/10 bg-slate-800 border border-slate-700 hover:border-rose-500/50 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all shadow-inner">
+                    <span className="text-3xl font-black text-rose-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(244,63,94,0.5)] transition-all">{rankings.followUp.atrasados.length}</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2 group-hover:text-rose-300">Atrasados</span>
                   </div>
-                  <div onClick={() => openDetalhe('Retornos Hoje', rankings.followUp.hoje)} className="group cursor-pointer hover:bg-amber-50 bg-white border-2 border-amber-100 hover:border-amber-300 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all">
-                    <span className="text-3xl font-black text-amber-600 group-hover:scale-110 transition-transform">{rankings.followUp.hoje.length}</span>
-                    <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider mt-2">Hoje</span>
+                  <div onClick={() => openDetalhe('Retornos Hoje', rankings.followUp.hoje)} className="group cursor-pointer hover:bg-amber-500/10 bg-slate-800 border border-slate-700 hover:border-amber-500/50 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all shadow-inner">
+                    <span className="text-3xl font-black text-amber-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] transition-all">{rankings.followUp.hoje.length}</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2 group-hover:text-amber-300">Hoje</span>
                   </div>
-                  <div onClick={() => openDetalhe('Retornos nos Próximos 7 Dias', rankings.followUp.proximos)} className="group cursor-pointer hover:bg-blue-50 bg-white border-2 border-blue-100 hover:border-blue-300 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all">
-                    <span className="text-3xl font-black text-blue-600 group-hover:scale-110 transition-transform">{rankings.followUp.proximos.length}</span>
-                    <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wider mt-2">Próximos 7d</span>
+                  <div onClick={() => openDetalhe('Retornos nos Próximos 7 Dias', rankings.followUp.proximos)} className="group cursor-pointer hover:bg-blue-500/10 bg-slate-800 border border-slate-700 hover:border-blue-500/50 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all shadow-inner">
+                    <span className="text-3xl font-black text-blue-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.5)] transition-all">{rankings.followUp.proximos.length}</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2 group-hover:text-blue-300">Próximos 7d</span>
                   </div>
-                  <div onClick={() => openDetalhe('Oportunidades de Alta Prioridade', rankings.followUp.altaPrioArr)} className="group cursor-pointer hover:bg-orange-50 bg-white border-2 border-orange-100 hover:border-orange-300 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all">
-                    <span className="text-3xl font-black text-orange-600 group-hover:scale-110 transition-transform">{rankings.followUp.altaPrioArr.length}</span>
-                    <span className="text-[10px] font-bold text-orange-800 uppercase tracking-wider mt-2">Alta Priori.</span>
+                  <div onClick={() => openDetalhe('Oportunidades de Alta Prioridade', rankings.followUp.altaPrioArr)} className="group cursor-pointer hover:bg-orange-500/10 bg-slate-800 border border-slate-700 hover:border-orange-500/50 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all shadow-inner">
+                    <span className="text-3xl font-black text-orange-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.5)] transition-all">{rankings.followUp.altaPrioArr.length}</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2 group-hover:text-orange-300">Alta Priori.</span>
                   </div>
                 </div>
               </div>
@@ -604,8 +609,8 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
             {/* Linha 3: Rankings (Produtos, Clientes, Regiões) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-widest"><Package size={20} className="text-indigo-500"/> Top Produtos</h3>
+              <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
+                <h3 className="text-sm font-black text-white mb-6 flex items-center gap-2 uppercase tracking-widest"><Package size={20} className="text-emerald-500"/> Top Produtos</h3>
                 {rankings.topProdutos && rankings.topProdutos.length > 0 ? (
                   <div className="space-y-2">
                     {rankings.topProdutos.map(([name, data], idx) => (
@@ -613,14 +618,14 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                     ))}
                   </div>
                 ) : (
-                  <div className="h-40 flex items-center justify-center border-2 border-dashed border-slate-100 rounded-xl">
-                    <p className="text-xs text-slate-400 font-medium italic">Sem dados neste período</p>
+                  <div className="h-40 flex items-center justify-center border-2 border-dashed border-slate-800 rounded-xl bg-slate-900/50">
+                    <p className="text-xs text-slate-500 font-medium italic">Sem dados neste período</p>
                   </div>
                 )}
               </div>
 
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-widest"><Users size={20} className="text-emerald-500"/> Top Clientes</h3>
+              <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
+                <h3 className="text-sm font-black text-white mb-6 flex items-center gap-2 uppercase tracking-widest"><Users size={20} className="text-emerald-500"/> Top Clientes</h3>
                 {rankings.topClientes && rankings.topClientes.length > 0 ? (
                   <div className="space-y-2">
                     {rankings.topClientes.map(([name, data], idx) => (
@@ -628,14 +633,14 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                     ))}
                   </div>
                 ) : (
-                  <div className="h-40 flex items-center justify-center border-2 border-dashed border-slate-100 rounded-xl">
-                    <p className="text-xs text-slate-400 font-medium italic">Sem dados neste período</p>
+                  <div className="h-40 flex items-center justify-center border-2 border-dashed border-slate-800 rounded-xl bg-slate-900/50">
+                    <p className="text-xs text-slate-500 font-medium italic">Sem dados neste período</p>
                   </div>
                 )}
               </div>
 
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-widest"><MapPin size={20} className="text-amber-500"/> Top Regiões</h3>
+              <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
+                <h3 className="text-sm font-black text-white mb-6 flex items-center gap-2 uppercase tracking-widest"><MapPin size={20} className="text-emerald-500"/> Top Regiões</h3>
                 {rankings.topRegioes && rankings.topRegioes.length > 0 ? (
                   <div className="space-y-2">
                     {rankings.topRegioes.map(([name, data], idx) => (
@@ -643,8 +648,8 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                     ))}
                   </div>
                 ) : (
-                  <div className="h-40 flex items-center justify-center border-2 border-dashed border-slate-100 rounded-xl">
-                    <p className="text-xs text-slate-400 font-medium italic">Sem dados neste período</p>
+                  <div className="h-40 flex items-center justify-center border-2 border-dashed border-slate-800 rounded-xl bg-slate-900/50">
+                    <p className="text-xs text-slate-500 font-medium italic">Sem dados neste período</p>
                   </div>
                 )}
               </div>
@@ -652,14 +657,14 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
             </div>
 
             {/* Linha 4: Oportunidades para agir agora */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-widest"><AlertTriangle size={20} className="text-orange-500"/> Oportunidades para agir agora</h3>
+            <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
+              <h3 className="text-sm font-black text-white mb-6 flex items-center gap-2 uppercase tracking-widest"><AlertTriangle size={20} className="text-orange-500"/> Oportunidades para agir agora</h3>
               
               {agirAgora && agirAgora.length > 0 ? (
-                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <div className="overflow-x-auto rounded-xl border border-slate-800 shadow-inner">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200">
+                      <tr className="bg-slate-950/80 border-b border-slate-800">
                         <th className="py-3 px-4 text-[11px] font-black text-slate-500 uppercase tracking-widest rounded-tl-xl">Temp.</th>
                         <th className="py-3 px-4 text-[11px] font-black text-slate-500 uppercase tracking-widest">Orçamento</th>
                         <th className="py-3 px-4 text-[11px] font-black text-slate-500 uppercase tracking-widest">Cliente</th>
@@ -668,36 +673,36 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                         <th className="py-3 px-4 text-[11px] font-black text-slate-500 uppercase tracking-widest rounded-tr-xl">Ação (Whats)</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-800">
                       {agirAgora.map((orc, i) => (
-                        <tr key={i} className="hover:bg-slate-50 group transition-colors">
+                        <tr key={i} className="hover:bg-slate-800/80 group transition-colors">
                           <td className="py-3 px-4">
-                            <div className={`p-2 rounded-xl inline-flex items-center justify-center shadow-sm ${
-                              orc.temp === 'quente' ? 'bg-gradient-to-br from-rose-100 to-rose-200 text-rose-700 border border-rose-300' :
-                              orc.temp === 'morna' ? 'bg-gradient-to-br from-amber-100 to-amber-200 text-amber-700 border border-amber-300' :
-                              'bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 border border-blue-200'
+                            <div className={`p-2 rounded-xl inline-flex items-center justify-center shadow-sm border ${
+                              orc.temp === 'quente' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30 shadow-[0_0_10px_rgba(244,63,94,0.2)]' :
+                              orc.temp === 'morna' ? 'bg-amber-500/10 text-amber-500 border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.2)]' :
+                              'bg-blue-500/10 text-blue-400 border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
                             }`} title={`Temperatura: ${orc.temp}`}>
                               {orc.temp === 'quente' ? <Flame size={18} strokeWidth={2.5} /> :
                                orc.temp === 'morna' ? <Sun size={18} strokeWidth={2.5} /> :
                                <Snowflake size={18} strokeWidth={2.5} />}
                             </div>
                           </td>
-                          <td className="py-3 px-4 text-sm font-bold text-slate-500">#{orc?.numero_sequencial || orc?.id?.slice(0,6)}</td>
-                          <td className="py-3 px-4 font-black text-sm text-slate-800 max-w-[200px] truncate">{orc?.cliente || '-'}</td>
-                          <td className="py-3 px-4 font-black text-sm text-slate-900 text-right">{formatCurrency(orc?.total)}</td>
+                          <td className="py-3 px-4 text-sm font-bold text-slate-400">#{orc?.numero_sequencial || orc?.id?.slice(0,6)}</td>
+                          <td className="py-3 px-4 font-black text-sm text-white max-w-[200px] truncate">{orc?.cliente || '-'}</td>
+                          <td className="py-3 px-4 font-black text-sm text-emerald-400 text-right">{formatCurrency(orc?.total)}</td>
                           <td className="py-3 px-4">
-                            <span className={`px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
-                              orc.temp === 'quente' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 
-                              orc.temp === 'morna' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 
-                              'bg-white text-slate-600 border border-slate-200'
+                            <span className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border shadow-sm ${
+                              orc.temp === 'quente' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 
+                              orc.temp === 'morna' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
+                              'bg-slate-800 text-slate-300 border-slate-700'
                             }`}>
                               {orc?.data_retorno ? String(orc.data_retorno).split('-').reverse().join('/') : 'Sem data'}
                             </span>
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-3 justify-between">
-                              <span className="text-xs text-slate-500 font-medium truncate max-w-[150px] block" title={orc?.proxima_acao}>{orc?.proxima_acao || 'Nenhuma'}</span>
-                              <button onClick={() => sendWhatsApp(orc)} className="flex items-center justify-center p-2 text-emerald-600 hover:text-white bg-emerald-50 hover:bg-emerald-500 border border-emerald-200 hover:border-emerald-600 rounded-xl transition-all shadow-sm opacity-80 group-hover:opacity-100">
+                              <span className="text-xs text-slate-400 font-medium truncate max-w-[150px] block" title={orc?.proxima_acao}>{orc?.proxima_acao || 'Nenhuma'}</span>
+                              <button onClick={() => sendWhatsApp(orc)} className="flex items-center justify-center p-2 text-emerald-400 hover:text-white bg-emerald-500/10 hover:bg-emerald-500/30 border border-emerald-500/20 hover:border-emerald-500/50 rounded-xl transition-all shadow-sm opacity-80 group-hover:opacity-100">
                                 <MessageCircle size={16} strokeWidth={2.5} />
                               </button>
                             </div>
@@ -708,11 +713,11 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                   </table>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                  <div className="p-4 bg-white rounded-full shadow-sm mb-4">
-                    <CheckCircle size={32} className="text-emerald-400" />
+                <div className="flex flex-col items-center justify-center py-12 bg-slate-900 rounded-2xl border-2 border-dashed border-slate-800">
+                  <div className="p-4 bg-slate-800 rounded-full shadow-sm mb-4 border border-slate-700">
+                    <CheckCircle size={32} className="text-emerald-500" />
                   </div>
-                  <h4 className="text-lg font-black text-slate-700 mb-1">Tudo em dia!</h4>
+                  <h4 className="text-lg font-black text-white mb-1">Tudo em dia!</h4>
                   <p className="text-sm text-slate-500 font-medium">Nenhuma oportunidade urgente no radar para os filtros selecionados.</p>
                 </div>
               )}
