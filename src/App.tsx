@@ -403,7 +403,32 @@ function App() {
   };
 
   const imprimirOrcamento = () => {
-    window.print();
+    const originalTitle = document.title;
+    
+    const sanitize = (str: string) => {
+      if (!str) return '';
+      return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // remove acentos
+        .replace(/[^a-zA-Z0-9]/g, "_")  // substitui caracteres especiais por underline
+        .replace(/_+/g, "_")            // remove underlines duplicados
+        .replace(/^_|_$/g, "");         // remove underline das pontas
+    };
+
+    const clienteBase = form.cliente || 'Cliente';
+    const produtoBase = (form.produto || '').split(' - ')[0] || 'Produto';
+    
+    let fileName = `Orcamento_${form.numero || 'S-N'}_${sanitize(clienteBase)}_${sanitize(produtoBase)}_FormaPlay`;
+    if (fileName.length > 120) fileName = fileName.substring(0, 120);
+    
+    document.title = fileName;
+    
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        document.title = originalTitle;
+      }, 500);
+    }, 100);
   };
 
   const enviarWhatsApp = () => {
