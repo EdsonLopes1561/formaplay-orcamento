@@ -122,9 +122,28 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
 
     (orcamentosFiltrados || []).forEach(o => {
       const val = Number(o?.total) || 0;
-      const pName = String(o?.produto || 'Não informado');
-      const cName = String(o?.cliente || 'Não informado');
-      const cReg = (o?.cidade || o?.cliente_cidade) ? `${o.cidade || o.cliente_cidade}/${o.estado || o.cliente_uf || ''}` : 'Não informada';
+      const pName = String(o?.produto || 'Não informado').trim();
+      const cName = String(o?.cliente || 'Não informado').trim();
+      
+      let rawCidade = String(o?.cidade || o?.cliente_cidade || '').trim();
+      let rawEstado = String(o?.estado || o?.cliente_uf || '').trim().toUpperCase();
+      let cReg = 'Não informado';
+
+      if (rawCidade && rawCidade.toLowerCase() !== 'undefined' && rawCidade !== 'null') {
+        rawCidade = rawCidade.replace(/[\/\-]+\s*$/, '').trim();
+        
+        const ufMatch = rawCidade.match(/[\/\-]\s*([A-Za-z]{2})$/);
+        if (ufMatch) {
+          rawCidade = rawCidade.replace(/[\/\-]\s*([A-Za-z]{2})$/, '').trim();
+          if (!rawEstado) rawEstado = ufMatch[1].toUpperCase();
+        }
+
+        if (rawEstado && rawEstado.length >= 2) {
+          cReg = `${rawCidade}/${rawEstado.slice(0,2)}`;
+        } else {
+          cReg = rawCidade;
+        }
+      }
       
       if (!produtos[pName]) produtos[pName] = { qtd: 0, valor: 0 };
       produtos[pName].qtd++;
