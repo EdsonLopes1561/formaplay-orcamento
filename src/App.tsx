@@ -407,26 +407,19 @@ function App() {
   };
 
   const enviarWhatsApp = () => {
-    const fmtVal = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const lines = [
-      `*${EMPRESA.nome}*`,
-      `Orçamento ${form.numero} — ${form.data_orcamento}`,
-      ``,
-      `*Cliente:* ${form.cliente}`,
-      `*Status:* ${form.status || 'Aberto'}`,
-      `*Produto:* ${form.produto}`,
-      `*Qtd:* ${form.quantidade} x ${fmtVal(form.valor_unitario)}`,
-      `*Subtotal:* ${fmtVal(form.subtotal)}`,
-      form.frete > 0 ? `*Frete:* ${fmtVal(form.frete)}` : '',
-      form.desconto > 0 ? `*Desconto:* ${fmtVal(form.desconto)}` : '',
-      `*TOTAL: ${fmtVal(form.total)}*`,
-      ``,
-      `*Prazo:* ${form.prazo_entrega}`,
-      `*Validade:* ${form.validade}`,
-      `*Pagamento:* ${form.pagamento}`,
-      form.observacoes ? `*Obs:* ${form.observacoes}` : '',
-    ].filter(Boolean).join('\n');
-    const url = `https://wa.me/?text=${encodeURIComponent(lines)}`;
+    const mensagem = `Olá, segue o orçamento referente ao jogo Desafio Logístico.\nA FormaPlay fica à disposição para qualquer dúvida.`;
+    let url = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
+    
+    if (form.telefone) {
+      let numero = form.telefone.replace(/\D/g, '');
+      if (numero.length >= 10 && numero.length <= 11) {
+        numero = `55${numero}`;
+      }
+      if (numero) {
+        url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
+      }
+    }
+    
     window.open(url, '_blank');
   };
 
@@ -563,7 +556,7 @@ function App() {
               onClick={enviarWhatsApp}
               className="flex items-center gap-2 px-5 py-2.5 bg-[#25D366] text-white rounded-lg hover:bg-[#1ebe5d] active:scale-95 transition-all font-bold text-sm shadow-md"
             >
-              <MessageCircle size={18} /> WhatsApp
+              <MessageCircle size={18} /> Enviar WhatsApp
             </button>
             <button
               onClick={() => { setShowHistorico(true); carregarHistorico(); }}
