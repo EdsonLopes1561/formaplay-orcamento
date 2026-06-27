@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, TrendingUp, BarChart2, DollarSign, Target, Activity, Users, MapPin, AlertTriangle, Calendar, Layers, CheckCircle, Package, FileText, MessageCircle, ArrowLeft, Flame, Sun, Snowflake, Filter } from 'lucide-react';
+import { X, TrendingUp, BarChart2, DollarSign, Target, Activity, Users, MapPin, AlertTriangle, Calendar, Layers, CheckCircle, Package, FileText, MessageCircle, ArrowLeft, Flame, Sun, Snowflake, Filter, ChevronRight } from 'lucide-react';
 import { supabase } from '../supabase';
 
 interface TorreControleModalProps {
@@ -335,13 +335,13 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
     const percent = safeMax > 0 ? (safeValue / safeMax) * 100 : 0;
     
     return (
-      <div className="mb-3">
-        <div className="flex justify-between text-xs font-medium text-gray-700 mb-1">
+      <div className="mb-4">
+        <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1.5">
           <span className="truncate pr-2">{String(label)}</span>
-          <span className="whitespace-nowrap font-bold text-gray-900">{formatCurrency(safeValue)} {subValue && <span className="text-gray-400 font-normal ml-1">({subValue})</span>}</span>
+          <span className="whitespace-nowrap font-bold text-slate-900">{formatCurrency(safeValue)} {subValue && <span className="text-slate-400 font-medium ml-1">({subValue})</span>}</span>
         </div>
-        <div className="w-full bg-gray-100 rounded-full h-2.5">
-          <div className="bg-indigo-600 h-2.5 rounded-full" style={{ width: `${Math.min(percent, 100)}%` }}></div>
+        <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 rounded-full shadow-inner" style={{ width: `${Math.min(percent, 100)}%` }}></div>
         </div>
       </div>
     );
@@ -350,22 +350,22 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
   const FunnelGraphic = ({ data }: { data: any }) => {
     const max = Math.max(Number(data?.solicitacoes) || 0, Number(data?.orcamentos) || 0, Number(data?.enviados) || 0, Number(data?.aprovados) || 0, 1);
     const steps = [
-      { label: 'Solicitações (Site)', value: Number(data?.solicitacoes) || 0, color: 'bg-blue-400' },
-      { label: 'Orçamentos Gerados', value: Number(data?.orcamentos) || 0, color: 'bg-indigo-500' },
-      { label: 'Orçamentos Enviados', value: Number(data?.enviados) || 0, color: 'bg-purple-500' },
-      { label: 'Orçamentos Aprovados', value: Number(data?.aprovados) || 0, color: 'bg-emerald-500' },
+      { label: 'Solicitações (Site)', value: Number(data?.solicitacoes) || 0, from: 'from-blue-400', to: 'to-blue-500' },
+      { label: 'Orçamentos Gerados', value: Number(data?.orcamentos) || 0, from: 'from-indigo-400', to: 'to-indigo-500' },
+      { label: 'Orçamentos Enviados', value: Number(data?.enviados) || 0, from: 'from-purple-400', to: 'to-purple-500' },
+      { label: 'Orçamentos Aprovados', value: Number(data?.aprovados) || 0, from: 'from-emerald-400', to: 'to-emerald-500' },
     ];
     
     return (
-      <div className="flex flex-col gap-3 py-2">
+      <div className="flex flex-col gap-4 py-2">
         {steps.map((step, idx) => (
-          <div key={idx} className="relative">
-            <div className="flex justify-between text-xs mb-1 font-medium text-gray-600">
+          <div key={idx} className="relative group">
+            <div className="flex justify-between text-xs mb-1.5 font-bold text-slate-600 uppercase tracking-wide">
               <span>{step.label}</span>
-              <span className="font-bold">{step.value}</span>
+              <span className="text-slate-800">{step.value}</span>
             </div>
             <div className="w-full flex justify-center">
-              <div className={`${step.color} h-6 rounded-md shadow-sm transition-all duration-500 ease-in-out`} style={{ width: `${Math.max((step.value / max) * 100, 5)}%` }}></div>
+              <div className={`bg-gradient-to-r ${step.from} ${step.to} h-8 rounded-lg shadow-sm transition-all duration-700 ease-out group-hover:brightness-110`} style={{ width: `${Math.max((step.value / max) * 100, 5)}%` }}></div>
             </div>
           </div>
         ))}
@@ -374,50 +374,51 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-slate-50 rounded-2xl w-full max-w-7xl max-h-[95vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-fade-in">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50 transition-opacity">
+      <div className="bg-[#f8fafc] rounded-3xl w-full max-w-[1400px] max-h-[95vh] flex flex-col shadow-2xl border border-white/40 overflow-hidden animate-fade-in">
         
-        {/* Cabeçalho */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-white border-b border-slate-200 shadow-sm relative z-10 gap-4">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-[#1e293b] text-white rounded-xl shadow-md">
-              <Activity size={26} />
+        {/* Cabeçalho Premium */}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between p-6 bg-white border-b border-slate-200 shadow-sm relative z-10 gap-6">
+          <div className="flex items-center gap-5">
+            <div className="p-3.5 bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-2xl shadow-lg shadow-slate-900/20">
+              <Activity size={28} strokeWidth={2.5} />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-[#1e293b] tracking-tight">Torre de Controle <span className="text-[#f97316]">FormaPlay</span></h2>
-              <p className="text-sm text-slate-500 font-medium">Visão analítica de orçamentos e inteligência comercial.</p>
+              <h2 className="text-3xl font-black text-slate-800 tracking-tight">Torre de Controle <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400">FormaPlay</span></h2>
+              <p className="text-sm text-slate-500 font-medium mt-0.5">Visão analítica de orçamentos e inteligência comercial de alto impacto.</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {!detalheVisivel && (
-              <div className="flex flex-wrap gap-2 justify-end mr-4">
-                <div className="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200">
-                  <Filter size={14} className="text-slate-500 ml-2" />
+              <div className="flex flex-wrap gap-2 justify-end mr-2">
+                <div className="flex items-center bg-slate-50 hover:bg-slate-100 transition-colors rounded-xl p-1.5 border border-slate-200 shadow-sm">
+                  <Calendar size={16} className="text-indigo-500 ml-2" />
                   <select value={periodo} onChange={(e) => setPeriodo(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-700 py-1 pl-2 pr-6 focus:ring-0 cursor-pointer">
                     {['Todos', 'Hoje', 'Esta semana', 'Este mês', 'Este ano'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200">
-                  <select value={fStatus} onChange={(e) => setFStatus(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-700 py-1 px-2 focus:ring-0 cursor-pointer">
+                <div className="flex items-center bg-slate-50 hover:bg-slate-100 transition-colors rounded-xl p-1.5 border border-slate-200 shadow-sm">
+                  <Filter size={14} className="text-slate-400 ml-2" />
+                  <select value={fStatus} onChange={(e) => setFStatus(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-700 py-1 pl-2 pr-6 focus:ring-0 cursor-pointer">
                     <option value="Todos">Status (Todos)</option>
                     {['Aberto', 'Enviado', 'Aprovado', 'Recusado', 'Cancelado'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200 hidden sm:flex">
-                  <select value={fPrioridade} onChange={(e) => setFPrioridade(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-700 py-1 px-2 focus:ring-0 cursor-pointer">
+                <div className="flex items-center bg-slate-50 hover:bg-slate-100 transition-colors rounded-xl p-1.5 border border-slate-200 shadow-sm hidden sm:flex">
+                  <select value={fPrioridade} onChange={(e) => setFPrioridade(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-700 py-1 px-3 focus:ring-0 cursor-pointer">
                     <option value="Todas">Prioridade (Todas)</option>
                     {['Baixa', 'Média', 'Alta'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200 hidden md:flex">
-                  <select value={fProduto} onChange={(e) => setFProduto(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-700 py-1 px-2 focus:ring-0 cursor-pointer max-w-[120px]">
+                <div className="flex items-center bg-slate-50 hover:bg-slate-100 transition-colors rounded-xl p-1.5 border border-slate-200 shadow-sm hidden md:flex">
+                  <select value={fProduto} onChange={(e) => setFProduto(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-700 py-1 px-3 focus:ring-0 cursor-pointer max-w-[140px]">
                     <option value="Todos">Produto (Todos)</option>
                     {uniqueProdutos.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200 hidden lg:flex">
-                  <select value={fCidade} onChange={(e) => setFCidade(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-700 py-1 px-2 focus:ring-0 cursor-pointer max-w-[120px]">
+                <div className="flex items-center bg-slate-50 hover:bg-slate-100 transition-colors rounded-xl p-1.5 border border-slate-200 shadow-sm hidden lg:flex">
+                  <select value={fCidade} onChange={(e) => setFCidade(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-700 py-1 px-3 focus:ring-0 cursor-pointer max-w-[140px]">
                     <option value="Todas">Região (Todas)</option>
                     {uniqueCidades.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
@@ -425,68 +426,71 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
               </div>
             )}
 
-            <button onClick={onClose} className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
-              <X size={20} />
+            <button onClick={onClose} className="p-2.5 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-600 transition-all shadow-sm">
+              <X size={22} strokeWidth={2.5} />
             </button>
           </div>
         </div>
 
         {loading ? (
-          <div className="flex-1 flex flex-col items-center justify-center min-h-[400px]">
-            <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-            <p className="text-slate-500 font-medium text-sm">Carregando inteligência comercial...</p>
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[500px]">
+            <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-5"></div>
+            <p className="text-slate-500 font-bold text-sm tracking-wide uppercase">Carregando inteligência comercial...</p>
           </div>
         ) : error ? (
-          <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] text-center p-6">
-            <AlertTriangle size={48} className="text-rose-500 mb-4" />
-            <h3 className="text-lg font-bold text-slate-800">Não foi possível carregar os dados da Torre de Controle.</h3>
-            <p className="text-sm text-slate-500 mt-2">Por favor, verifique sua conexão ou tente novamente mais tarde.</p>
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[500px] text-center p-8">
+            <AlertTriangle size={56} className="text-rose-500 mb-5" />
+            <h3 className="text-2xl font-black text-slate-800">Falha ao processar os dados.</h3>
+            <p className="text-slate-500 mt-2 font-medium">Não foi possível carregar as informações da Torre de Controle no momento.</p>
           </div>
         ) : detalheVisivel ? (
           
           /* VISÃO DETALHADA (DRILL-DOWN) */
-          <div className="flex-1 overflow-y-auto p-6 bg-slate-50 flex flex-col animate-fade-in">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <button onClick={() => setDetalheVisivel(null)} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors text-slate-600">
-                  <ArrowLeft size={20} />
+          <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50 flex flex-col animate-fade-in">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <button onClick={() => setDetalheVisivel(null)} className="flex items-center justify-center p-2.5 bg-white border border-slate-200 shadow-sm rounded-xl hover:bg-slate-800 hover:text-white transition-all text-slate-600 group">
+                  <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                 </button>
-                <h3 className="text-xl font-black text-slate-800">{tituloDetalhe} <span className="text-sm font-medium text-slate-500 ml-2">({detalheVisivel.length} orçamentos)</span></h3>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800">{tituloDetalhe}</h3>
+                  <p className="text-sm font-medium text-slate-500 mt-0.5">{detalheVisivel.length} orçamentos encontrados nesta visão.</p>
+                </div>
               </div>
             </div>
 
             {detalheVisivel.length > 0 ? (
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex-1">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-1">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200">
-                        <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase">Orçamento</th>
-                        <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase">Cliente</th>
-                        <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase">Status</th>
-                        <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase text-right">Valor</th>
-                        <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase">Ações</th>
+                        <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Orçamento</th>
+                        <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Cliente</th>
+                        <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                        <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Valor</th>
+                        <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
                       {detalheVisivel.map((orc, idx) => (
-                        <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="py-3 px-4 text-sm font-bold text-slate-700">#{orc?.numero_sequencial || orc?.id?.slice(0,6)}</td>
-                          <td className="py-3 px-4 text-sm font-medium text-slate-800">{orc?.cliente || 'Não informado'}</td>
-                          <td className="py-3 px-4 text-xs font-medium">
-                            <span className={`px-2 py-1 rounded-md ${
-                              orc?.status === 'Aprovado' ? 'bg-emerald-100 text-emerald-700' :
-                              orc?.status === 'Enviado' ? 'bg-blue-100 text-blue-700' :
-                              orc?.status === 'Recusado' ? 'bg-red-100 text-red-700' :
-                              'bg-slate-100 text-slate-700'
+                        <tr key={idx} className="border-b border-slate-100 hover:bg-indigo-50/30 transition-colors">
+                          <td className="py-4 px-6 text-sm font-black text-slate-700">#{orc?.numero_sequencial || orc?.id?.slice(0,6)}</td>
+                          <td className="py-4 px-6 text-sm font-bold text-slate-800">{orc?.cliente || 'Não informado'}</td>
+                          <td className="py-4 px-6 text-xs font-bold">
+                            <span className={`px-3 py-1.5 rounded-lg ${
+                              orc?.status === 'Aprovado' ? 'bg-emerald-100 text-emerald-800' :
+                              orc?.status === 'Enviado' ? 'bg-blue-100 text-blue-800' :
+                              orc?.status === 'Recusado' ? 'bg-red-100 text-red-800' :
+                              'bg-slate-100 text-slate-800'
                             }`}>
                               {orc?.status || 'Aberto'}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-sm font-black text-slate-800 text-right">{formatCurrency(orc?.total)}</td>
-                          <td className="py-3 px-4">
-                            <button onClick={() => sendWhatsApp(orc)} className="text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 p-1.5 rounded-md transition-colors" title="Chamar no WhatsApp">
-                              <MessageCircle size={16} />
+                          <td className="py-4 px-6 text-sm font-black text-slate-900 text-right">{formatCurrency(orc?.total)}</td>
+                          <td className="py-4 px-6 text-center">
+                            <button onClick={() => sendWhatsApp(orc)} className="inline-flex text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 p-2 rounded-xl transition-colors shadow-sm" title="Chamar no WhatsApp">
+                              <MessageCircle size={18} />
                             </button>
                           </td>
                         </tr>
@@ -496,9 +500,9 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
-                <AlertTriangle size={48} className="mb-4 opacity-50" />
-                <p>Nenhum dado encontrado para este detalhamento.</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-300">
+                <AlertTriangle size={48} className="mb-4 opacity-50 text-slate-300" />
+                <p className="font-medium text-slate-500">Nenhum registro corresponde ao filtro atual.</p>
               </div>
             )}
           </div>
@@ -506,178 +510,195 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
         ) : (
           
           /* VISÃO GERAL (CARDS & GRAFICOS) */
-          <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+          <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
             
             {/* Linha 1: Cards Principais */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-              <div onClick={() => openDetalhe('Total Orçado', orcamentosFiltrados)} className="cursor-pointer hover:ring-2 hover:ring-indigo-400 bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between transition-all">
-                <div className="flex items-center gap-2 text-slate-500 mb-2">
-                  <Layers size={16} /> <span className="text-xs font-bold uppercase tracking-wider">Total Orçado</span>
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-5">
+              <div onClick={() => openDetalhe('Total Orçado', orcamentosFiltrados)} className="group cursor-pointer bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-indigo-300 hover:-translate-y-1 transition-all flex flex-col justify-between">
+                <div className="flex items-center justify-between text-slate-500 mb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider">Total Orçado</span>
+                  <Layers size={18} className="text-indigo-500 opacity-80 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div className="text-xl font-black text-slate-800">{formatCurrency(cardsData.totalOrcado)}</div>
+                <div className="text-2xl font-black text-slate-800 truncate" title={formatCurrency(cardsData.totalOrcado)}>{formatCurrency(cardsData.totalOrcado)}</div>
               </div>
               
-              <div onClick={() => openDetalhe('Orçamentos Aprovados', cardsData.aprovadosArr)} className="cursor-pointer hover:ring-2 hover:ring-emerald-400 bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between border-b-4 border-b-emerald-500 transition-all">
-                <div className="flex items-center gap-2 text-slate-500 mb-2">
-                  <CheckCircle size={16} className="text-emerald-500" /> <span className="text-xs font-bold uppercase tracking-wider">Aprovado</span>
+              <div onClick={() => openDetalhe('Orçamentos Aprovados', cardsData.aprovadosArr)} className="group cursor-pointer bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-emerald-300 hover:-translate-y-1 transition-all flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
+                <div className="flex items-center justify-between text-slate-500 mb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">Aprovado</span>
+                  <CheckCircle size={18} className="text-emerald-500 opacity-80 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div className="text-xl font-black text-emerald-700">{formatCurrency(cardsData.totalAprovado)}</div>
+                <div className="text-2xl font-black text-emerald-700 truncate" title={formatCurrency(cardsData.totalAprovado)}>{formatCurrency(cardsData.totalAprovado)}</div>
               </div>
               
-              <div onClick={() => openDetalhe('Orçamentos em Negociação', cardsData.negociacaoArr)} className="cursor-pointer hover:ring-2 hover:ring-amber-400 bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between border-b-4 border-b-amber-500 transition-all">
-                <div className="flex items-center gap-2 text-slate-500 mb-2">
-                  <TrendingUp size={16} className="text-amber-500" /> <span className="text-xs font-bold uppercase tracking-wider">Negociação</span>
+              <div onClick={() => openDetalhe('Orçamentos em Negociação', cardsData.negociacaoArr)} className="group cursor-pointer bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-amber-300 hover:-translate-y-1 transition-all flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-amber-500"></div>
+                <div className="flex items-center justify-between text-slate-500 mb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-800">Negociação</span>
+                  <TrendingUp size={18} className="text-amber-500 opacity-80 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div className="text-xl font-black text-amber-700">{formatCurrency(cardsData.totalNegociacao)}</div>
+                <div className="text-2xl font-black text-amber-700 truncate" title={formatCurrency(cardsData.totalNegociacao)}>{formatCurrency(cardsData.totalNegociacao)}</div>
               </div>
               
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                <div className="flex items-center gap-2 text-slate-500 mb-2">
-                  <DollarSign size={16} /> <span className="text-xs font-bold uppercase tracking-wider">Ticket Médio</span>
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div className="flex items-center justify-between text-slate-500 mb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider">Ticket Médio</span>
+                  <DollarSign size={18} className="text-blue-500 opacity-80" />
                 </div>
-                <div className="text-xl font-black text-indigo-700">{formatCurrency(cardsData.ticketMedio)}</div>
+                <div className="text-2xl font-black text-slate-800 truncate" title={formatCurrency(cardsData.ticketMedio)}>{formatCurrency(cardsData.ticketMedio)}</div>
               </div>
               
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                <div className="flex items-center gap-2 text-slate-500 mb-2">
-                  <Target size={16} /> <span className="text-xs font-bold uppercase tracking-wider">Aprovação</span>
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div className="flex items-center justify-between text-slate-500 mb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider">Aprovação</span>
+                  <Target size={18} className="text-purple-500 opacity-80" />
                 </div>
-                <div className="text-xl font-black text-slate-800">{Number(cardsData.taxa || 0).toFixed(1)}%</div>
+                <div className="text-2xl font-black text-slate-800">{Number(cardsData.taxa || 0).toFixed(1)}%</div>
               </div>
               
-              <div onClick={() => openDetalhe('Volume Total', orcamentosFiltrados)} className="cursor-pointer hover:ring-2 hover:ring-slate-400 bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between bg-gradient-to-br from-slate-800 to-slate-900 text-white transition-all">
-                <div className="flex items-center gap-2 text-slate-300 mb-2">
-                  <FileText size={16} /> <span className="text-xs font-bold uppercase tracking-wider">Volume</span>
+              <div onClick={() => openDetalhe('Volume Total', orcamentosFiltrados)} className="group cursor-pointer p-5 rounded-2xl border border-slate-700 shadow-md hover:shadow-xl hover:-translate-y-1 bg-gradient-to-br from-slate-800 to-slate-900 text-white transition-all flex flex-col justify-between">
+                <div className="flex items-center justify-between text-slate-300 mb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider">Volume</span>
+                  <FileText size={18} className="text-slate-400 group-hover:text-white transition-colors" />
                 </div>
-                <div className="text-2xl font-black">{cardsData.qtd} <span className="text-xs font-normal text-slate-400">orçamentos</span></div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-black">{cardsData.qtd}</span>
+                  <span className="text-sm font-medium text-slate-400">orçamentos</span>
+                </div>
               </div>
             </div>
 
             {/* Linha 2: Funil e Saúde do Follow-up */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm col-span-1 lg:col-span-2">
-                <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2 uppercase tracking-wider"><BarChart2 size={18} className="text-indigo-600"/> Funil Comercial</h3>
-                <div className="px-4">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm col-span-1 xl:col-span-2 flex flex-col">
+                <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-widest"><BarChart2 size={20} className="text-indigo-500"/> Funil Comercial de Conversão</h3>
+                <div className="px-2 flex-1 flex flex-col justify-center">
                   <FunnelGraphic data={funnel} />
                 </div>
               </div>
 
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm col-span-1 flex flex-col">
-                <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2 uppercase tracking-wider"><Activity size={18} className="text-rose-500"/> Saúde do Follow-up</h3>
-                <div className="grid grid-cols-2 gap-3 flex-1">
-                  <div onClick={() => openDetalhe('Retornos Atrasados', rankings.followUp.atrasados)} className="cursor-pointer hover:bg-rose-100 bg-rose-50 p-3 rounded-lg border border-rose-100 flex flex-col items-center justify-center text-center transition-colors">
-                    <span className="text-2xl font-black text-rose-600">{rankings.followUp.atrasados.length}</span>
-                    <span className="text-[10px] font-bold text-rose-800 uppercase mt-1">Atrasados</span>
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm col-span-1 flex flex-col">
+                <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-widest"><Activity size={20} className="text-rose-500"/> Saúde do Follow-up</h3>
+                <div className="grid grid-cols-2 gap-4 flex-1">
+                  <div onClick={() => openDetalhe('Retornos Atrasados', rankings.followUp.atrasados)} className="group cursor-pointer hover:bg-rose-50 bg-white border-2 border-rose-100 hover:border-rose-300 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all">
+                    <span className="text-3xl font-black text-rose-600 group-hover:scale-110 transition-transform">{rankings.followUp.atrasados.length}</span>
+                    <span className="text-[10px] font-bold text-rose-800 uppercase tracking-wider mt-2">Atrasados</span>
                   </div>
-                  <div onClick={() => openDetalhe('Retornos Hoje', rankings.followUp.hoje)} className="cursor-pointer hover:bg-amber-100 bg-amber-50 p-3 rounded-lg border border-amber-100 flex flex-col items-center justify-center text-center transition-colors">
-                    <span className="text-2xl font-black text-amber-600">{rankings.followUp.hoje.length}</span>
-                    <span className="text-[10px] font-bold text-amber-800 uppercase mt-1">Hoje</span>
+                  <div onClick={() => openDetalhe('Retornos Hoje', rankings.followUp.hoje)} className="group cursor-pointer hover:bg-amber-50 bg-white border-2 border-amber-100 hover:border-amber-300 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all">
+                    <span className="text-3xl font-black text-amber-600 group-hover:scale-110 transition-transform">{rankings.followUp.hoje.length}</span>
+                    <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider mt-2">Hoje</span>
                   </div>
-                  <div onClick={() => openDetalhe('Retornos nos Próximos 7 Dias', rankings.followUp.proximos)} className="cursor-pointer hover:bg-blue-100 bg-blue-50 p-3 rounded-lg border border-blue-100 flex flex-col items-center justify-center text-center transition-colors">
-                    <span className="text-2xl font-black text-blue-600">{rankings.followUp.proximos.length}</span>
-                    <span className="text-[10px] font-bold text-blue-800 uppercase mt-1">Próximos 7d</span>
+                  <div onClick={() => openDetalhe('Retornos nos Próximos 7 Dias', rankings.followUp.proximos)} className="group cursor-pointer hover:bg-blue-50 bg-white border-2 border-blue-100 hover:border-blue-300 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all">
+                    <span className="text-3xl font-black text-blue-600 group-hover:scale-110 transition-transform">{rankings.followUp.proximos.length}</span>
+                    <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wider mt-2">Próximos 7d</span>
                   </div>
-                  <div onClick={() => openDetalhe('Oportunidades de Alta Prioridade', rankings.followUp.altaPrioArr)} className="cursor-pointer hover:bg-orange-100 bg-orange-50 p-3 rounded-lg border border-orange-100 flex flex-col items-center justify-center text-center transition-colors">
-                    <span className="text-2xl font-black text-orange-600">{rankings.followUp.altaPrioArr.length}</span>
-                    <span className="text-[10px] font-bold text-orange-800 uppercase mt-1">Alta Prioridade</span>
+                  <div onClick={() => openDetalhe('Oportunidades de Alta Prioridade', rankings.followUp.altaPrioArr)} className="group cursor-pointer hover:bg-orange-50 bg-white border-2 border-orange-100 hover:border-orange-300 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all">
+                    <span className="text-3xl font-black text-orange-600 group-hover:scale-110 transition-transform">{rankings.followUp.altaPrioArr.length}</span>
+                    <span className="text-[10px] font-bold text-orange-800 uppercase tracking-wider mt-2">Alta Priori.</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Linha 3: Rankings (Produtos, Clientes, Regiões) */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2 uppercase tracking-wider"><Package size={18} className="text-indigo-500"/> Top Produtos (Por Valor)</h3>
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-widest"><Package size={20} className="text-indigo-500"/> Top Produtos</h3>
                 {rankings.topProdutos && rankings.topProdutos.length > 0 ? (
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {rankings.topProdutos.map(([name, data], idx) => (
                       <BarGraphic key={idx} label={name} value={data.valor} subValue={`${data.qtd} un.`} max={rankings.topProdutos[0][1]?.valor || 0} />
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400 italic">Sem dados suficientes para este indicador.</p>
+                  <div className="h-40 flex items-center justify-center border-2 border-dashed border-slate-100 rounded-xl">
+                    <p className="text-xs text-slate-400 font-medium italic">Sem dados neste período</p>
+                  </div>
                 )}
               </div>
 
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2 uppercase tracking-wider"><Users size={18} className="text-emerald-500"/> Top Clientes (Por Valor)</h3>
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-widest"><Users size={20} className="text-emerald-500"/> Top Clientes</h3>
                 {rankings.topClientes && rankings.topClientes.length > 0 ? (
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {rankings.topClientes.map(([name, data], idx) => (
                       <BarGraphic key={idx} label={name} value={data.valor} subValue={`${data.qtd} un.`} max={rankings.topClientes[0][1]?.valor || 0} />
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400 italic">Sem dados suficientes para este indicador.</p>
+                  <div className="h-40 flex items-center justify-center border-2 border-dashed border-slate-100 rounded-xl">
+                    <p className="text-xs text-slate-400 font-medium italic">Sem dados neste período</p>
+                  </div>
                 )}
               </div>
 
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2 uppercase tracking-wider"><MapPin size={18} className="text-amber-500"/> Top Regiões (Por Valor)</h3>
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-widest"><MapPin size={20} className="text-amber-500"/> Top Regiões</h3>
                 {rankings.topRegioes && rankings.topRegioes.length > 0 ? (
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {rankings.topRegioes.map(([name, data], idx) => (
                       <BarGraphic key={idx} label={name} value={data.valor} subValue={`${data.qtd} un.`} max={rankings.topRegioes[0][1]?.valor || 0} />
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400 italic">Sem dados suficientes para este indicador.</p>
+                  <div className="h-40 flex items-center justify-center border-2 border-dashed border-slate-100 rounded-xl">
+                    <p className="text-xs text-slate-400 font-medium italic">Sem dados neste período</p>
+                  </div>
                 )}
               </div>
 
             </div>
 
             {/* Linha 4: Oportunidades para agir agora */}
-            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-              <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2 uppercase tracking-wider"><AlertTriangle size={18} className="text-orange-500"/> Oportunidades para agir agora</h3>
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-widest"><AlertTriangle size={20} className="text-orange-500"/> Oportunidades para agir agora</h3>
               
               {agirAgora && agirAgora.length > 0 ? (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-200 bg-slate-50">
-                        <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase rounded-tl-lg">Temp.</th>
-                        <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase">Orçamento</th>
-                        <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase">Cliente</th>
-                        <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase text-right">Valor</th>
-                        <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase">Retorno</th>
-                        <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase">Ação</th>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="py-3 px-4 text-[11px] font-black text-slate-500 uppercase tracking-widest rounded-tl-xl">Temp.</th>
+                        <th className="py-3 px-4 text-[11px] font-black text-slate-500 uppercase tracking-widest">Orçamento</th>
+                        <th className="py-3 px-4 text-[11px] font-black text-slate-500 uppercase tracking-widest">Cliente</th>
+                        <th className="py-3 px-4 text-[11px] font-black text-slate-500 uppercase tracking-widest text-right">Valor</th>
+                        <th className="py-3 px-4 text-[11px] font-black text-slate-500 uppercase tracking-widest">Retorno</th>
+                        <th className="py-3 px-4 text-[11px] font-black text-slate-500 uppercase tracking-widest rounded-tr-xl">Ação (Whats)</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-slate-100">
                       {agirAgora.map((orc, i) => (
-                        <tr key={i} className="border-b border-slate-100 hover:bg-slate-50 group">
-                          <td className="py-3 px-3">
-                            <div className={`p-1.5 rounded-md inline-flex items-center justify-center ${
-                              orc.temp === 'quente' ? 'bg-rose-100 text-rose-600' :
-                              orc.temp === 'morna' ? 'bg-amber-100 text-amber-500' :
-                              'bg-blue-100 text-blue-500'
-                            }`} title={`Oportunidade ${orc.temp}`}>
-                              {orc.temp === 'quente' ? <Flame size={16} /> :
-                               orc.temp === 'morna' ? <Sun size={16} /> :
-                               <Snowflake size={16} />}
+                        <tr key={i} className="hover:bg-slate-50 group transition-colors">
+                          <td className="py-3 px-4">
+                            <div className={`p-2 rounded-xl inline-flex items-center justify-center shadow-sm ${
+                              orc.temp === 'quente' ? 'bg-gradient-to-br from-rose-100 to-rose-200 text-rose-700 border border-rose-300' :
+                              orc.temp === 'morna' ? 'bg-gradient-to-br from-amber-100 to-amber-200 text-amber-700 border border-amber-300' :
+                              'bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 border border-blue-200'
+                            }`} title={`Temperatura: ${orc.temp}`}>
+                              {orc.temp === 'quente' ? <Flame size={18} strokeWidth={2.5} /> :
+                               orc.temp === 'morna' ? <Sun size={18} strokeWidth={2.5} /> :
+                               <Snowflake size={18} strokeWidth={2.5} />}
                             </div>
                           </td>
-                          <td className="py-3 px-3 text-xs font-bold text-slate-600">#{orc?.numero_sequencial || orc?.id?.slice(0,6)}</td>
-                          <td className="py-3 px-3 font-bold text-sm text-slate-800 max-w-[200px] truncate">{orc?.cliente || '-'}</td>
-                          <td className="py-3 px-3 font-black text-sm text-indigo-700 text-right">{formatCurrency(orc?.total)}</td>
-                          <td className="py-3 px-3 text-xs font-medium">
-                            <span className={`px-2 py-1 rounded-md border ${
-                              orc.temp === 'quente' ? 'bg-rose-50 text-rose-700 border-rose-200' : 
-                              orc.temp === 'morna' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
-                              'bg-slate-50 text-slate-700 border-slate-200'
+                          <td className="py-3 px-4 text-sm font-bold text-slate-500">#{orc?.numero_sequencial || orc?.id?.slice(0,6)}</td>
+                          <td className="py-3 px-4 font-black text-sm text-slate-800 max-w-[200px] truncate">{orc?.cliente || '-'}</td>
+                          <td className="py-3 px-4 font-black text-sm text-slate-900 text-right">{formatCurrency(orc?.total)}</td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
+                              orc.temp === 'quente' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 
+                              orc.temp === 'morna' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 
+                              'bg-white text-slate-600 border border-slate-200'
                             }`}>
                               {orc?.data_retorno ? String(orc.data_retorno).split('-').reverse().join('/') : 'Sem data'}
                             </span>
                           </td>
-                          <td className="py-3 px-3">
-                            <div className="flex items-center gap-2 justify-between">
-                              <span className="text-xs text-slate-600 italic truncate max-w-[150px] block" title={orc?.proxima_acao}>{orc?.proxima_acao || 'Nenhuma'}</span>
-                              <button onClick={() => sendWhatsApp(orc)} className="flex items-center gap-1 text-emerald-600 hover:text-white bg-emerald-50 hover:bg-emerald-500 border border-emerald-200 hover:border-emerald-600 px-2 py-1.5 rounded-md transition-all opacity-70 group-hover:opacity-100">
-                                <MessageCircle size={14} /> <span className="text-[10px] font-bold uppercase hidden sm:inline">WhatsApp</span>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-3 justify-between">
+                              <span className="text-xs text-slate-500 font-medium truncate max-w-[150px] block" title={orc?.proxima_acao}>{orc?.proxima_acao || 'Nenhuma'}</span>
+                              <button onClick={() => sendWhatsApp(orc)} className="flex items-center justify-center p-2 text-emerald-600 hover:text-white bg-emerald-50 hover:bg-emerald-500 border border-emerald-200 hover:border-emerald-600 rounded-xl transition-all shadow-sm opacity-80 group-hover:opacity-100">
+                                <MessageCircle size={16} strokeWidth={2.5} />
                               </button>
                             </div>
                           </td>
@@ -687,9 +708,12 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                   </table>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center p-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                  <CheckCircle size={32} className="text-slate-300 mb-2" />
-                  <p className="text-sm text-slate-500 font-medium">Nenhuma oportunidade urgente no momento.</p>
+                <div className="flex flex-col items-center justify-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                  <div className="p-4 bg-white rounded-full shadow-sm mb-4">
+                    <CheckCircle size={32} className="text-emerald-400" />
+                  </div>
+                  <h4 className="text-lg font-black text-slate-700 mb-1">Tudo em dia!</h4>
+                  <p className="text-sm text-slate-500 font-medium">Nenhuma oportunidade urgente no radar para os filtros selecionados.</p>
                 </div>
               )}
             </div>
