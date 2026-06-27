@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, MessageCircle, RefreshCw, Mailbox, Check, Archive, Trash2, AlertCircle } from 'lucide-react';
+import { X, MessageCircle, RefreshCw, Mailbox, Check, Archive, AlertCircle } from 'lucide-react';
 import { SolicitacaoOrcamento } from '../types';
 import { supabase } from '../supabase';
 
@@ -36,11 +36,11 @@ export function SolicitacoesModal({
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Convertida': return <span className="bg-green-100 text-green-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider border border-green-200">{status}</span>;
-      case 'Pendente': return <span className="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider border border-amber-200">{status}</span>;
-      case 'Arquivada': return <span className="bg-gray-100 text-gray-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider border border-gray-200">{status}</span>;
-      case 'Spam': return <span className="bg-red-100 text-red-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider border border-red-200">{status}</span>;
-      default: return <span className="bg-blue-100 text-blue-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider border border-blue-200">{status}</span>;
+      case 'Convertida': return <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider border border-emerald-500/30">{status}</span>;
+      case 'Pendente': return <span className="bg-amber-500/20 text-amber-400 text-[10px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider border border-amber-500/30">{status}</span>;
+      case 'Arquivada': return <span className="bg-slate-500/20 text-slate-400 text-[10px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider border border-slate-500/30">{status}</span>;
+      case 'Spam': return <span className="bg-rose-500/20 text-rose-400 text-[10px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider border border-rose-500/30">{status}</span>;
+      default: return <span className="bg-blue-500/20 text-blue-400 text-[10px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider border border-blue-500/30">{status}</span>;
     }
   };
 
@@ -69,49 +69,53 @@ export function SolicitacoesModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border-t-4 border-indigo-500">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-blue-950/80 backdrop-blur-md animate-fade-in transition-opacity">
+      <div className="bg-blue-950 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] w-full max-w-4xl max-h-[90vh] flex flex-col border border-blue-800/50 overflow-hidden text-slate-200">
+        
         {/* Modal header */}
-        <div className="flex items-center justify-between p-6 border-b-2 border-gray-100 bg-gradient-to-r from-indigo-50 to-transparent">
-          <div>
-            <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-              <Mailbox className="text-indigo-600" /> Inbox de Solicitações
-            </h2>
-            <p className="text-sm text-gray-500 mt-0.5">{solicitacoes.length} lead(s) capturado(s)</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 border-b border-blue-900 bg-blue-950 shadow-sm relative z-10 gap-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3.5 bg-gradient-to-br from-emerald-600 to-emerald-400 text-slate-950 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hidden sm:block">
+              <Mailbox size={28} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Inbox de <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-200">Solicitações</span></h2>
+              <p className="text-sm text-slate-400 font-medium mt-0.5">{solicitacoes.length} lead(s) capturado(s) pelo site</p>
+            </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2 self-end sm:self-auto">
             <button
               onClick={onRefresh}
               disabled={loading}
-              className="p-2 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors disabled:opacity-50"
+              className="p-2.5 rounded-xl bg-blue-900/80 text-emerald-400 hover:text-emerald-300 hover:bg-blue-800 transition-all border border-blue-800 shadow-sm disabled:opacity-50 active:scale-95"
               title="Atualizar"
             >
-              <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+              <RefreshCw size={20} strokeWidth={2.5} className={loading ? 'animate-spin' : ''} />
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+              className="p-2.5 rounded-xl bg-blue-900 hover:bg-slate-700 hover:text-white transition-all border border-blue-800 text-slate-400 shadow-sm active:scale-95"
             >
-              <X size={20} />
+              <X size={20} strokeWidth={2.5} />
             </button>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="px-6 py-3 bg-white border-b border-gray-100 flex gap-2 overflow-x-auto hide-scrollbar">
+        <div className="px-6 py-4 bg-blue-950/80 border-b border-blue-900 flex gap-2 overflow-x-auto hide-scrollbar relative z-10">
           {Object.entries(counts).map(([key, count]) => (
             <button
               key={key}
               onClick={() => setFiltro(key)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 border active:scale-95 ${
                 filtro === key 
-                  ? 'bg-indigo-600 text-white shadow-md' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-emerald-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] border-emerald-500/50' 
+                  : 'bg-blue-900/50 text-slate-400 hover:bg-blue-800 hover:text-white border-blue-800'
               }`}
             >
               {key}
-              <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                filtro === key ? 'bg-white/20 text-white' : 'bg-white text-gray-500 shadow-sm'
+              <span className={`px-2 py-0.5 rounded-lg text-[10px] ${
+                filtro === key ? 'bg-white/20 text-white' : 'bg-blue-950 text-slate-400 border border-blue-800'
               }`}>
                 {count}
               </span>
@@ -120,134 +124,148 @@ export function SolicitacoesModal({
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50">
+        <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-blue-950/30">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-10 h-10 border-4 border-blue-900 border-t-emerald-500 rounded-full animate-spin shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+              <p className="mt-4 text-slate-400 font-bold uppercase tracking-widest text-sm">Atualizando...</p>
             </div>
           ) : solicitacoesFiltradas.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
-              <Mailbox size={48} className="mx-auto mb-3 opacity-30" />
-              <p className="text-lg font-bold">Nenhuma solicitação encontrada</p>
-              <p className="text-sm">
-                {filtro === 'Todas' ? 'Os clientes preencherão o formulário público.' : `Nenhuma solicitação com status "${filtro}"`}
+            <div className="text-center py-20 text-slate-500 flex flex-col items-center bg-blue-900/20 rounded-3xl border border-dashed border-blue-800">
+              <div className="p-4 bg-blue-900/50 rounded-full mb-4 border border-blue-800">
+                <Mailbox size={48} className="opacity-50 text-slate-400" />
+              </div>
+              <p className="text-xl font-black text-white">Nenhuma solicitação encontrada</p>
+              <p className="text-sm mt-1 font-medium">
+                {filtro === 'Todas' ? 'Os clientes preencherão o formulário público no site.' : `Nenhuma solicitação com status "${filtro}".`}
               </p>
             </div>
           ) : (
-            solicitacoesFiltradas.map((sol) => (
-              <div
-                key={sol.id}
-                className={`flex flex-col gap-3 p-4 rounded-xl bg-white shadow-sm border-l-4 transition-all group ${
-                  sol.status === 'Pendente' ? 'border-amber-400 hover:shadow-md' :
-                  sol.status === 'Convertida' ? 'border-green-500 opacity-80' :
-                  sol.status === 'Spam' ? 'border-red-500 opacity-60' : 'border-gray-400 opacity-60'
-                }`}
-              >
-                {/* Cabecalho do Card */}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-black text-indigo-700 text-base">{sol.codigo}</span>
-                      {getStatusBadge(sol.status)}
-                      <span className="text-gray-300">•</span>
-                      <span className="text-xs font-semibold text-gray-500">
-                        {new Date(sol.created_at).toLocaleString('pt-BR')}
-                      </span>
+            <div className="grid grid-cols-1 gap-4">
+              {solicitacoesFiltradas.map((sol) => (
+                <div
+                  key={sol.id}
+                  className={`flex flex-col gap-4 p-5 rounded-2xl bg-blue-900/40 shadow-lg transition-all group relative overflow-hidden border border-blue-800 hover:bg-blue-900/60 hover:-translate-y-1 ${
+                    sol.status === 'Convertida' ? 'opacity-80' : sol.status === 'Spam' || sol.status === 'Arquivada' ? 'opacity-60 grayscale-[0.2]' : ''
+                  }`}
+                >
+                  <div className={`absolute top-0 left-0 w-1 h-full opacity-80 group-hover:opacity-100 transition-opacity ${
+                    sol.status === 'Convertida' ? 'bg-emerald-500' :
+                    sol.status === 'Pendente' ? 'bg-amber-500' :
+                    sol.status === 'Spam' ? 'bg-rose-500' : 'bg-slate-500'
+                  }`}></div>
+
+                  {/* Cabecalho do Card */}
+                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0 pl-2">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <span className="font-black text-white text-lg">{sol.codigo}</span>
+                        {getStatusBadge(sol.status)}
+                        <span className="text-blue-800 font-bold hidden sm:inline">•</span>
+                        <span className="text-xs font-bold text-slate-400">
+                          {new Date(sol.created_at).toLocaleString('pt-BR')}
+                        </span>
+                      </div>
+                      <p className="font-bold text-emerald-400 truncate text-xl mb-1">{sol.nome_razao}</p>
+                      <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-slate-300 font-medium">
+                        <span className="flex items-center gap-1.5"><span className="text-emerald-500/70">📱</span> {sol.telefone}</span>
+                        {sol.email && <span className="flex items-center gap-1.5"><span className="text-indigo-400/70">✉️</span> {sol.email}</span>}
+                      </div>
                     </div>
-                    <p className="font-bold text-gray-900 truncate text-lg">{sol.nome_razao}</p>
-                    <div className="flex items-center gap-3 mt-1 text-sm text-gray-600">
-                      <span>📱 {sol.telefone}</span>
-                      {sol.email && <span>✉️ {sol.email}</span>}
+                    
+                    {/* Botoes de Acao Principais */}
+                    <div className="flex flex-wrap gap-2 md:justify-end pl-2 md:pl-0">
+                      <button
+                        onClick={() => enviarWhatsApp(sol)}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/30 text-xs font-bold rounded-xl hover:bg-[#25D366] hover:text-white transition-all shadow-sm active:scale-95"
+                      >
+                        <MessageCircle size={16} strokeWidth={2.5} /> WhatsApp
+                      </button>
+                      {sol.status === 'Pendente' && (
+                        <button
+                          onClick={() => onConverter(sol)}
+                          disabled={updating === sol.id}
+                          className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white border border-blue-500/50 text-xs font-bold rounded-xl hover:bg-blue-500 transition-all shadow-[0_0_10px_rgba(37,99,235,0.3)] disabled:opacity-50 active:scale-95"
+                          title="Preencher no Painel de Orçamentos"
+                        >
+                          <Check size={16} strokeWidth={2.5} /> Converter
+                        </button>
+                      )}
+                      {sol.status === 'Pendente' && (
+                        <button
+                          onClick={() => atualizarStatus(sol.id, 'Arquivada')}
+                          disabled={updating === sol.id}
+                          className="flex items-center justify-center p-2 bg-slate-700/50 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-600 hover:text-white transition-all shadow-sm border border-slate-600 disabled:opacity-50 active:scale-95"
+                          title="Arquivar"
+                        >
+                          <Archive size={16} strokeWidth={2.5} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Detalhes da Solicitacao */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 bg-blue-900/30 p-4 rounded-xl border border-blue-800/50 ml-2">
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5">Pedido Solicitado</p>
+                      <p className="text-base font-bold text-slate-200">{sol.quantidade}x {sol.jogo_escolhido}</p>
+                      {sol.embrulho_presente && (
+                        <span className="inline-block mt-2 bg-pink-500/10 text-pink-400 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-pink-500/20">
+                          🎁 Embrulho para presente incluso
+                        </span>
+                      )}
+                    </div>
+                    <div className="md:text-right">
+                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5">Total Estimado</p>
+                      <p className="text-xl font-black text-emerald-400">{fmt(sol.total_estimado)}</p>
+                      <p className="text-xs text-slate-400 font-bold mt-1">Pgto: <span className="text-slate-300">{sol.forma_pagamento}</span></p>
                     </div>
                   </div>
                   
-                  {/* Botoes de Acao Principais */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => enviarWhatsApp(sol)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[#25D366] text-white text-xs font-bold rounded-lg hover:bg-[#1ebe5d] transition-all shadow-sm"
-                    >
-                      <MessageCircle size={14} /> WhatsApp
-                    </button>
-                    {sol.status === 'Pendente' && (
-                      <button
-                        onClick={() => onConverter(sol)}
-                        disabled={updating === sol.id}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-all shadow-sm disabled:opacity-50"
-                        title="Preencher no Painel de Orçamentos"
-                      >
-                        <Check size={14} /> Converter em Orçamento
-                      </button>
-                    )}
-                    {sol.status === 'Pendente' && (
-                      <button
-                        onClick={() => atualizarStatus(sol.id, 'Arquivada')}
-                        disabled={updating === sol.id}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-600 text-white text-xs font-bold rounded-lg hover:bg-gray-700 transition-all shadow-sm disabled:opacity-50"
-                        title="Arquivar"
-                      >
-                        <Archive size={14} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Detalhes da Solicitacao */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                  <div>
-                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Pedido</p>
-                    <p className="text-sm font-semibold text-gray-900">{sol.quantidade}x {sol.jogo_escolhido}</p>
-                    {sol.embrulho_presente && (
-                      <span className="inline-block mt-1 bg-pink-100 text-pink-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-pink-200">
-                        🎁 Embrulho para presente
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Total Estimado</p>
-                    <p className="text-lg font-black text-indigo-700">{fmt(sol.total_estimado)}</p>
-                    <p className="text-xs text-gray-600 font-medium">Pgto: {sol.forma_pagamento}</p>
-                  </div>
-                </div>
-                
-                {/* Endereco e Observacoes */}
-                <div className="flex flex-col gap-2 mt-1">
-                  <p className="text-xs text-gray-600">
-                    <span className="font-semibold">📍 Endereço:</span> {sol.endereco}, {sol.numero} {sol.complemento ? `(${sol.complemento})` : ''} - {sol.bairro}, {sol.cidade}/{sol.estado} - {sol.cep}
-                  </p>
-                  {sol.observacoes_cliente && (
-                    <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded border border-amber-100">
-                      <span className="font-semibold">📝 Observações:</span> {sol.observacoes_cliente}
+                  {/* Endereco e Observacoes */}
+                  <div className="flex flex-col gap-3 mt-1 ml-2">
+                    <p className="text-xs text-slate-300 font-medium leading-relaxed">
+                      <span className="font-bold text-amber-400/80 mr-1">📍 Endereço:</span> 
+                      {sol.endereco}, {sol.numero} {sol.complemento ? `(${sol.complemento})` : ''} - {sol.bairro}, {sol.cidade}/{sol.estado} - {sol.cep}
                     </p>
-                  )}
-                </div>
+                    {sol.observacoes_cliente && (
+                      <div className="bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">
+                        <p className="text-xs text-amber-400 font-medium leading-relaxed">
+                          <span className="font-black uppercase tracking-wider mr-1">📝 Obs do Cliente:</span> 
+                          {sol.observacoes_cliente}
+                        </p>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Controles de Status Secundarios */}
-                <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-gray-100">
-                  {sol.status !== 'Pendente' && (
-                    <button
-                      onClick={() => atualizarStatus(sol.id, 'Pendente')}
-                      disabled={updating === sol.id}
-                      className="text-xs font-bold text-amber-600 hover:text-amber-800 disabled:opacity-50"
-                    >
-                      Voltar para Pendente
-                    </button>
-                  )}
-                  {sol.status !== 'Spam' && (
-                    <button
-                      onClick={() => atualizarStatus(sol.id, 'Spam')}
-                      disabled={updating === sol.id}
-                      className="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1 disabled:opacity-50"
-                    >
-                      <AlertCircle size={12} /> Marcar como Spam
-                    </button>
-                  )}
+                  {/* Controles de Status Secundarios */}
+                  <div className="flex flex-wrap justify-end gap-3 mt-3 pt-3 border-t border-blue-800/50 ml-2">
+                    {sol.status !== 'Pendente' && (
+                      <button
+                        onClick={() => atualizarStatus(sol.id, 'Pendente')}
+                        disabled={updating === sol.id}
+                        className="text-xs font-bold text-amber-500 hover:text-amber-400 disabled:opacity-50 transition-colors"
+                      >
+                        Restaurar para Pendente
+                      </button>
+                    )}
+                    {sol.status !== 'Spam' && (
+                      <button
+                        onClick={() => atualizarStatus(sol.id, 'Spam')}
+                        disabled={updating === sol.id}
+                        className="text-xs font-bold text-rose-500 hover:text-rose-400 flex items-center gap-1.5 disabled:opacity-50 transition-colors"
+                      >
+                        <AlertCircle size={14} strokeWidth={2.5} /> Marcar como Spam
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </div>
     </div>
   );
 }
+
