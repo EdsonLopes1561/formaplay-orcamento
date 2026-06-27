@@ -522,10 +522,11 @@ function App() {
         )}
 
         {/* Header */}
-        <header className="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-950 border-b-4 border-green-400 shadow-2xl sticky top-0 z-40 backdrop-blur-md">
-          <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-5">
-            <div className="flex items-center justify-between gap-2 sm:gap-4">
-              <div className="flex items-center gap-2 sm:gap-5 min-w-0">
+        <header className="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-950 border-b-4 border-green-400 shadow-2xl sticky top-0 z-40 backdrop-blur-md w-full overflow-hidden">
+          <div className="max-w-6xl mx-auto px-2 sm:px-4 py-3 sm:py-5 w-full">
+            <div className="flex flex-row items-center justify-between gap-2">
+              
+              <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                 <div className="h-10 w-10 sm:h-16 sm:w-16 flex-shrink-0 rounded-full border-2 border-green-400 shadow-2xl flex items-center justify-center bg-white">
                   <img
                     src="/logocircular.png"
@@ -535,24 +536,23 @@ function App() {
                 </div>
 
                 <div className="border-l-4 border-green-400 pl-2 sm:pl-5 py-0.5 sm:py-1 min-w-0">
-                  <h1 className="font-black text-white leading-tight text-lg sm:text-2xl tracking-tight drop-shadow-lg truncate">
+                  <h1 className="font-black text-white leading-tight text-base sm:text-2xl tracking-tight drop-shadow-lg truncate">
                     <FormaPlayBrand />
                   </h1>
-
-                  <p className="text-[10px] sm:text-sm font-extrabold text-green-300 tracking-wide uppercase truncate">
+                  <p className="text-[9px] sm:text-sm font-extrabold text-green-300 tracking-wide uppercase truncate">
                     Jogos Educacionais
                   </p>
-
-                  <p className="text-[9px] sm:text-xs text-blue-100 mt-0.5 sm:mt-1 font-medium tracking-wide truncate">
+                  <p className="hidden sm:block text-[9px] sm:text-xs text-blue-100 mt-0.5 sm:mt-1 font-medium tracking-wide truncate">
                     Sistema de Orçamentos Profissionais
                   </p>
                 </div>
               </div>
+
               <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                 {form.numero && (
-                  <div className="text-right bg-gradient-to-r from-green-500 to-green-600 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl border-2 border-green-300 shadow-lg transform hover:scale-105 transition-all">
-                    <span className="text-[9px] sm:text-xs text-green-900 font-black uppercase tracking-widest block">Orç.</span>
-                    <p className="font-black text-white text-base sm:text-2xl leading-tight">{form.numero}</p>
+                  <div className="text-right bg-gradient-to-r from-green-500 to-green-600 px-2.5 py-1.5 sm:px-5 sm:py-3 rounded-lg sm:rounded-xl border border-green-300 shadow-lg transform hover:scale-105 transition-all">
+                    <span className="text-[8px] sm:text-xs text-green-900 font-black uppercase tracking-widest block">Orç.</span>
+                    <p className="font-black text-white text-sm sm:text-2xl leading-tight">{form.numero}</p>
                   </div>
                 )}
                 <button
@@ -569,10 +569,11 @@ function App() {
                   className="flex items-center justify-center gap-1 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-xs sm:text-sm"
                   title="Sair"
                 >
-                  <LogOut size={16} className="sm:w-[18px] sm:h-[18px]" />
+                  <LogOut size={16} className="w-[14px] h-[14px] sm:w-[18px] sm:h-[18px]" />
                   <span className="hidden sm:inline">Sair</span>
                 </button>
               </div>
+
             </div>
           </div>
         </header>
