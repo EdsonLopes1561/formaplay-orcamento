@@ -38,8 +38,36 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
   const [isSearchingCep, setIsSearchingCep] = useState(false);
   const [cepError, setCepError] = useState<string | null>(null);
 
-  const handleCepChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const fetchCep = async (cepStr: string, formattedCep: string) => {
+    setIsSearchingCep(true);
+    try {
+      const url = `https://viacep.com.br/ws/${cepStr}/json/`;
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      if (data.erro) {
+        setCepError('CEP não encontrado. Preencha o endereço manualmente.');
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          cep: formattedCep,
+          endereco: data.logradouro || prev.endereco,
+          bairro: data.bairro || prev.bairro,
+          cidade: data.localidade || prev.cidade,
+          estado: data.uf || prev.estado,
+        }));
+      }
+    } catch (err) {
+      console.error('Erro ao buscar CEP:', err);
+      setCepError('Não foi possível consultar o CEP agora. Preencha o endereço manualmente.');
+    } finally {
+      setIsSearchingCep(false);
+    }
+  };
+
+  const handleCepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/\D/g, '');
+    
     let formattedCep = rawValue;
     if (rawValue.length > 5) {
       formattedCep = `${rawValue.slice(0, 5)}-${rawValue.slice(5, 8)}`;
@@ -49,27 +77,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
     setCepError(null);
 
     if (rawValue.length === 8) {
-      setIsSearchingCep(true);
-      try {
-        const res = await fetch(`https://viacep.com.br/ws/${rawValue}/json/`);
-        const data = await res.json();
-        if (data.erro) {
-          setCepError('CEP não encontrado. Preencha o endereço manualmente.');
-        } else {
-          setFormData((prev) => ({
-            ...prev,
-            endereco: data.logradouro || prev.endereco,
-            bairro: data.bairro || prev.bairro,
-            cidade: data.localidade || prev.cidade,
-            estado: data.uf || prev.estado,
-          }));
-        }
-      } catch (err) {
-        console.error('Erro ao buscar CEP:', err);
-        setCepError('Não foi possível consultar o CEP agora. Preencha o endereço manualmente.');
-      } finally {
-        setIsSearchingCep(false);
-      }
+      fetchCep(rawValue, formattedCep);
     }
   };
 
