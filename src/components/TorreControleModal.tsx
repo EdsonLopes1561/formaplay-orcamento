@@ -8,6 +8,7 @@ interface TorreControleModalProps {
 
 export function TorreControleModal({ onClose }: TorreControleModalProps) {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [solicitacoes, setSolicitacoes] = useState<any[]>([]);
   const [periodo, setPeriodo] = useState('Todos');
@@ -15,23 +16,30 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setError(false);
       try {
         const [orcRes, solRes] = await Promise.all([
           supabase.from('orcamentos').select('*').order('created_at', { ascending: false }),
           supabase.from('solicitacoes_orcamento').select('*').order('created_at', { ascending: false })
         ]);
-        if (orcRes.data) setOrcamentos(orcRes.data);
-        if (solRes.data) setSolicitacoes(solRes.data);
+        if (orcRes.error) throw orcRes.error;
+        if (solRes.error) throw solRes.error;
+
+        setOrcamentos(orcRes.data || []);
+        setSolicitacoes(solRes.data || []);
       } catch (e) {
-        console.error(e);
+        console.error("Erro na Torre de Controle:", e);
+        setError(true);
       }
       setLoading(false);
     };
     fetchData();
   }, []);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+  const formatCurrency = (value: any) => {
+    const num = Number(value);
+    if (isNaN(num)) return 'R$ 0,00';
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num);
   };
 
   const getStartDate = () => {
@@ -52,14 +60,16 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
   // Filtragem
   const orcamentosFiltrados = useMemo(() => {
     const start = getStartDate();
-    if (!start) return orcamentos;
-    return orcamentos.filter(o => new Date(o.created_at) >= start);
+    const lista = Array.isArray(orcamentos) ? orcamentos : [];
+    if (!start) return lista;
+    return lista.filter(o => o?.created_at && new Date(o.created_at) >= start);
   }, [orcamentos, periodo]);
 
   const solicitacoesFiltradas = useMemo(() => {
     const start = getStartDate();
-    if (!start) return solicitacoes;
-    return solicitacoes.filter(s => new Date(s.created_at) >= start);
+    const lista = Array.isArray(solicitacoes) ? solicitacoes : [];
+    if (!start) return lista;
+    return lista.filter(s => s?.created_at && new Date(s.created_at) >= start);
   }, [solicitacoes, periodo]);
 
   // Cálculos de Cards
@@ -69,10 +79,10 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
     let totalNegociacao = 0;
     let aprovadosCount = 0;
 
-    orcamentosFiltrados.forEach(o => {
-      const val = Number(o.total) || 0;
+    (orcamentosFiltrados || []).forEach(o => {
+      const val = Number(o?.total) || 0;
       totalOrcado += val;
-      const status = o.status || 'Aberto';
+      const status = o?.status || 'Aberto';
       if (status === 'Aprovado') {
         totalAprovado += val;
         aprovadosCount++;
@@ -100,7 +110,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
     const hoje: any[] = [];
     const proximos: any[] = [];
     const quentes: any[] = [];
-    const altaPrioridadeCount = orcamentosFiltrados.filter(o => o.prioridade === 'Alta').length;
+    const altaPrioridadeCount = (orcamentosFiltrados || []).filter(o => o?.prioridade === 'Alta').length;
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -110,11 +120,11 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
     const next7Days = new Date();
     next7Days.setDate(todayStart.getDate() + 7);
 
-    orcamentosFiltrados.forEach(o => {
-      const val = Number(o.total) || 0;
-      const pName = o.produto || 'Não informado';
-      const cName = o.cliente || 'Não informado';
-      const cReg = (o.cidade || o.cliente_cidade) ? `${o.cidade || o.cliente_cidade}/${o.estado || o.cliente_uf || ''}` : 'Não informada';
+    (orcamentosFiltrados || []).forEach(o => {
+      const val = Number(o?.total) || 0;
+      const pName = String(o?.produto || 'Não informado');
+      const cName = String(o?.cliente || 'Não informado');
+      const cReg = (o?.cidade || o?.cliente_cidade) ? `${o.cidade || o.cliente_cidade}/${o.estado || o.cliente_uf || ''}` : 'Não informada';
       
       if (!produtos[pName]) produtos[pName] = { qtd: 0, valor: 0 };
       produtos[pName].qtd++;
@@ -129,16 +139,18 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
       regioes[cReg].valor += val;
 
       // Follow-up
-      const status = o.status || 'Aberto';
-      if ((status === 'Aberto' || status === 'Enviado') && o.data_retorno) {
+      const status = o?.status || 'Aberto';
+      if ((status === 'Aberto' || status === 'Enviado') && o?.data_retorno) {
         const retDate = new Date(o.data_retorno + 'T00:00:00');
-        if (retDate < todayStart) atrasados.push(o);
-        else if (retDate >= todayStart && retDate <= todayEnd) hoje.push(o);
-        else if (retDate > todayEnd && retDate <= next7Days) proximos.push(o);
+        if (!isNaN(retDate.getTime())) {
+          if (retDate < todayStart) atrasados.push(o);
+          else if (retDate >= todayStart && retDate <= todayEnd) hoje.push(o);
+          else if (retDate > todayEnd && retDate <= next7Days) proximos.push(o);
+        }
       }
 
       // Oportunidades quentes: Alta prioridade + em negociação
-      if ((status === 'Aberto' || status === 'Enviado') && o.prioridade === 'Alta') {
+      if ((status === 'Aberto' || status === 'Enviado') && o?.prioridade === 'Alta') {
         quentes.push(o);
       }
     });
@@ -155,7 +167,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
         proximos: proximos.length,
         altaPrioridade: altaPrioridadeCount
       },
-      quentes: quentes.sort((a, b) => Number(b.total) - Number(a.total)).slice(0, 5)
+      quentes: quentes.sort((a, b) => (Number(b?.total) || 0) - (Number(a?.total) || 0)).slice(0, 5)
     };
   }, [orcamentosFiltrados]);
 
@@ -163,8 +175,8 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
   const funnel = useMemo(() => {
     let enviados = 0;
     let aprovados = 0;
-    orcamentosFiltrados.forEach(o => {
-      const st = o.status || 'Aberto';
+    (orcamentosFiltrados || []).forEach(o => {
+      const st = o?.status || 'Aberto';
       if (st === 'Enviado') enviados++;
       if (st === 'Aprovado') aprovados++;
     });
@@ -177,27 +189,30 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
   }, [solicitacoesFiltradas, orcamentosFiltrados]);
 
   const BarGraphic = ({ label, value, max, subValue }: { label: string, value: number, max: number, subValue?: string }) => {
-    const percent = max > 0 ? (value / max) * 100 : 0;
+    const safeMax = Number(max) || 0;
+    const safeValue = Number(value) || 0;
+    const percent = safeMax > 0 ? (safeValue / safeMax) * 100 : 0;
+    
     return (
       <div className="mb-3">
         <div className="flex justify-between text-xs font-medium text-gray-700 mb-1">
-          <span className="truncate pr-2">{label}</span>
-          <span className="whitespace-nowrap font-bold text-gray-900">{formatCurrency(value)} {subValue && <span className="text-gray-400 font-normal ml-1">({subValue})</span>}</span>
+          <span className="truncate pr-2">{String(label)}</span>
+          <span className="whitespace-nowrap font-bold text-gray-900">{formatCurrency(safeValue)} {subValue && <span className="text-gray-400 font-normal ml-1">({subValue})</span>}</span>
         </div>
         <div className="w-full bg-gray-100 rounded-full h-2.5">
-          <div className="bg-indigo-600 h-2.5 rounded-full" style={{ width: `${percent}%` }}></div>
+          <div className="bg-indigo-600 h-2.5 rounded-full" style={{ width: `${Math.min(percent, 100)}%` }}></div>
         </div>
       </div>
     );
   };
 
   const FunnelGraphic = ({ data }: { data: any }) => {
-    const max = Math.max(data.solicitacoes, data.orcamentos, data.enviados, data.aprovados, 1);
+    const max = Math.max(Number(data?.solicitacoes) || 0, Number(data?.orcamentos) || 0, Number(data?.enviados) || 0, Number(data?.aprovados) || 0, 1);
     const steps = [
-      { label: 'Solicitações (Site)', value: data.solicitacoes, color: 'bg-blue-400' },
-      { label: 'Orçamentos Gerados', value: data.orcamentos, color: 'bg-indigo-500' },
-      { label: 'Orçamentos Enviados', value: data.enviados, color: 'bg-purple-500' },
-      { label: 'Orçamentos Aprovados', value: data.aprovados, color: 'bg-emerald-500' },
+      { label: 'Solicitações (Site)', value: Number(data?.solicitacoes) || 0, color: 'bg-blue-400' },
+      { label: 'Orçamentos Gerados', value: Number(data?.orcamentos) || 0, color: 'bg-indigo-500' },
+      { label: 'Orçamentos Enviados', value: Number(data?.enviados) || 0, color: 'bg-purple-500' },
+      { label: 'Orçamentos Aprovados', value: Number(data?.aprovados) || 0, color: 'bg-emerald-500' },
     ];
     
     return (
@@ -257,6 +272,12 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
             <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
             <p className="text-slate-500 font-medium text-sm">Carregando inteligência comercial...</p>
           </div>
+        ) : error ? (
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] text-center p-6">
+            <AlertTriangle size={48} className="text-rose-500 mb-4" />
+            <h3 className="text-lg font-bold text-slate-800">Não foi possível carregar os dados da Torre de Controle.</h3>
+            <p className="text-sm text-slate-500 mt-2">Por favor, verifique sua conexão ou tente novamente mais tarde.</p>
+          </div>
         ) : (
           <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
             
@@ -290,7 +311,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                 <div className="flex items-center gap-2 text-slate-500 mb-2">
                   <Target size={16} /> <span className="text-xs font-bold uppercase tracking-wider">Aprovação</span>
                 </div>
-                <div className="text-xl font-black text-slate-800">{cards.taxa.toFixed(1)}%</div>
+                <div className="text-xl font-black text-slate-800">{Number(cards.taxa || 0).toFixed(1)}%</div>
               </div>
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between bg-gradient-to-br from-slate-800 to-slate-900 text-white">
                 <div className="flex items-center gap-2 text-slate-300 mb-2">
@@ -338,10 +359,10 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
               
               <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2 uppercase tracking-wider"><Package size={18} className="text-indigo-500"/> Top Produtos (Por Valor)</h3>
-                {rankings.topProdutos.length > 0 ? (
+                {rankings.topProdutos && rankings.topProdutos.length > 0 ? (
                   <div className="space-y-1">
                     {rankings.topProdutos.map(([name, data], idx) => (
-                      <BarGraphic key={idx} label={name} value={data.valor} subValue={`${data.qtd} un.`} max={rankings.topProdutos[0][1].valor} />
+                      <BarGraphic key={idx} label={name} value={data.valor} subValue={`${data.qtd} un.`} max={rankings.topProdutos[0][1]?.valor || 0} />
                     ))}
                   </div>
                 ) : (
@@ -351,10 +372,10 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
 
               <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2 uppercase tracking-wider"><Users size={18} className="text-emerald-500"/> Top Clientes (Por Valor)</h3>
-                {rankings.topClientes.length > 0 ? (
+                {rankings.topClientes && rankings.topClientes.length > 0 ? (
                   <div className="space-y-1">
                     {rankings.topClientes.map(([name, data], idx) => (
-                      <BarGraphic key={idx} label={name} value={data.valor} subValue={`${data.qtd} un.`} max={rankings.topClientes[0][1].valor} />
+                      <BarGraphic key={idx} label={name} value={data.valor} subValue={`${data.qtd} un.`} max={rankings.topClientes[0][1]?.valor || 0} />
                     ))}
                   </div>
                 ) : (
@@ -364,10 +385,10 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
 
               <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2 uppercase tracking-wider"><MapPin size={18} className="text-amber-500"/> Top Regiões (Por Valor)</h3>
-                {rankings.topRegioes.length > 0 ? (
+                {rankings.topRegioes && rankings.topRegioes.length > 0 ? (
                   <div className="space-y-1">
                     {rankings.topRegioes.map(([name, data], idx) => (
-                      <BarGraphic key={idx} label={name} value={data.valor} subValue={`${data.qtd} un.`} max={rankings.topRegioes[0][1].valor} />
+                      <BarGraphic key={idx} label={name} value={data.valor} subValue={`${data.qtd} un.`} max={rankings.topRegioes[0][1]?.valor || 0} />
                     ))}
                   </div>
                 ) : (
@@ -381,7 +402,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
               <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2 uppercase tracking-wider"><AlertTriangle size={18} className="text-orange-500"/> Oportunidades Quentes (Alta Prioridade)</h3>
               
-              {rankings.quentes.length > 0 ? (
+              {rankings.quentes && rankings.quentes.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
@@ -395,17 +416,17 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                     <tbody>
                       {rankings.quentes.map((orc, i) => (
                         <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="py-3 pr-4 font-bold text-sm text-slate-800 max-w-[200px] truncate">{orc.cliente}</td>
-                          <td className="py-3 pr-4 font-black text-sm text-indigo-700">{formatCurrency(orc.total)}</td>
+                          <td className="py-3 pr-4 font-bold text-sm text-slate-800 max-w-[200px] truncate">{orc?.cliente || '-'}</td>
+                          <td className="py-3 pr-4 font-black text-sm text-indigo-700">{formatCurrency(orc?.total)}</td>
                           <td className="py-3 pr-4 text-xs font-medium">
                             <span className={`px-2 py-1 rounded-md ${
-                              orc.data_retorno && new Date(orc.data_retorno + 'T00:00:00') < new Date(new Date().setHours(0,0,0,0))
+                              orc?.data_retorno && !isNaN(new Date(orc.data_retorno + 'T00:00:00').getTime()) && new Date(orc.data_retorno + 'T00:00:00') < new Date(new Date().setHours(0,0,0,0))
                               ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-700'
                             }`}>
-                              {orc.data_retorno ? orc.data_retorno.split('-').reverse().join('/') : 'Sem data'}
+                              {orc?.data_retorno ? String(orc.data_retorno).split('-').reverse().join('/') : 'Sem data'}
                             </span>
                           </td>
-                          <td className="py-3 text-xs text-slate-600 italic truncate max-w-[300px]">{orc.proxima_acao || 'Nenhuma ação registrada'}</td>
+                          <td className="py-3 text-xs text-slate-600 italic truncate max-w-[300px]">{orc?.proxima_acao || 'Nenhuma ação registrada'}</td>
                         </tr>
                       ))}
                     </tbody>
