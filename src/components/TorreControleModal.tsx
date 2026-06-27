@@ -90,21 +90,51 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
       return cReg;
   };
 
-  // Valores Únicos para Comboboxes
-  const { uniqueProdutos, uniqueCidades } = useMemo(() => {
+  // Valores Únicos para Comboboxes e Mapa Canônico de Regiões
+  const { uniqueProdutos, uniqueCidades, canonicalMap } = useMemo(() => {
     const prods = new Set<string>();
-    const cids = new Set<string>();
+    const allCidades = new Set<string>();
+
     (orcamentos || []).forEach(o => {
       const p = String(o?.produto || '').trim();
       if (p) prods.add(p);
       const reg = getRegiaoNormalizada(o);
-      if (reg && reg !== 'Não informado') cids.add(reg);
+      allCidades.add(reg);
     });
+
+    const arrCidades = Array.from(allCidades);
+    const map = new Map<string, string>();
+
+    arrCidades.forEach(c => {
+      if (c !== 'Não informado' && !c.includes('/')) {
+        const withUf = arrCidades.find(other => other.startsWith(c + '/'));
+        if (withUf) {
+          map.set(c, withUf);
+        } else {
+          map.set(c, c);
+        }
+      } else {
+        map.set(c, c);
+      }
+    });
+
+    const cids = new Set<string>();
+    arrCidades.forEach(c => {
+      const canonical = map.get(c) || c;
+      if (canonical !== 'Não informado') cids.add(canonical);
+    });
+
     return {
       uniqueProdutos: Array.from(prods).sort(),
-      uniqueCidades: Array.from(cids).sort()
+      uniqueCidades: Array.from(cids).sort(),
+      canonicalMap: map
     };
   }, [orcamentos]);
+
+  const getRegiao = (o: any) => {
+    const basic = getRegiaoNormalizada(o);
+    return canonicalMap.get(basic) || basic;
+  };
 
   // Filtragem Geral
   const orcamentosFiltrados = useMemo(() => {
@@ -116,7 +146,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
       if (fStatus !== 'Todos' && (o?.status || 'Aberto') !== fStatus) return false;
       if (fPrioridade !== 'Todas' && (o?.prioridade || 'Baixa') !== fPrioridade) return false;
       if (fProduto !== 'Todos' && String(o?.produto || '').trim() !== fProduto) return false;
-      if (fCidade !== 'Todas' && getRegiaoNormalizada(o) !== fCidade) return false;
+      if (fCidade !== 'Todas' && getRegiao(o) !== fCidade) return false;
       return true;
     });
   }, [orcamentos, periodo, fStatus, fPrioridade, fProduto, fCidade]);
@@ -183,7 +213,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
       const val = Number(o?.total) || 0;
       const pName = String(o?.produto || 'Não informado').trim();
       const cName = String(o?.cliente || 'Não informado').trim();
-      const cReg = getRegiaoNormalizada(o);
+      const cReg = getRegiao(o);
       
       if (!produtos[pName]) produtos[pName] = { qtd: 0, valor: 0 };
       produtos[pName].qtd++;
