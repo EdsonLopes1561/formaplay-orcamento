@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Plus, Save, Printer, MessageCircle, FolderOpen, Copy,
+  Plus, Save, Printer, MessageCircle, FolderOpen, Copy, CopyPlus,
   Trash2, RotateCcw, ChevronDown, CheckCircle, AlertCircle,
   FileText, Users, Tag, Sparkles, Check, Package, LogOut, User, BarChart2, Mailbox
 } from 'lucide-react';
@@ -468,6 +468,29 @@ function App() {
     }
   };
 
+  const duplicarOrcamento = async () => {
+    if (!currentId) return; // Only makes sense to duplicate an existing saved one (or we can duplicate unsaved, doesn't matter, but user says "duplicar um orcamento existente")
+    
+    try {
+      const numero = await calcularNumeroOrcamento();
+      setForm((prev) => ({
+        ...prev,
+        numero,
+        data_orcamento: new Date().toLocaleDateString('pt-BR'),
+        status: 'Aberto',
+        prioridade: 'Baixa',
+        data_retorno: '',
+        proxima_acao: '',
+        observacao_interna: ''
+      }));
+      setCurrentId(null);
+      showToast('success', 'Orçamento duplicado com sucesso.');
+    } catch (error) {
+      console.error(error);
+      showToast('error', 'Não foi possível duplicar o orçamento.');
+    }
+  };
+
   const fmtCurrency = (v: number | string | null | undefined) => {
     const n = Number(v) || 0;
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -608,6 +631,14 @@ function App() {
               className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-200 active:scale-95 transition-all font-bold text-sm shadow-sm"
             >
               <Copy size={18} /> Copiar mensagem
+            </button>
+            <button
+              onClick={duplicarOrcamento}
+              disabled={!currentId}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg active:scale-95 transition-all font-bold text-sm shadow-sm border ${!currentId ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'}`}
+              title="Duplicar este orçamento"
+            >
+              <CopyPlus size={18} /> Duplicar orçamento
             </button>
             <button
               onClick={() => { setShowHistorico(true); carregarHistorico(); }}
