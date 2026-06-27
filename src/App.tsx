@@ -415,10 +415,16 @@ function App() {
         .replace(/^_|_$/g, "");         // remove underline das pontas
     };
 
-    const clienteBase = form.cliente || 'Cliente';
-    const produtoBase = (form.produto || '').split(' - ')[0] || 'Produto';
+    const produtoBase = (form.produto || '').split(' - ')[0];
+    const numLimpo = (form.numero || 'S-N').replace(/#/g, '');
     
-    let fileName = `Orcamento_${form.numero || 'S-N'}_${sanitize(clienteBase)}_${sanitize(produtoBase)}_FormaPlay`;
+    let fileName = `Orcamento_${numLimpo}`;
+    const prodSanitizado = sanitize(produtoBase);
+    if (prodSanitizado) {
+      fileName += `_${prodSanitizado}`;
+    }
+    fileName += `_FormaPlay`;
+    
     if (fileName.length > 120) fileName = fileName.substring(0, 120);
     
     document.title = fileName;
