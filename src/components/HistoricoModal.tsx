@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, FileText, Trash2, AlertTriangle } from 'lucide-react';
+import { X, FileText, Trash2, AlertTriangle, Search } from 'lucide-react';
 import { Orcamento } from '../types';
 
 interface HistoricoModalProps {
@@ -22,7 +22,11 @@ export function HistoricoModal({
   const fmt = (val: number) =>
     val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  const [filtro, setFiltro] = useState<string>('Todos');
+  const [filtroStatus, setFiltroStatus] = useState<string>('Todos');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtroProduto, setFiltroProduto] = useState<string>('');
+  const [dataInicial, setDataInicial] = useState<string>('');
+  const [dataFinal, setDataFinal] = useState<string>('');
 
   const counts = {
     Todos: orcamentos.length,
@@ -33,7 +37,53 @@ export function HistoricoModal({
     Cancelado: orcamentos.filter(o => o.status === 'Cancelado').length,
   };
 
-  const orcamentosFiltrados = orcamentos.filter(o => filtro === 'Todos' || (o.status || 'Aberto') === filtro);
+  const produtosUnicos = Array.from(new Set(orcamentos.map(o => o.produto).filter(Boolean)));
+
+  const orcamentosFiltrados = orcamentos.filter(o => {
+    if (filtroStatus !== 'Todos' && (o.status || 'Aberto') !== filtroStatus) return false;
+    
+    if (filtroProduto && o.produto !== filtroProduto) return false;
+
+    if (dataInicial || dataFinal) {
+      let oDateStr = o.created_at || '';
+      if (!oDateStr && o.data_orcamento) {
+        oDateStr = o.data_orcamento.split('/').reverse().join('-');
+      }
+      if (oDateStr) {
+        const oDate = new Date(oDateStr);
+        if (dataInicial && oDate < new Date(dataInicial + 'T00:00:00')) return false;
+        if (dataFinal && oDate > new Date(dataFinal + 'T23:59:59')) return false;
+      }
+    }
+
+    if (searchTerm) {
+      const sanitize = (str?: string) => str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : '';
+      const st = sanitize(searchTerm);
+      const match = (
+        sanitize(o.numero).includes(st) ||
+        sanitize(o.cliente).includes(st) ||
+        sanitize(o.cliente_razao_social).includes(st) ||
+        sanitize(o.cliente_documento).includes(st) ||
+        sanitize(o.telefone).includes(st) ||
+        sanitize(o.email).includes(st) ||
+        sanitize(o.cidade).includes(st) ||
+        sanitize(o.estado || o.cliente_uf).includes(st) ||
+        sanitize(o.produto).includes(st) ||
+        sanitize(o.status || 'Aberto').includes(st)
+      );
+      if (!match) return false;
+    }
+
+    return true;
+  });
+
+  const limparFiltros = () => {
+    setFiltroStatus('Todos');
+    setSearchTerm('');
+    setFiltroProduto('');
+    setDataInicial('');
+    setDataFinal('');
+  };
 
   const getStatusBadge = (status: string | undefined) => {
     const s = status || 'Aberto';
@@ -73,26 +123,74 @@ export function HistoricoModal({
           </button>
         </div>
 
-        {/* Filters */}
-        <div className="px-6 py-3 bg-white border-b border-gray-100 flex gap-2 overflow-x-auto hide-scrollbar">
-          {Object.entries(counts).map(([key, count]) => (
-            <button
-              key={key}
-              onClick={() => setFiltro(key)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
-                filtro === key 
-                  ? 'bg-gray-900 text-white shadow-md' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {key}
-              <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                filtro === key ? 'bg-white/20 text-white' : 'bg-white text-gray-500 shadow-sm'
-              }`}>
-                {count}
-              </span>
-            </button>
-          ))}
+        {/* Search & Filters */}
+        <div className="p-5 bg-white border-b border-gray-100 space-y-4">
+          <div className="flex gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Buscar por número, cliente, CPF/CNPJ, telefone, cidade, e-mail..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none"
+              />
+            </div>
+            {(searchTerm || filtroStatus !== 'Todos' || filtroProduto || dataInicial || dataFinal) && (
+              <button
+                onClick={limparFiltros}
+                className="px-4 py-2 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
+              >
+                <X size={16} /> Limpar filtros
+              </button>
+            )}
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-600 mb-1">Status</label>
+              <select
+                value={filtroStatus}
+                onChange={(e) => setFiltroStatus(e.target.value)}
+                className="w-full px-3 py-1.5 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none text-sm bg-gray-50"
+              >
+                {Object.entries(counts).map(([key, count]) => (
+                  <option key={key} value={key}>{key} ({count})</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-600 mb-1">Produto</label>
+              <select
+                value={filtroProduto}
+                onChange={(e) => setFiltroProduto(e.target.value)}
+                className="w-full px-3 py-1.5 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none text-sm bg-gray-50"
+              >
+                <option value="">Todos os produtos</option>
+                {produtosUnicos.map(p => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-600 mb-1">Data Inicial</label>
+              <input
+                type="date"
+                value={dataInicial}
+                onChange={(e) => setDataInicial(e.target.value)}
+                className="w-full px-3 py-1.5 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none text-sm bg-gray-50"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-600 mb-1">Data Final</label>
+              <input
+                type="date"
+                value={dataFinal}
+                onChange={(e) => setDataFinal(e.target.value)}
+                className="w-full px-3 py-1.5 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none text-sm bg-gray-50"
+              />
+            </div>
+          </div>
         </div>
 
         {/* List */}
@@ -104,9 +202,9 @@ export function HistoricoModal({
           ) : orcamentosFiltrados.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
               <FileText size={48} className="mx-auto mb-3 opacity-30" />
-              <p className="text-lg font-bold">Nenhum orçamento encontrado</p>
+              <p className="text-lg font-bold">Nenhum orçamento encontrado para os filtros selecionados.</p>
               <p className="text-sm">
-                {filtro === 'Todos' ? 'Salve um orçamento para vê-lo aqui' : `Nenhum orçamento com status "${filtro}"`}
+                Revise sua busca ou limpe os filtros para ver todos.
               </p>
             </div>
           ) : (
