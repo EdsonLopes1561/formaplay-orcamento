@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Save, Printer, MessageCircle, FolderOpen, Copy, CopyPlus,
   Trash2, RotateCcw, ChevronDown, CheckCircle, AlertCircle,
-  FileText, Users, Tag, Sparkles, Check, Package, LogOut, User, BarChart2, Mailbox
+  FileText, Users, Tag, Sparkles, Check, Package, LogOut, User, BarChart2, Mailbox, Download
 } from 'lucide-react';
 import { supabase } from './supabase.ts';
 import { Orcamento, Cliente, EMPRESA, PRODUTOS, emptyOrcamento, SolicitacaoOrcamento } from './types';
@@ -12,6 +12,7 @@ import { ClientesModal } from './components/ClientesModal';
 import { DashboardModal } from './components/DashboardModal';
 import { FormaPlayBrand } from './components/FormaPlayBrand';
 import { SolicitacoesModal } from './components/SolicitacoesModal';
+import { ExportModal } from './components/ExportModal';
 
 type Toast = { type: 'success' | 'error'; message: string };
 
@@ -137,6 +138,7 @@ function App() {
   const [toast, setToast] = useState<Toast | null>(null);
   const [showClientes, setShowClientes] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoOrcamento[]>([]);
   const [showSolicitacoes, setShowSolicitacoes] = useState(false);
@@ -678,6 +680,13 @@ function App() {
                 </span>
               )}
             </button>
+            <button
+              onClick={() => setShowExportModal(true)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#217346] border-2 border-[#217346] text-white rounded-lg hover:bg-[#1e6b41] hover:border-[#1e6b41] active:scale-95 transition-all font-bold text-sm shadow-md whitespace-nowrap"
+            >
+              <Download size={18} />
+              Exportar Dados
+            </button>
             {currentId && (
               <button
                 onClick={() => excluirOrcamento(currentId)}
@@ -1216,7 +1225,13 @@ function App() {
         <DashboardModal
           orcamentos={historico}
           onClose={() => setShowDashboard(false)}
+          onOpenExport={() => setShowExportModal(true)}
         />
+      )}
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <ExportModal onClose={() => setShowExportModal(false)} />
       )}
 
       {/* Solicitacoes Modal */}
