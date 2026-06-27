@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Save, Printer, MessageCircle, FolderOpen, Copy, CopyPlus,
   Trash2, RotateCcw, ChevronDown, CheckCircle, AlertCircle,
-  FileText, Users, Tag, Sparkles, Check, Package, LogOut, User, BarChart2, Mailbox, Download
+  FileText, Users, Tag, Sparkles, Check, Package, LogOut, User, BarChart2, Mailbox, Download, Activity
 } from 'lucide-react';
 import { supabase } from './supabase.ts';
 import { Orcamento, Cliente, EMPRESA, PRODUTOS, emptyOrcamento, SolicitacaoOrcamento } from './types';
@@ -13,6 +13,7 @@ import { DashboardModal } from './components/DashboardModal';
 import { FormaPlayBrand } from './components/FormaPlayBrand';
 import { SolicitacoesModal } from './components/SolicitacoesModal';
 import { ExportModal } from './components/ExportModal';
+import { TorreControleModal } from './components/TorreControleModal';
 
 type Toast = { type: 'success' | 'error'; message: string };
 
@@ -138,6 +139,7 @@ function App() {
   const [toast, setToast] = useState<Toast | null>(null);
   const [showClientes, setShowClientes] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [showTorreControle, setShowTorreControle] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
 
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoOrcamento[]>([]);
@@ -660,6 +662,13 @@ function App() {
             >
               <BarChart2 size={18} />
               Painel Comercial
+            </button>
+            <button
+              onClick={() => setShowTorreControle(true)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-800 text-white rounded-lg hover:bg-slate-700 hover:border-slate-700 active:scale-95 transition-all font-bold text-sm shadow-md"
+            >
+              <Activity size={18} className="text-orange-400" />
+              Torre de Controle
             </button>
             <button
               onClick={() => setShowClientes(true)}
@@ -1227,6 +1236,11 @@ function App() {
           onClose={() => setShowDashboard(false)}
           onOpenExport={() => setShowExportModal(true)}
         />
+      )}
+
+      {/* Torre de Controle Modal */}
+      {showTorreControle && (
+        <TorreControleModal onClose={() => setShowTorreControle(false)} />
       )}
 
       {/* Export Modal */}
