@@ -35,6 +35,44 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
     observacoes: '',
   });
 
+  const [isSearchingCep, setIsSearchingCep] = useState(false);
+  const [cepError, setCepError] = useState<string | null>(null);
+
+  const handleCepChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    let formattedCep = rawValue;
+    if (rawValue.length > 5) {
+      formattedCep = `${rawValue.slice(0, 5)}-${rawValue.slice(5, 8)}`;
+    }
+    
+    setFormData((prev) => ({ ...prev, cep: formattedCep }));
+    setCepError(null);
+
+    if (rawValue.length === 8) {
+      setIsSearchingCep(true);
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${rawValue}/json/`);
+        const data = await res.json();
+        if (data.erro) {
+          setCepError('CEP não encontrado. Preencha o endereço manualmente.');
+        } else {
+          setFormData((prev) => ({
+            ...prev,
+            endereco: data.logradouro || prev.endereco,
+            bairro: data.bairro || prev.bairro,
+            cidade: data.localidade || prev.cidade,
+            estado: data.uf || prev.estado,
+          }));
+        }
+      } catch (err) {
+        console.error('Erro ao buscar CEP:', err);
+        setCepError('Não foi possível consultar o CEP agora. Preencha o endereço manualmente.');
+      } finally {
+        setIsSearchingCep(false);
+      }
+    }
+  };
+
   const loadClientes = async () => {
     console.log('Buscando clientes no Supabase...');
     setLoading(true);
@@ -209,6 +247,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                   tipo_cliente: '',
                   observacoes: '',
                 });
+                setCepError(null);
               }}
               className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
             >
@@ -300,16 +339,6 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">CEP</label>
-                <input
-                  type="text"
-                  value={formData.cep || ''}
-                  onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
-                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Tipo de Cliente</label>
                 <select
                   value={formData.tipo_cliente || ''}
@@ -322,8 +351,22 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                 </select>
               </div>
 
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">CEP</label>
+                <input
+                  type="text"
+                  value={formData.cep || ''}
+                  onChange={handleCepChange}
+                  maxLength={9}
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none"
+                  placeholder="00000-000"
+                />
+                {isSearchingCep && <p className="text-sm text-blue-600 mt-1 font-medium">Buscando CEP...</p>}
+                {cepError && <p className="text-sm text-amber-600 mt-1 font-medium">{cepError}</p>}
+              </div>
+
               <div className="md:col-span-2">
-                <label className="block text-sm font-bold text-gray-700 mb-1">Logradouro</label>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Rua / Logradouro</label>
                 <input
                   type="text"
                   value={formData.endereco || ''}
@@ -338,6 +381,16 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                   type="text"
                   value={formData.numero || ''}
                   onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Complemento</label>
+                <input
+                  type="text"
+                  value={formData.complemento || ''}
+                  onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
                   className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none"
                 />
               </div>
@@ -369,16 +422,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                   value={formData.estado || ''}
                   onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
                   className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-bold text-gray-700 mb-1">Complemento</label>
-                <input
-                  type="text"
-                  value={formData.complemento || ''}
-                  onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
-                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none"
+                  maxLength={2}
                 />
               </div>
 
@@ -418,6 +462,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                   tipo_cliente: '',
                   observacoes: '',
                 });
+                setCepError(null);
               }}
               className="px-6 py-2.5 bg-gray-300 text-gray-900 rounded-lg hover:bg-gray-400 transition-all font-bold text-sm shadow-md active:scale-95"
             >
