@@ -193,122 +193,132 @@ export function ExportModal({ onClose }: ExportModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl w-full max-w-2xl flex flex-col shadow-2xl border-t-4 border-indigo-600 animate-fade-in">
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-indigo-50/50 to-transparent">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-100 text-indigo-700 rounded-lg">
-              <Download size={24} />
+    <div className="fixed inset-0 bg-blue-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in transition-opacity">
+      <div className="bg-blue-950 rounded-3xl w-full max-w-2xl flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-blue-800/50 overflow-hidden text-slate-200">
+        
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 border-b border-blue-900 bg-blue-950 shadow-sm relative z-10 gap-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3.5 bg-gradient-to-br from-emerald-600 to-emerald-400 text-slate-950 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hidden sm:block">
+              <Download size={28} strokeWidth={2.5} />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-gray-900">Central de Exportação</h2>
-              <p className="text-sm text-gray-500 font-medium">Baixe relatórios e dados do sistema em formato CSV.</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Central de <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-200">Exportação</span></h2>
+              <p className="text-sm text-slate-400 font-medium mt-0.5">Baixe relatórios e dados do sistema em CSV.</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors">
-            <X size={20} />
+          <button
+            onClick={onClose}
+            className="p-2.5 rounded-xl bg-blue-900 hover:bg-slate-700 hover:text-white transition-all border border-blue-800 text-slate-400 self-end sm:self-auto shadow-sm active:scale-95"
+          >
+            <X size={20} strokeWidth={2.5} />
           </button>
         </div>
 
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-950/30">
           <button
             onClick={() => handleExport('Orcamentos')}
             disabled={loading}
-            className="flex items-center gap-4 p-4 border-2 border-gray-100 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-all text-left group"
+            className="flex items-center gap-4 p-4 border border-blue-800 bg-blue-900/40 rounded-2xl hover:border-emerald-500/50 hover:bg-blue-900/60 transition-all text-left group shadow-lg hover:-translate-y-1 relative overflow-hidden"
           >
-            <div className="p-3 bg-blue-100 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
-              <FileSpreadsheet size={24} />
+            <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
+            <div className="p-3.5 bg-blue-600/20 text-blue-400 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-[0_0_10px_rgba(0,0,0,0.3)]">
+              <FileSpreadsheet size={24} strokeWidth={2.5} />
             </div>
-            <div>
-              <h3 className="font-bold text-gray-900 group-hover:text-indigo-900">Orçamentos</h3>
-              <p className="text-xs text-gray-500">Histórico completo de orçamentos.</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-slate-200 group-hover:text-blue-400 transition-colors truncate">Orçamentos</h3>
+              <p className="text-xs text-slate-400 font-medium">Histórico completo de orçamentos.</p>
             </div>
           </button>
 
           <button
             onClick={() => handleExport('Clientes')}
             disabled={loading}
-            className="flex items-center gap-4 p-4 border-2 border-gray-100 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-all text-left group"
+            className="flex items-center gap-4 p-4 border border-blue-800 bg-blue-900/40 rounded-2xl hover:border-emerald-500/50 hover:bg-blue-900/60 transition-all text-left group shadow-lg hover:-translate-y-1 relative overflow-hidden"
           >
-            <div className="p-3 bg-emerald-100 text-emerald-600 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-              <Users size={24} />
+            <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
+            <div className="p-3.5 bg-emerald-600/20 text-emerald-400 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors shadow-[0_0_10px_rgba(0,0,0,0.3)]">
+              <Users size={24} strokeWidth={2.5} />
             </div>
-            <div>
-              <h3 className="font-bold text-gray-900 group-hover:text-indigo-900">Clientes</h3>
-              <p className="text-xs text-gray-500">Base de clientes cadastrados.</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate">Clientes</h3>
+              <p className="text-xs text-slate-400 font-medium">Base de clientes cadastrados.</p>
             </div>
           </button>
 
           <button
             onClick={() => handleExport('Solicitacoes')}
             disabled={loading}
-            className="flex items-center gap-4 p-4 border-2 border-gray-100 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-all text-left group"
+            className="flex items-center gap-4 p-4 border border-blue-800 bg-blue-900/40 rounded-2xl hover:border-emerald-500/50 hover:bg-blue-900/60 transition-all text-left group shadow-lg hover:-translate-y-1 relative overflow-hidden"
           >
-            <div className="p-3 bg-amber-100 text-amber-600 rounded-lg group-hover:bg-amber-600 group-hover:text-white transition-colors">
-              <FileText size={24} />
+            <div className="absolute top-0 left-0 w-1 h-full bg-amber-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
+            <div className="p-3.5 bg-amber-600/20 text-amber-400 rounded-xl group-hover:bg-amber-600 group-hover:text-white transition-colors shadow-[0_0_10px_rgba(0,0,0,0.3)]">
+              <FileText size={24} strokeWidth={2.5} />
             </div>
-            <div>
-              <h3 className="font-bold text-gray-900 group-hover:text-indigo-900">Solicitações</h3>
-              <p className="text-xs text-gray-500">Pedidos vindos do site público.</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-slate-200 group-hover:text-amber-400 transition-colors truncate">Solicitações</h3>
+              <p className="text-xs text-slate-400 font-medium">Pedidos vindos do site público.</p>
             </div>
           </button>
 
           <button
             onClick={() => handleExport('FollowUp')}
             disabled={loading}
-            className="flex items-center gap-4 p-4 border-2 border-gray-100 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-all text-left group"
+            className="flex items-center gap-4 p-4 border border-blue-800 bg-blue-900/40 rounded-2xl hover:border-emerald-500/50 hover:bg-blue-900/60 transition-all text-left group shadow-lg hover:-translate-y-1 relative overflow-hidden"
           >
-            <div className="p-3 bg-purple-100 text-purple-600 rounded-lg group-hover:bg-purple-600 group-hover:text-white transition-colors">
-              <CalendarCheck size={24} />
+            <div className="absolute top-0 left-0 w-1 h-full bg-purple-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
+            <div className="p-3.5 bg-purple-600/20 text-purple-400 rounded-xl group-hover:bg-purple-600 group-hover:text-white transition-colors shadow-[0_0_10px_rgba(0,0,0,0.3)]">
+              <CalendarCheck size={24} strokeWidth={2.5} />
             </div>
-            <div>
-              <h3 className="font-bold text-gray-900 group-hover:text-indigo-900">Follow-up</h3>
-              <p className="text-xs text-gray-500">Apenas orçamentos em andamento.</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-slate-200 group-hover:text-purple-400 transition-colors truncate">Follow-up</h3>
+              <p className="text-xs text-slate-400 font-medium">Apenas orçamentos em andamento.</p>
             </div>
           </button>
 
           <button
             onClick={() => handleExport('Resumo')}
             disabled={loading}
-            className="flex items-center gap-4 p-4 border-2 border-gray-100 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-all text-left group"
+            className="flex items-center gap-4 p-4 border border-blue-800 bg-blue-900/40 rounded-2xl hover:border-emerald-500/50 hover:bg-blue-900/60 transition-all text-left group shadow-lg hover:-translate-y-1 relative overflow-hidden"
           >
-            <div className="p-3 bg-pink-100 text-pink-600 rounded-lg group-hover:bg-pink-600 group-hover:text-white transition-colors">
-              <BarChart size={24} />
+            <div className="absolute top-0 left-0 w-1 h-full bg-pink-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
+            <div className="p-3.5 bg-pink-600/20 text-pink-400 rounded-xl group-hover:bg-pink-600 group-hover:text-white transition-colors shadow-[0_0_10px_rgba(0,0,0,0.3)]">
+              <BarChart size={24} strokeWidth={2.5} />
             </div>
-            <div>
-              <h3 className="font-bold text-gray-900 group-hover:text-indigo-900">Resumo Comercial</h3>
-              <p className="text-xs text-gray-500">Métricas financeiras e de conversão.</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-slate-200 group-hover:text-pink-400 transition-colors truncate">Resumo Comercial</h3>
+              <p className="text-xs text-slate-400 font-medium">Métricas financeiras e de conversão.</p>
             </div>
           </button>
 
           <button
             onClick={() => handleExport('Tudo')}
             disabled={loading}
-            className="flex items-center gap-4 p-4 border-2 border-gray-900 bg-gray-900 rounded-xl hover:bg-gray-800 transition-all text-left group shadow-md"
+            className="flex items-center gap-4 p-4 border border-emerald-500/50 bg-blue-900/60 rounded-2xl hover:bg-emerald-900/30 transition-all text-left group shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:-translate-y-1 relative overflow-hidden"
           >
-            <div className="p-3 bg-gray-700 text-white rounded-lg">
-              <Layers size={24} />
+            <div className="absolute top-0 left-0 w-1 h-full bg-emerald-400"></div>
+            <div className="p-3.5 bg-gradient-to-br from-emerald-600 to-emerald-400 text-slate-950 rounded-xl group-hover:scale-105 transition-transform shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+              <Layers size={24} strokeWidth={2.5} />
             </div>
-            <div>
-              <h3 className="font-bold text-white">Tudo completo</h3>
-              <p className="text-xs text-gray-400">Baixar todas as planilhas juntas.</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-black text-emerald-400 truncate">Tudo completo</h3>
+              <p className="text-xs text-slate-400 font-medium">Baixar todas as planilhas juntas.</p>
             </div>
           </button>
         </div>
 
         {loading && (
-          <div className="px-6 pb-6 text-center animate-pulse">
-            <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full font-bold text-sm">
-              <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="px-6 pb-6 pt-2 text-center animate-pulse bg-blue-950/30">
+            <div className="inline-flex items-center gap-2.5 bg-emerald-500/10 text-emerald-400 px-5 py-2.5 rounded-xl font-bold text-sm border border-emerald-500/20 shadow-inner">
+              <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
               {loadingStatus}
             </div>
-            <p className="text-xs text-gray-500 mt-2">Serão baixados arquivos separados em CSV para cada categoria.</p>
+            <p className="text-xs text-slate-500 font-medium mt-3">Serão baixados arquivos separados em CSV para cada categoria.</p>
           </div>
         )}
         
         {!loading && (
-          <div className="px-6 pb-6 text-center">
-            <p className="text-xs text-gray-400">Os arquivos baixados possuem extensão .csv e podem ser abertos no Excel.</p>
+          <div className="px-6 pb-6 pt-2 text-center bg-blue-950/30">
+            <p className="text-xs font-semibold text-slate-500">Os arquivos baixados possuem extensão .csv e podem ser abertos no Excel.</p>
           </div>
         )}
 
