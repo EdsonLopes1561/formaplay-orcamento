@@ -508,7 +508,7 @@ function App() {
       </div>
 
       {/* Screen UI */}
-      <div className="print:hidden min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50/30">
+      <div className="print:hidden min-h-screen bg-[#0a0f1d] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(30,58,138,0.2),rgba(255,255,255,0))] text-slate-200">
         {/* Toast */}
         {toast && (
           <div
@@ -581,14 +581,14 @@ function App() {
         <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
           {/* Edit mode banner */}
           {currentId && (
-            <div className="flex items-center gap-3 px-5 py-3.5 bg-amber-50 border-2 border-amber-400 rounded-xl shadow-sm">
+            <div className="flex items-center gap-3 px-5 py-3.5 bg-amber-950/40 border-2 border-amber-500/50 rounded-xl shadow-sm">
               <span className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center text-white font-black text-base">✏</span>
               <div className="min-w-0">
-                <p className="font-black text-amber-800 text-sm leading-tight">
+                <p className="font-black text-amber-300 text-sm leading-tight">
                   Editando orçamento {form.numero}
                   {form.cliente ? ` · ${form.cliente}` : ''}
                 </p>
-                <p className="text-xs text-amber-600 font-medium mt-0.5">
+                <p className="text-xs text-amber-200 font-medium mt-0.5">
                   As alterações substituirão o orçamento salvo ao clicar em &ldquo;Atualizar Orçamento&rdquo;.
                 </p>
               </div>
@@ -632,21 +632,21 @@ function App() {
             </button>
             <button
               onClick={copiarMensagem}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-200 active:scale-95 transition-all font-bold text-sm shadow-sm"
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg hover:bg-slate-200 active:scale-95 transition-all font-bold text-sm shadow-sm"
             >
               <Copy size={18} /> Copiar mensagem
             </button>
             <button
               onClick={duplicarOrcamento}
               disabled={!currentId}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg active:scale-95 transition-all font-bold text-sm shadow-sm border ${!currentId ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'}`}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg active:scale-95 transition-all font-bold text-sm shadow-sm border ${!currentId ? 'bg-slate-800 text-gray-400 border-slate-700 cursor-not-allowed' : 'bg-purple-900/30 text-purple-300 border-purple-500/50 hover:bg-purple-900/50'}`}
               title="Duplicar este orçamento"
             >
               <CopyPlus size={18} /> Duplicar orçamento
             </button>
             <button
               onClick={() => { setShowHistorico(true); carregarHistorico(); }}
-              className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-blue-900 text-blue-900 rounded-lg hover:bg-blue-50 active:scale-95 transition-all font-bold text-sm shadow-md"
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/10 rounded-lg hover:bg-blue-50 active:scale-95 transition-all font-bold text-sm shadow-md"
             >
               <FolderOpen size={18} />
               Histórico
@@ -658,7 +658,7 @@ function App() {
             </button>
             <button
               onClick={() => { setShowDashboard(true); carregarHistorico(); }}
-              className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-blue-900 text-blue-900 rounded-lg hover:bg-blue-50 active:scale-95 transition-all font-bold text-sm shadow-md"
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/10 rounded-lg hover:bg-blue-50 active:scale-95 transition-all font-bold text-sm shadow-md"
             >
               <BarChart2 size={18} />
               Painel Comercial
@@ -672,14 +672,14 @@ function App() {
             </button>
             <button
               onClick={() => setShowClientes(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-blue-900 text-blue-900 rounded-lg hover:bg-blue-50 active:scale-95 transition-all font-bold text-sm shadow-md"
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/10 rounded-lg hover:bg-blue-50 active:scale-95 transition-all font-bold text-sm shadow-md"
             >
               <User size={18} />
               Clientes
             </button>
             <button
               onClick={() => { setShowSolicitacoes(true); carregarSolicitacoes(); }}
-              className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-indigo-500 text-indigo-700 rounded-lg hover:bg-indigo-50 active:scale-95 transition-all font-bold text-sm shadow-md"
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-indigo-400 hover:border-indigo-500/50 hover:bg-indigo-500/10 rounded-lg hover:bg-indigo-50 active:scale-95 transition-all font-bold text-sm shadow-md"
             >
               <Mailbox size={18} />
               Solicitações
@@ -716,15 +716,15 @@ function App() {
             {/* Left column */}
             <div className="lg:col-span-2 space-y-5">
               {/* Client info */}
-              <div className="bg-white rounded-xl shadow-md border-l-4 border-blue-900 p-6">
-                <h2 className="font-black text-gray-900 mb-5 flex items-center gap-3">
+              <div className="bg-[#0f172a] rounded-xl shadow-xl border border-slate-800 border-l-4 border-l-blue-500 p-6 relative overflow-hidden">
+                <h2 className="font-black text-slate-100 mb-5 flex items-center gap-3">
                   <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-900 to-blue-800 text-white text-xs font-bold flex items-center justify-center">1</span>
                   Dados do Cliente
                 </h2>
 
                 {form.cliente_nome && (
-                  <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg text-sm text-gray-800 shadow-inner">
-                    <p className="font-bold text-blue-900 mb-2 border-b border-blue-200 pb-1">Resumo do Cliente Vinculado (Snapshot)</p>
+                  <div className="mb-6 p-4 bg-blue-50 border border-slate-700 rounded-lg text-sm text-slate-200 shadow-inner">
+                    <p className="font-bold text-blue-400 mb-2 border-b border-blue-800/50 pb-1">Resumo do Cliente Vinculado (Snapshot)</p>
                     <p><strong>Razão Social/Nome:</strong> {form.cliente_razao_social || form.cliente_nome}</p>
                     {form.cliente_nome_fantasia && <p><strong>Fantasia:</strong> {form.cliente_nome_fantasia}</p>}
                     {form.cliente_documento && <p><strong>Documento:</strong> {form.cliente_documento}</p>}
@@ -758,8 +758,8 @@ function App() {
               </div>
 
               {/* Product */}
-              <div className="bg-white rounded-xl shadow-md border-l-4 border-green-500 p-6">
-                <h2 className="font-black text-gray-900 mb-5 flex items-center gap-3">
+              <div className="bg-[#0f172a] rounded-xl shadow-xl border border-slate-800 border-l-4 border-l-green-500 p-6 relative overflow-hidden">
+                <h2 className="font-black text-slate-100 mb-5 flex items-center gap-3">
                   <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-600 to-green-700 text-white text-xs font-bold flex items-center justify-center">2</span>
                   Jogo / Produto
                 </h2>
@@ -776,7 +776,7 @@ function App() {
                           </option>
                         ))}
                       </select>
-                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                     </div>
                   </div>
                   <div>
@@ -787,21 +787,21 @@ function App() {
                   <div>
                     <label className="form-label">Valor Unitário (R$)</label>
                     <input name="valor_unitario" type="number" min="0" step="0.01" value={form.valor_unitario} onChange={handleChange}
-                      className={form.produto ? "form-input bg-blue-50 text-blue-700 cursor-not-allowed font-semibold" : "form-input"}
+                      className={form.produto ? "form-input bg-blue-950/60 border-blue-800 text-blue-300 cursor-not-allowed font-semibold" : "form-input"}
                       readOnly={!!form.produto}
                     />
                   </div>
                   <div>
                     <label className="form-label">Subtotal</label>
                     <input value={fmtCurrency(form.subtotal)} readOnly
-                      className="form-input bg-blue-50 text-blue-700 cursor-not-allowed font-semibold" />
+                      className="form-input bg-blue-950/60 border-blue-800 text-blue-300 cursor-not-allowed font-semibold" />
                   </div>
                 </div>
               </div>
 
               {/* Conditions */}
-              <div className="bg-white rounded-xl shadow-md border-l-4 border-blue-700 p-6">
-                <h2 className="font-black text-gray-900 mb-5 flex items-center gap-3">
+              <div className="bg-[#0f172a] rounded-xl shadow-xl border border-slate-800 border-l-4 border-l-blue-400 p-6 relative overflow-hidden">
+                <h2 className="font-black text-slate-100 mb-5 flex items-center gap-3">
                   <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-700 to-blue-900 text-white text-xs font-bold flex items-center justify-center">3</span>
                   Condições Comerciais
                 </h2>
@@ -826,7 +826,7 @@ function App() {
                         <option value="FOB">FOB (Por conta do Destinatário)</option>
                         <option value="Retirada">Retirada</option>
                       </select>
-                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                     </div>
                   </div>
 
@@ -839,7 +839,7 @@ function App() {
                       onChange={handleChange}
                       className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
                     />
-                    <label htmlFor="frete_incluso" className="text-sm font-bold text-gray-700">Frete contemplado no valor total (sem cobrança separada)</label>
+                    <label htmlFor="frete_incluso" className="text-sm font-bold text-slate-300">Frete contemplado no valor total (sem cobrança separada)</label>
                   </div>
 
                   <div className="sm:col-span-2">
@@ -868,7 +868,7 @@ function App() {
                         <option>A combinar</option>
                         <option>Personalizado</option>
                       </select>
-                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                     </div>
                   </div>
 
@@ -905,12 +905,12 @@ function App() {
               </div>
 
               {/* Follow-up / CRM Interno */}
-              <div className="bg-white rounded-xl shadow-md border-l-4 border-amber-500 p-6">
-                <h2 className="font-black text-gray-900 mb-2 flex items-center gap-3">
+              <div className="bg-[#0f172a] rounded-xl shadow-xl border border-slate-800 border-l-4 border-l-amber-500 p-6 relative overflow-hidden">
+                <h2 className="font-black text-slate-100 mb-2 flex items-center gap-3">
                   <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 text-white text-xs font-bold flex items-center justify-center">4</span>
                   Controle Comercial Interno
                 </h2>
-                <p className="text-xs text-amber-700 font-semibold mb-5 bg-amber-50 p-2 rounded border border-amber-200">
+                <p className="text-xs text-amber-400 font-semibold mb-5 bg-amber-950/30 p-2 rounded border border-amber-900/50 text-amber-400">
                   ⚠️ Não aparece no PDF do cliente
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -918,12 +918,12 @@ function App() {
                     <label className="form-label">Prioridade</label>
                     <div className="relative">
                       <select name="prioridade" value={form.prioridade || 'Baixa'} onChange={handleChange}
-                        className="form-input appearance-none pr-10 font-bold text-gray-700">
+                        className="form-input appearance-none pr-10 font-bold text-slate-300">
                         <option value="Baixa">Baixa</option>
                         <option value="Média">Média</option>
                         <option value="Alta">Alta</option>
                       </select>
-                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                     </div>
                   </div>
                   <div>
@@ -949,8 +949,8 @@ function App() {
             {/* Right column */}
             <div className="space-y-5">
               {/* Budget identification */}
-              <div className="bg-white rounded-xl shadow-md border-l-4 border-blue-900 p-6">
-                <h2 className="font-black text-gray-900 mb-5">Identificação</h2>
+              <div className="bg-[#0f172a] rounded-xl shadow-xl border border-slate-800 border-l-4 border-l-blue-500 p-6 relative overflow-hidden">
+                <h2 className="font-black text-slate-100 mb-5">Identificação</h2>
                 <div className="space-y-4">
                   <div>
                     <label className="form-label">Número do Orçamento</label>
@@ -961,8 +961,8 @@ function App() {
                       readOnly={!!currentId}
                       className={`form-input font-bold ${
                         currentId
-                          ? 'text-amber-700 bg-amber-50 cursor-not-allowed opacity-80'
-                          : 'text-green-600 bg-green-50'
+                          ? 'text-amber-400 bg-amber-950/50 border border-amber-900 cursor-not-allowed opacity-80'
+                          : 'text-green-400 bg-green-950/50 border border-green-900'
                       }`}
                       placeholder="#0001"
                       title={currentId ? 'O número não pode ser alterado durante a edição' : ''}
@@ -977,14 +977,14 @@ function App() {
                     <label className="form-label">Status do Orçamento</label>
                     <div className="relative">
                       <select name="status" value={form.status || 'Aberto'} onChange={handleChange}
-                        className="form-input appearance-none pr-10 font-bold text-gray-700">
+                        className="form-input appearance-none pr-10 font-bold text-slate-300">
                         <option value="Aberto">Aberto</option>
                         <option value="Enviado">Enviado</option>
                         <option value="Aprovado">Aprovado</option>
                         <option value="Recusado">Recusado</option>
                         <option value="Cancelado">Cancelado</option>
                       </select>
-                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                     </div>
                   </div>
                 </div>
@@ -995,11 +995,11 @@ function App() {
                 const imgSrc = getProdutoImagem(form.produto);
                 if (!imgSrc) return null;
                 return (
-                  <div className="bg-white rounded-xl shadow-md border border-blue-200 p-5" translate="no">
-                    <h2 className="font-bold text-blue-900 mb-3 text-sm border-l-4 border-blue-700 pl-3" translate="no">
+                  <div className="bg-slate-900/80 rounded-xl shadow-md border border-slate-700 p-5" translate="no">
+                    <h2 className="font-bold text-blue-400 mb-3 text-sm border-l-4 border-blue-500 pl-3" translate="no">
                       Produto Selecionado
                     </h2>
-                    <div className="bg-blue-50/60 rounded-lg border border-blue-100 p-3 flex items-center justify-center min-h-[140px]">
+                    <div className="bg-slate-800/60 rounded-lg border border-slate-700 p-3 px-3 py-2 flex items-center justify-center min-h-[140px]">
                       <img
                         src={imgSrc}
                         alt={form.produto}
@@ -1007,8 +1007,8 @@ function App() {
                       />
                     </div>
                     <div className="mt-3">
-                      <p className="font-bold text-sm text-blue-900" translate="no">{form.produto}</p>
-                      <p className="text-xs text-blue-600 font-semibold mt-1" translate="no">
+                      <p className="font-bold text-sm text-blue-400" translate="no">{form.produto}</p>
+                      <p className="text-xs text-blue-300 font-semibold mt-1" translate="no">
                         Valor unitário: {fmtCurrency(form.valor_unitario)}
                       </p>
                     </div>
@@ -1021,38 +1021,38 @@ function App() {
                 const info = getProdutoInfo(form.produto);
                 if (!info) return null;
                 return (
-                  <div className="bg-white rounded-xl shadow-md border border-blue-200 p-5" translate="no">
-                    <div className="flex items-center gap-2 mb-3 border-l-4 border-blue-700 pl-3">
-                      <FileText className="w-4 h-4 text-blue-700" />
-                      <h2 className="font-bold text-blue-900 text-sm" translate="no">
+                  <div className="bg-slate-900/80 rounded-xl shadow-md border border-slate-700 p-5" translate="no">
+                    <div className="flex items-center gap-2 mb-3 border-l-4 border-blue-500 pl-3">
+                      <FileText className="w-4 h-4 text-blue-400" />
+                      <h2 className="font-bold text-blue-400 text-sm" translate="no">
                         Descrição do Produto
                       </h2>
                     </div>
-                    <h3 className="font-black text-blue-900 text-base mb-2" translate="no">
+                    <h3 className="font-black text-blue-400 text-base mb-2" translate="no">
                       {info.titulo}
                     </h3>
-                    <p className="text-sm text-gray-700 leading-relaxed mb-3" translate="no">
+                    <p className="text-sm text-slate-300 leading-relaxed mb-3" translate="no">
                       {info.descricao}
                     </p>
-                    <div className="grid grid-cols-1 gap-2 pt-3 border-t border-blue-100">
+                    <div className="grid grid-cols-1 gap-2 pt-3 border-t border-slate-700">
                       <div className="flex items-start gap-2">
-                        <Users className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <Users className="w-4 h-4 text-blue-300 mt-0.5 flex-shrink-0" />
                         <div>
-                          <span className="text-[11px] font-bold uppercase tracking-wide text-blue-700 block">
+                          <span className="text-[11px] font-bold uppercase tracking-wide text-blue-400 block">
                             Público-alvo
                           </span>
-                          <span className="text-xs text-gray-700 font-medium" translate="no">
+                          <span className="text-xs text-slate-300 font-medium" translate="no">
                             {info.publico}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-start gap-2">
-                        <Tag className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <Tag className="w-4 h-4 text-blue-300 mt-0.5 flex-shrink-0" />
                         <div>
-                          <span className="text-[11px] font-bold uppercase tracking-wide text-blue-700 block">
+                          <span className="text-[11px] font-bold uppercase tracking-wide text-blue-400 block">
                             Categoria
                           </span>
-                          <span className="text-xs text-gray-700 font-medium" translate="no">
+                          <span className="text-xs text-slate-300 font-medium" translate="no">
                             {info.categoria}
                           </span>
                         </div>
@@ -1067,10 +1067,10 @@ function App() {
                 const info = getProdutoInfo(form.produto);
                 if (!info) return null;
                 return (
-                  <div className="bg-white rounded-xl shadow-md border border-blue-200 p-5" translate="no">
-                    <div className="flex items-center gap-2 mb-4 border-l-4 border-blue-700 pl-3">
-                      <Sparkles className="w-4 h-4 text-blue-700" />
-                      <h2 className="font-bold text-blue-900 text-sm" translate="no">
+                  <div className="bg-slate-900/80 rounded-xl shadow-md border border-slate-700 p-5" translate="no">
+                    <div className="flex items-center gap-2 mb-4 border-l-4 border-blue-500 pl-3">
+                      <Sparkles className="w-4 h-4 text-blue-400" />
+                      <h2 className="font-bold text-blue-400 text-sm" translate="no">
                         Diferenciais do Produto
                       </h2>
                     </div>
@@ -1078,13 +1078,13 @@ function App() {
                       {info.diferenciais.map((item, idx) => (
                         <li
                           key={idx}
-                          className="flex items-start gap-2.5 bg-blue-50/60 rounded-lg px-3 py-2 border border-blue-100"
+                          className="flex items-start gap-2.5 bg-slate-800/60 rounded-lg px-3 py-2 border border-slate-700"
                           translate="no"
                         >
                           <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center mt-0.5">
                             <Check className="w-3 h-3 text-white" strokeWidth={3} />
                           </span>
-                          <span className="text-sm text-gray-800 font-medium leading-snug">
+                          <span className="text-sm text-slate-200 font-medium leading-snug">
                             {item}
                           </span>
                         </li>
@@ -1099,10 +1099,10 @@ function App() {
                 const info = getProdutoInfo(form.produto);
                 if (!info) return null;
                 return (
-                  <div className="bg-white rounded-xl shadow-md border border-blue-200 p-5" translate="no">
-                    <div className="flex items-center gap-2 mb-4 border-l-4 border-blue-700 pl-3">
-                      <Package className="w-4 h-4 text-blue-700" />
-                      <h2 className="font-bold text-blue-900 text-sm" translate="no">
+                  <div className="bg-slate-900/80 rounded-xl shadow-md border border-slate-700 p-5" translate="no">
+                    <div className="flex items-center gap-2 mb-4 border-l-4 border-blue-500 pl-3">
+                      <Package className="w-4 h-4 text-blue-400" />
+                      <h2 className="font-bold text-blue-400 text-sm" translate="no">
                         Conteúdo da Caixa
                       </h2>
                     </div>
@@ -1110,11 +1110,11 @@ function App() {
                       {info.conteudo.map((item, idx) => (
                         <li
                           key={idx}
-                          className="flex items-center gap-2.5 bg-blue-50/60 rounded-lg px-3 py-2 border border-blue-100"
+                          className="flex items-center gap-2.5 bg-slate-800/60 rounded-lg px-3 py-2 border border-slate-700"
                           translate="no"
                         >
                           <span className="flex-shrink-0 w-2 h-2 rounded-full bg-gradient-to-br from-blue-600 to-blue-800" />
-                          <span className="text-sm text-gray-800 font-medium leading-snug">
+                          <span className="text-sm text-slate-200 font-medium leading-snug">
                             {item}
                           </span>
                         </li>
