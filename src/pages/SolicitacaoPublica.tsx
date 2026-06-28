@@ -237,9 +237,12 @@ export const SolicitacaoPublica: React.FC = () => {
           observacoes_cliente: (() => {
             let obsFrete = '';
             if (freteSelecionado) {
-              obsFrete = `\n\n=== FRETE ESCOLHIDO (SUPERFRETE) ===\nTransportadora: ${freteSelecionado.company}\nServiço: ${freteSelecionado.name}\nPrazo: ${freteSelecionado.delivery_time} dias úteis\nValor: ${fmtCurrency(freteSelecionado.price)}\nCEP destino: ${form.cep}\nVolumes: ${freteSelecionado.volumes_validos} volume(s)\n`;
+              obsFrete = ` | FRETE: ${freteSelecionado.company || ''} ${freteSelecionado.name || ''} (${freteSelecionado.delivery_time || 0}d) ${fmtCurrency(freteSelecionado.price)}`;
             }
-            const obsFinal = ((form.observacoes || '') + obsFrete).trim();
+            let obsFinal = ((form.observacoes || '') + obsFrete).trim();
+            if (obsFinal.length > 250) {
+              obsFinal = obsFinal.substring(0, 247) + '...';
+            }
             return obsFinal || null;
           })(),
           embrulho_presente: form.embrulho_presente,
@@ -252,8 +255,8 @@ export const SolicitacaoPublica: React.FC = () => {
       }
 
       setIsSuccess(true);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('[Solicitação Pública] Erro ao salvar solicitação:', err);
       setSubmitError("Não foi possível enviar sua solicitação agora. Verifique os dados e tente novamente.");
     } finally {
       setLoadingSubmit(false);
