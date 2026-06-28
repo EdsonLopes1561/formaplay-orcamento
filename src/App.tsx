@@ -459,7 +459,15 @@ function App() {
     };
 
     const numLimpo = (form.numero || 'S-N').replace(/#/g, '');
-    let fileName = `Confirmacao_Compra_${numLimpo}_FormaPlay`;
+    const produtoBase = (form.produto || '').split(' - ')[0];
+    
+    let fileName = `Confirmacao_Compra_${numLimpo}`;
+    const prodSanitizado = sanitize(produtoBase);
+    if (prodSanitizado) {
+      fileName += `_${prodSanitizado}`;
+    }
+    fileName += `_FormaPlay`;
+    
     if (fileName.length > 120) fileName = fileName.substring(0, 120);
     
     document.title = fileName;
