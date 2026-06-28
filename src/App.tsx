@@ -512,6 +512,21 @@ function App() {
     }
   };
 
+  const copiarMensagemConfirmacao = async () => {
+    const nomeProduto = form.produto ? form.produto.split(' - ')[0] : 'referente ao orçamento aprovado';
+    const mensagem = `Olá, tudo bem?\n\nConforme aprovação do orçamento, segue em anexo a Confirmação de Compra referente ao jogo ${nomeProduto}.\n\nO documento reúne os dados do pedido, produto, quantidade, valores, prazo de entrega, forma de pagamento e emissão de Nota Fiscal, para registro e conferência.\n\nA FormaPlay fica à disposição para qualquer ajuste ou informação adicional.`;
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(mensagem);
+        showToast('success', 'Mensagem de confirmação copiada com sucesso.');
+      } else {
+        throw new Error('Clipboard API not available');
+      }
+    } catch (error) {
+      showToast('error', 'Não foi possível copiar a mensagem. Copie manualmente.');
+    }
+  };
+
   const duplicarOrcamento = async () => {
     if (!currentId) return; // Only makes sense to duplicate an existing saved one (or we can duplicate unsaved, doesn't matter, but user says "duplicar um orcamento existente")
     
@@ -676,6 +691,14 @@ function App() {
             >
               <FileText size={18} /> {form.status !== 'Aprovado' ? 'Disponível após aprovação' : 'Confirmação de Compra'}
             </button>
+            {form.status === 'Aprovado' && (
+              <button
+                onClick={copiarMensagemConfirmacao}
+                className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border border-slate-700 text-emerald-400 hover:text-white hover:bg-emerald-700 rounded-lg active:scale-95 transition-all font-bold text-sm shadow-sm"
+              >
+                <Copy size={18} /> Copiar mensagem confirmação
+              </button>
+            )}
             <button
               onClick={enviarWhatsApp}
               className="flex items-center gap-2 px-5 py-2.5 bg-[#25D366] text-white rounded-lg hover:bg-[#1ebe5d] active:scale-95 transition-all font-bold text-sm shadow-md"
