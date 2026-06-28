@@ -83,16 +83,32 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
     fetchProdutos();
   }, [isAdminMode]);
 
-  const handleAdminAuth = () => {
+  const handleAdminAuth = async () => {
     if (isAdminMode) {
       setIsAdminMode(false);
       setAdminToken('');
       return;
     }
     const token = window.prompt('Digite a senha administrativa:');
-    if (token) {
+    if (!token) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/produtos?admin=1', {
+        headers: { 'x-admin-token': token }
+      });
+      if (!res.ok) {
+        throw new Error('Senha administrativa inválida.');
+      }
       setAdminToken(token);
       setIsAdminMode(true);
+    } catch (err: any) {
+      setError('Senha administrativa inválida.');
+      setAdminToken('');
+      setIsAdminMode(false);
+    } finally {
+      setLoading(false);
     }
   };
 
