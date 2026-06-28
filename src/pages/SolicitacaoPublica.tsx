@@ -269,7 +269,8 @@ export const SolicitacaoPublica: React.FC = () => {
       setIsSuccess(true);
     } catch (err: any) {
       console.error('[Solicitação Pública] Erro ao salvar solicitação:', err);
-      setSubmitError("Não foi possível enviar sua solicitação agora. Verifique os dados e tente novamente.");
+      const errorMessage = err.message || err.toString() || "Erro desconhecido";
+      setSubmitError(`Falha ao enviar. Detalhe técnico para o suporte: ${errorMessage}`);
     } finally {
       setLoadingSubmit(false);
     }
