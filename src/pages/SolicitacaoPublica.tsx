@@ -1,3 +1,4 @@
+import { calcularVolumes } from '../config/produtosLogisticos';
 import React, { useState } from 'react';
 import { supabase } from '../supabase';
 
@@ -89,7 +90,11 @@ export const SolicitacaoPublica: React.FC = () => {
   const [loadingFrete, setLoadingFrete] = useState(false);
   const [erroFrete, setErroFrete] = useState<string | null>(null);
 
-  const fmtCurrency = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const fmtCurrency = (v: any) => {
+    const num = Number(v);
+    if (isNaN(num)) return 'R$ 0,00';
+    return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -146,7 +151,7 @@ export const SolicitacaoPublica: React.FC = () => {
     setFreteSelecionado(null);
 
     try {
-      const { calcularVolumes } = await import('../config/produtosLogisticos');
+      
       const volumes = calcularVolumes(form.jogo, form.quantidade);
 
       const res = await fetch('/api/frete', {
@@ -466,7 +471,7 @@ export const SolicitacaoPublica: React.FC = () => {
             </div>
 
             {/* Secao Frete */}
-            {form.jogo && form.cep.length >= 8 && (
+            {form?.jogo && form?.cep?.length >= 8 && (
               <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700 mt-6">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
                   <div>
@@ -500,17 +505,17 @@ export const SolicitacaoPublica: React.FC = () => {
                           <input 
                             type="radio" 
                             name="frete" 
-                            checked={freteSelecionado?.name === opcao.name} 
+                            checked={freteSelecionado?.name === opcao?.name} 
                             onChange={() => setFreteSelecionado(opcao)}
                             className="w-4 h-4 text-green-600 bg-slate-800 border-slate-600 focus:ring-green-500 focus:ring-offset-slate-900"
                           />
                           <div>
-                            <p className="font-bold text-white leading-tight">{opcao.company} - {opcao.name}</p>
-                            <p className="text-xs text-slate-400 mt-0.5">{opcao.delivery_time} dias úteis • {opcao.volumes_validos} volume(s)</p>
+                            <p className="font-bold text-white leading-tight">{opcao?.company || 'Transportadora'} - {opcao?.name || 'Serviço'}</p>
+                            <p className="text-xs text-slate-400 mt-0.5">{opcao?.delivery_time || 0} dias úteis • {opcao?.volumes_validos || 1} volume(s)</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-green-400">{fmtCurrency(opcao.price)}</p>
+                          <p className="font-bold text-green-400">{fmtCurrency(opcao?.price || 0)}</p>
                         </div>
                       </label>
                     ))}
