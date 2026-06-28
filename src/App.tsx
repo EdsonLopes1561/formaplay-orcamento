@@ -14,6 +14,7 @@ import { DashboardModal } from './components/DashboardModal';
 import { FormaPlayBrand } from './components/FormaPlayBrand';
 import { SolicitacoesModal } from './components/SolicitacoesModal';
 import { ExportModal } from './components/ExportModal';
+import { ProdutosModal } from './components/ProdutosModal';
 import { TorreControleModal } from './components/TorreControleModal';
 
 type Toast = { type: 'success' | 'error'; message: string };
@@ -143,6 +144,7 @@ function App() {
   const [showDashboard, setShowDashboard] = useState(false);
   const [showTorreControle, setShowTorreControle] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showProdutos, setShowProdutos] = useState(false);
 
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoOrcamento[]>([]);
   const [showSolicitacoes, setShowSolicitacoes] = useState(false);
@@ -765,6 +767,13 @@ function App() {
               Torre de Controle
             </button>
             <button
+              onClick={() => setShowProdutos(true)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-indigo-400 hover:border-indigo-500/50 hover:bg-indigo-500/10 rounded-lg hover:bg-indigo-50 active:scale-95 transition-all font-bold text-sm shadow-md"
+            >
+              <Package size={18} />
+              Produtos
+            </button>
+            <button
               onClick={() => setShowClientes(true)}
               className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/10 rounded-lg hover:bg-blue-50 active:scale-95 transition-all font-bold text-sm shadow-md"
             >
@@ -1340,6 +1349,11 @@ function App() {
       {/* Export Modal */}
       {showExportModal && (
         <ExportModal onClose={() => setShowExportModal(false)} />
+      )}
+
+      {/* Produtos Modal */}
+      {showProdutos && (
+        <ProdutosModal onClose={() => setShowProdutos(false)} />
       )}
 
       {/* Solicitacoes Modal */}

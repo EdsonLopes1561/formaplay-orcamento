@@ -70,6 +70,31 @@ export interface Orcamento {
   created_at?: string;
 }
 
+export interface Produto {
+  id: string;
+  nome: string;
+  sku: string;
+  revisao: string;
+  categoria?: string;
+  preco_base: number;
+  peso_kg: number;
+  altura_cm: number;
+  largura_cm: number;
+  comprimento_cm: number;
+  maximo_unidades_por_volume: number;
+  status_comercial: string;
+  quantidade_estoque: number;
+  controlar_estoque: boolean;
+  ativo: boolean;
+  mensagem_publica?: string;
+  descricao_curta?: string;
+  descricao_completa?: string;
+  observacao_interna?: string;
+  imagem_url?: string;
+  criado_em: string;
+  atualizado_em: string;
+}
+
 export interface SolicitacaoOrcamento {
   id: string;
   codigo: string;
