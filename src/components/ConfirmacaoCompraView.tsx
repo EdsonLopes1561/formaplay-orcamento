@@ -12,6 +12,24 @@ const fmt = (val: number | string | null | undefined) => {
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
+const getProdutoImagem = (nome: string): string | null => {
+  const n = (nome || '').toLowerCase();
+  if (n.includes('premium')) return '/desafio-logistico-premium.png';
+  if (n.includes('logístico') || n.includes('logistico')) return '/desafio-logistico.png';
+  if (n.includes('kids')) return '/desafio-kids.png';
+  if (n.includes('professor')) return '/edicao-professor.png';
+  return null;
+};
+
+const getProdutoDescricao = (nome: string): string | null => {
+  const n = (nome || '').toLowerCase();
+  if (n.includes('premium')) return 'Versão especial com apresentação premium, ideal para instituições, eventos, premiações e experiências educacionais diferenciadas.';
+  if (n.includes('kids')) return 'Jogo educativo voltado ao desenvolvimento lógico, interação infantil e aprendizado divertido.';
+  if (n.includes('logístico') || n.includes('logistico')) return 'Simulação prática de operações logísticas, estratégia e tomada de decisão profissional.';
+  if (n.includes('professor')) return 'Versão voltada para aplicação em sala de aula, treinamentos e atividades educacionais.';
+  return null;
+};
+
 export function ConfirmacaoCompraView({ orcamento, clienteData }: ConfirmacaoCompraViewProps) {
   function extrairEnderecoDasObservacoes(texto?: string): string {
     if (!texto) return '';
@@ -144,6 +162,9 @@ export function ConfirmacaoCompraView({ orcamento, clienteData }: ConfirmacaoCom
     mesmoEndereco = true;
   }
 
+  const produtoImagem = getProdutoImagem(orcamento.produto);
+  const produtoDesc = getProdutoDescricao(orcamento.produto);
+
   return (
     <div id="print-area" className="print-area">
       <div className="print-watermark" style={{ backgroundImage: 'url(' + '/logocircular.png' + ')' }} aria-hidden="true" />
@@ -249,7 +270,15 @@ export function ConfirmacaoCompraView({ orcamento, clienteData }: ConfirmacaoCom
           </thead>
           <tbody>
             <tr>
-              <td className="print-td">{orcamento.produto}</td>
+              <td className="print-td">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  {produtoImagem && <img src={produtoImagem} alt={orcamento.produto} style={{ height: '40px', width: '40px', objectFit: 'contain' }} />}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontWeight: 700, fontSize: '10px' }}>{orcamento.produto}</span>
+                    {produtoDesc && <span style={{ fontSize: '8.5px', color: '#64748b', marginTop: '2px', lineHeight: '1.2' }}>{produtoDesc}</span>}
+                  </div>
+                </div>
+              </td>
               <td className="print-td print-td-center">{orcamento.quantidade}</td>
               <td className="print-td print-td-right">{fmt(orcamento.valor_unitario)}</td>
               <td className="print-td print-td-right">{fmt(orcamento.subtotal)}</td>
@@ -344,9 +373,12 @@ export function ConfirmacaoCompraView({ orcamento, clienteData }: ConfirmacaoCom
         </div>
       </div>
 
-      <div className="print-section" style={{ marginTop: '16px', marginBottom: '16px', background: '#f8fafc', padding: '10px', borderRadius: '8px', border: '1px solid #dbeafe' }}>
-        <p style={{ fontSize: '11px', color: '#1e293b', textAlign: 'justify', lineHeight: '1.4', margin: 0, fontWeight: 500 }}>
-          "Por meio deste documento, o cliente confirma a aprovação do orçamento acima descrito e autoriza a FormaPlay Jogos Educacionais a dar sequência ao atendimento do pedido, conforme condições comerciais informadas."
+      <div className="print-section" style={{ marginTop: '12px', marginBottom: '12px', background: '#f8fafc', padding: '10px', borderRadius: '8px', border: '1px solid #dbeafe' }}>
+        <p style={{ fontSize: '10px', color: '#1e293b', textAlign: 'justify', lineHeight: '1.4', margin: '0 0 6px 0', fontWeight: 600 }}>
+          Por meio deste documento, o cliente confirma a aprovação do orçamento acima descrito e autoriza a FormaPlay Jogos Educacionais a dar sequência ao atendimento do pedido, conforme produto, quantidade, valores e condições comerciais informadas.
+        </p>
+        <p style={{ fontSize: '9px', color: '#475569', textAlign: 'justify', lineHeight: '1.3', margin: 0, fontStyle: 'italic' }}>
+          A produção e/ou separação do pedido seguirá os prazos e condições acordados, contados a partir da confirmação da compra e, quando aplicável, da confirmação de pagamento ou autorização formal da instituição.
         </p>
       </div>
 
@@ -362,6 +394,7 @@ export function ConfirmacaoCompraView({ orcamento, clienteData }: ConfirmacaoCom
             <img src="/Assinatura Edson.png?v=2" alt="Assinatura" className="print-sig-image" />
             <div className="print-sig-line" />
             <p>Responsável</p>
+            <p>Edson Lopes</p>
             <p><FormaPlayBrand /> Jogos Educacionais</p>
           </div>
         </div>

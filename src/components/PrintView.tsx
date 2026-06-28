@@ -499,6 +499,7 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
             <img src="/Assinatura Edson.png?v=2" alt="Assinatura" className="print-sig-image" />
             <div className="print-sig-line" />
             <p>Responsável</p>
+            <p>Edson Lopes</p>
             <p><FormaPlayBrand /> Jogos Educacionais</p>
           </div>
         </div>
