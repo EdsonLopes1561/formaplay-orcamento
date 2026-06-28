@@ -237,11 +237,11 @@ export const SolicitacaoPublica: React.FC = () => {
           cidade: form.cidade,
           estado: form.estado,
           jogo_escolhido: form.jogo,
-          quantidade: qtdFinal,
-          valor_estimado: form.jogo ? PRECOS[form.jogo] * qtdFinal : 0,
-          frete_estimado: freteEstimado,
-          desconto_pix: form.jogo ? (PRECOS[form.jogo] * qtdFinal) * 0.03 : 0,
-          total_estimado: totalEstimado,
+          quantidade: Number(qtdFinal) || 1,
+          valor_estimado: Number(form.jogo ? PRECOS[form.jogo] * qtdFinal : 0) || 0,
+          frete_estimado: Number(freteEstimado) || 0,
+          desconto_pix: Number(form.jogo ? (PRECOS[form.jogo] * qtdFinal) * 0.03 : 0) || 0,
+          total_estimado: Number(totalEstimado) || 0,
           observacoes_cliente: (() => {
             let obsFrete = '';
             if (freteSelecionado) {
