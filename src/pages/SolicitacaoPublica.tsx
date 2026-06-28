@@ -79,6 +79,8 @@ export const SolicitacaoPublica: React.FC = () => {
     embrulho_presente: false,
     forma_pagamento: 'Pix com desconto',
   });
+  
+  const [quantidadeStr, setQuantidadeStr] = useState<string>('1');
 
   const [loadingCep, setLoadingCep] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
@@ -114,7 +116,7 @@ export const SolicitacaoPublica: React.FC = () => {
     }
 
     if (name === 'quantidade') {
-      setForm(prev => ({ ...prev, [name]: Math.max(1, parseInt(value) || 1) }));
+      // Ignored here, handled by custom input
       return;
     }
 
@@ -143,7 +145,8 @@ export const SolicitacaoPublica: React.FC = () => {
   };
 
   const calcularFrete = async () => {
-    if (!form.cep || !form.jogo || form.quantidade < 1) return;
+    const qtdNum = Math.max(1, parseInt(quantidadeStr) || 1);
+    if (!form.cep || !form.jogo || qtdNum < 1) return;
     
     setLoadingFrete(true);
     setErroFrete(null);
@@ -152,7 +155,7 @@ export const SolicitacaoPublica: React.FC = () => {
 
     try {
       
-      const volumes = calcularVolumes(form.jogo, form.quantidade);
+      const volumes = calcularVolumes(form.jogo, qtdNum);
 
       const res = await fetch('/api/frete', {
         method: 'POST',
@@ -183,7 +186,8 @@ export const SolicitacaoPublica: React.FC = () => {
     }
   };
 
-  const valorProdutos = form.jogo ? PRECOS[form.jogo] * form.quantidade : 0;
+  const qtdParseada = Math.max(1, parseInt(quantidadeStr) || 1);
+  const valorProdutos = form.jogo ? PRECOS[form.jogo] * qtdParseada : 0;
   
   let freteEstimado = freteSelecionado ? freteSelecionado.price : 0;
   if (!freteSelecionado && form.estado) {
@@ -204,8 +208,12 @@ export const SolicitacaoPublica: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    const qtdFinal = Math.max(1, parseInt(quantidadeStr) || 1);
+    // Atualiza o estado com a quantidade final ao submeter (opcional, já usaremos qtdFinal)
+    setQuantidadeStr(qtdFinal.toString());
+
     // Validacao basica front-end
-    if (!form.nome || !form.telefone || !form.cep || !form.endereco || !form.numero || !form.cidade || !form.estado || !form.jogo || form.quantidade < 1) {
+    if (!form.nome || !form.telefone || !form.cep || !form.endereco || !form.numero || !form.cidade || !form.estado || !form.jogo || qtdFinal < 1) {
       setSubmitError("Por favor, preencha todos os campos obrigatórios.");
       return;
     }
@@ -229,10 +237,10 @@ export const SolicitacaoPublica: React.FC = () => {
           cidade: form.cidade,
           estado: form.estado,
           jogo_escolhido: form.jogo,
-          quantidade: form.quantidade,
-          valor_estimado: form.jogo ? PRECOS[form.jogo] * form.quantidade : 0,
+          quantidade: qtdFinal,
+          valor_estimado: form.jogo ? PRECOS[form.jogo] * qtdFinal : 0,
           frete_estimado: freteEstimado,
-          desconto_pix: form.jogo ? (PRECOS[form.jogo] * form.quantidade) * 0.03 : 0,
+          desconto_pix: form.jogo ? (PRECOS[form.jogo] * qtdFinal) * 0.03 : 0,
           total_estimado: totalEstimado,
           observacoes_cliente: (() => {
             let obsFrete = '';
@@ -250,7 +258,11 @@ export const SolicitacaoPublica: React.FC = () => {
         });
 
       if (error) {
-        console.error("Erro Supabase:", error);
+        console.error("Erro Real do Supabase ao Inserir Solicitação:");
+        console.error(" - Message:", error.message);
+        console.error(" - Details:", error.details);
+        console.error(" - Hint:", error.hint);
+        console.error(" - Code:", error.code);
         throw new Error(error.message);
       }
 
@@ -386,7 +398,46 @@ export const SolicitacaoPublica: React.FC = () => {
                 </div>
                 <div className="md:col-span-1">
                   <label className="block text-sm font-semibold text-slate-300 mb-1">Quantidade *</label>
-                  <input type="number" required min="1" name="quantidade" value={form.quantidade} onChange={handleChange} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white" />
+                  <div className="flex items-center">
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        const val = parseInt(quantidadeStr) || 1;
+                        if (val > 1) setQuantidadeStr((val - 1).toString());
+                      }}
+                      className="w-10 h-[42px] bg-slate-700 hover:bg-slate-600 text-white rounded-l-lg border border-slate-600 border-r-0 flex items-center justify-center font-bold transition-colors"
+                    >
+                      -
+                    </button>
+                    <input 
+                      type="number" 
+                      required 
+                      min="1" 
+                      name="quantidade" 
+                      value={quantidadeStr} 
+                      onChange={(e) => setQuantidadeStr(e.target.value)} 
+                      onFocus={(e) => e.target.select()}
+                      onBlur={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (isNaN(val) || val < 1) {
+                          setQuantidadeStr('1');
+                        } else {
+                          setQuantidadeStr(val.toString());
+                        }
+                      }}
+                      className="w-full h-[42px] px-2 text-center bg-[#0A0F1C] border border-slate-600 focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white" 
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        const val = parseInt(quantidadeStr) || 1;
+                        setQuantidadeStr((val + 1).toString());
+                      }}
+                      className="w-10 h-[42px] bg-slate-700 hover:bg-slate-600 text-white rounded-r-lg border border-slate-600 border-l-0 flex items-center justify-center font-bold transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
 
                 {form.jogo && (
@@ -481,7 +532,7 @@ export const SolicitacaoPublica: React.FC = () => {
                     <h3 className="font-bold text-white text-lg flex items-center gap-2">
                       🚚 Opções de Frete
                     </h3>
-                    <p className="text-sm text-slate-400">Calcule o frete para {form.cep} ({form.quantidade}x {form.jogo})</p>
+                    <p className="text-sm text-slate-400">Calcule o frete para {form.cep} ({qtdParseada}x {form.jogo})</p>
                   </div>
                   <button
                     type="button"
@@ -533,7 +584,7 @@ export const SolicitacaoPublica: React.FC = () => {
                 <h3 className="font-bold text-white mb-4 uppercase tracking-wide text-sm">Resumo Estimado</h3>
                 <div className="space-y-3 text-sm text-slate-300">
                   <div className="flex justify-between">
-                    <span>Produtos ({form.quantidade}x {form.jogo})</span>
+                    <span>Produtos ({qtdParseada}x {form.jogo})</span>
                     <span className="font-semibold text-white">{fmtCurrency(valorProdutos)}</span>
                   </div>
                   
