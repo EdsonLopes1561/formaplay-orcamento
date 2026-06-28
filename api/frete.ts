@@ -12,6 +12,11 @@ export default async function handler(req: Request) {
   const userAgent = process.env.SUPERFRETE_USER_AGENT || 'FormaPlay Orcamento v1 (contato.formaplay@gmail.com)';
   const originCep = process.env.FORMAPLAY_ORIGIN_CEP || '17209846';
 
+  console.log('--- DIAGNÓSTICO SUPERFRETE ---');
+  console.log(`SUPERFRETE_TOKEN existe: ${token ? 'sim' : 'não'}`);
+  console.log(`SUPERFRETE_BASE_URL: ${baseUrl}`);
+  console.log(`FORMAPLAY_ORIGIN_CEP: ${originCep}`);
+
   if (!token) {
     return new Response(JSON.stringify({ error: 'Token não configurado' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
@@ -20,13 +25,16 @@ export default async function handler(req: Request) {
     const body = await req.json();
     const { cepDestino, volumes } = body;
 
+    console.log(`CEP destino recebido: ${cepDestino}`);
+    console.log(`Quantidade recebida (volumes): ${volumes?.length}`);
+
     if (!cepDestino || !volumes || !Array.isArray(volumes) || volumes.length === 0) {
       return new Response(JSON.stringify({ error: 'Dados inválidos' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
-    // Como a SuperFrete não aceita enviar o array de volumes diretamente na mesma requisição
-    // de forma consolidada no pacote, faremos as chamadas para cada volume, conforme orientado.
-    const promessas = volumes.map(async (vol: any) => {
+    console.log(`Volumes calculados: ${volumes.length}`);
+
+    const promessas = volumes.map(async (vol: any, index: number) => {
       const payload = {
         from: { postal_code: originCep },
         to: { postal_code: cepDestino.replace(/\D/g, '') },
@@ -56,21 +64,24 @@ export default async function handler(req: Request) {
         body: JSON.stringify(payload)
       });
 
+      console.log(`Status HTTP SuperFrete (Volume ${index + 1}): ${resp.status}`);
+      
+      const responseData = await resp.json();
+      console.log(`Resposta SuperFrete resumida (Volume ${index + 1}):`, JSON.stringify(responseData).substring(0, 150) + '...');
+
       if (!resp.ok) {
-        throw new Error(`Erro na SuperFrete: ${resp.status}`);
+        throw new Error(`Erro na SuperFrete: ${resp.status} - ${JSON.stringify(responseData)}`);
       }
-      return resp.json();
+      return responseData;
     });
 
     const resultados = await Promise.all(promessas);
 
-    // Agrupar e somar os serviços retornados.
-    // resultados é um array de arrays: [ [ { name: "PAC", price: 10, ... } ], [ { name: "PAC", price: 15, ... } ] ]
     const servicosAgrupados: Record<string, any> = {};
 
     for (const resList of resultados) {
       for (const servico of resList) {
-        if (servico.has_error) continue; // Ignora pacotes/serviços que deram erro isolado
+        if (servico.has_error) continue;
 
         if (!servicosAgrupados[servico.name]) {
           servicosAgrupados[servico.name] = {
@@ -92,7 +103,6 @@ export default async function handler(req: Request) {
       }
     }
 
-    // Filtrar apenas serviços que retornaram sucesso para TODOS os volumes.
     const opcoesFinais = Object.values(servicosAgrupados).filter(
       (s: any) => s.volumes_validos === volumes.length
     );
@@ -102,8 +112,9 @@ export default async function handler(req: Request) {
       headers: { 'Content-Type': 'application/json' }
     });
 
-  } catch (error) {
-    console.error('Erro no /api/frete:', error);
-    return new Response(JSON.stringify({ error: 'Erro interno ao processar frete' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+  } catch (error: any) {
+    console.error('Erro no /api/frete:', error.message || error);
+    return new Response(JSON.stringify({ error: 'Erro interno ao processar frete', details: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
+
