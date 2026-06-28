@@ -84,6 +84,11 @@ export const SolicitacaoPublica: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const [opcoesFrete, setOpcoesFrete] = useState<any[] | null>(null);
+  const [freteSelecionado, setFreteSelecionado] = useState<any | null>(null);
+  const [loadingFrete, setLoadingFrete] = useState(false);
+  const [erroFrete, setErroFrete] = useState<string | null>(null);
+
   const fmtCurrency = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -132,10 +137,51 @@ export const SolicitacaoPublica: React.FC = () => {
     }
   };
 
+  const calcularFrete = async () => {
+    if (!form.cep || !form.jogo || form.quantidade < 1) return;
+    
+    setLoadingFrete(true);
+    setErroFrete(null);
+    setOpcoesFrete(null);
+    setFreteSelecionado(null);
+
+    try {
+      const { calcularVolumes } = await import('../config/produtosLogisticos');
+      const volumes = calcularVolumes(form.jogo, form.quantidade);
+
+      const res = await fetch('/api/frete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cepDestino: form.cep,
+          volumes
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error('Falha na API');
+      }
+
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        data.sort((a, b) => a.price - b.price);
+        setOpcoesFrete(data);
+        setFreteSelecionado(data[0]);
+      } else {
+        throw new Error('Sem opções de frete');
+      }
+    } catch (err) {
+      console.error(err);
+      setErroFrete("Não foi possível calcular o frete automaticamente no momento. Você ainda pode enviar sua solicitação e a FormaPlay confirmará o frete depois.");
+    } finally {
+      setLoadingFrete(false);
+    }
+  };
+
   const valorProdutos = form.jogo ? PRECOS[form.jogo] * form.quantidade : 0;
   
-  let freteEstimado = 0;
-  if (form.estado) {
+  let freteEstimado = freteSelecionado ? freteSelecionado.price : 0;
+  if (!freteSelecionado && form.estado) {
     const uf = form.estado.toUpperCase();
     if (uf === 'SP') {
       freteEstimado = 20;
@@ -183,7 +229,14 @@ export const SolicitacaoPublica: React.FC = () => {
           frete_estimado: freteEstimado,
           desconto_pix: form.jogo ? (PRECOS[form.jogo] * form.quantidade) * 0.03 : 0,
           total_estimado: totalEstimado,
-          observacoes_cliente: form.observacoes || null,
+          observacoes_cliente: (() => {
+            let obsFrete = '';
+            if (freteSelecionado) {
+              obsFrete = `\n\n=== FRETE ESCOLHIDO (SUPERFRETE) ===\nTransportadora: ${freteSelecionado.company}\nServiço: ${freteSelecionado.name}\nPrazo: ${freteSelecionado.delivery_time} dias úteis\nValor: ${fmtCurrency(freteSelecionado.price)}\nCEP destino: ${form.cep}\nVolumes: ${freteSelecionado.volumes_validos} volume(s)\n`;
+            }
+            const obsFinal = ((form.observacoes || '') + obsFrete).trim();
+            return obsFinal || null;
+          })(),
           embrulho_presente: form.embrulho_presente,
           forma_pagamento: form.forma_pagamento
         });
@@ -411,6 +464,60 @@ export const SolicitacaoPublica: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Secao Frete */}
+            {form.jogo && form.cep.length >= 8 && (
+              <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700 mt-6">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
+                  <div>
+                    <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                      🚚 Opções de Frete
+                    </h3>
+                    <p className="text-sm text-slate-400">Calcule o frete para {form.cep} ({form.quantidade}x {form.jogo})</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={calcularFrete}
+                    disabled={loadingFrete}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 active:scale-95 transition-all font-bold text-sm shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  >
+                    {loadingFrete ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : null}
+                    {loadingFrete ? 'Calculando...' : 'Calcular Frete'}
+                  </button>
+                </div>
+
+                {erroFrete && (
+                  <div className="bg-orange-900/30 border border-orange-500/30 text-orange-200 p-4 rounded-lg text-sm mb-4">
+                    {erroFrete}
+                  </div>
+                )}
+
+                {opcoesFrete && opcoesFrete.length > 0 && (
+                  <div className="space-y-3">
+                    {opcoesFrete.map((opcao: any) => (
+                      <label key={opcao.name} className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${freteSelecionado?.name === opcao.name ? 'border-green-500 bg-green-900/20 shadow-md ring-1 ring-green-500' : 'border-slate-700 bg-[#0A0F1C] hover:border-slate-500'}`}>
+                        <div className="flex items-center gap-3">
+                          <input 
+                            type="radio" 
+                            name="frete" 
+                            checked={freteSelecionado?.name === opcao.name} 
+                            onChange={() => setFreteSelecionado(opcao)}
+                            className="w-4 h-4 text-green-600 bg-slate-800 border-slate-600 focus:ring-green-500 focus:ring-offset-slate-900"
+                          />
+                          <div>
+                            <p className="font-bold text-white leading-tight">{opcao.company} - {opcao.name}</p>
+                            <p className="text-xs text-slate-400 mt-0.5">{opcao.delivery_time} dias úteis • {opcao.volumes_validos} volume(s)</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-green-400">{fmtCurrency(opcao.price)}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Resumo */}
             {form.jogo && (
