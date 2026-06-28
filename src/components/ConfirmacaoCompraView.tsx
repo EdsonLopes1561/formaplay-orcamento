@@ -21,13 +21,22 @@ const getProdutoImagem = (nome: string): string | null => {
   return null;
 };
 
-const getProdutoDescricao = (nome: string): string | null => {
-  const n = (nome || '').toLowerCase();
-  if (n.includes('premium')) return 'Versão especial com apresentação premium, ideal para instituições, eventos, premiações e experiências educacionais diferenciadas.';
-  if (n.includes('kids')) return 'Jogo educativo voltado ao desenvolvimento lógico, interação infantil e aprendizado divertido.';
-  if (n.includes('logístico') || n.includes('logistico')) return 'Simulação prática de operações logísticas, estratégia e tomada de decisão profissional.';
-  if (n.includes('professor')) return 'Versão voltada para aplicação em sala de aula, treinamentos e atividades educacionais.';
-  return null;
+const getProdutoDiferenciais = (nome: string): string[] => {
+  const k = (nome || '').toLowerCase();
+  if (k.includes('premium')) return ['Apresentação diferenciada', 'Ideal para eventos e premiações', 'Experiência educacional com acabamento superior', 'Mesma base pedagógica do Desafio Logístico'];
+  if (k.includes('kids')) return ['Aprendizado divertido', 'Desenvolvimento lógico', 'Interação infantil', 'Estímulo criativo'];
+  if (k.includes('logístico') || k.includes('logistico')) return ['Aprendizado prático', 'Estratégia e tomada de decisão', 'Aplicação educacional', 'Dinâmica em grupo'];
+  if (k.includes('professor')) return ['Aplicação em sala de aula', 'Material de apoio educacional', 'Dinâmicas pedagógicas', 'Treinamentos e workshops'];
+  return [];
+};
+
+const getProdutoConteudo = (nome: string): string[] => {
+  const k = (nome || '').toLowerCase();
+  if (k.includes('premium')) return ['Tabuleiro premium', 'Cartas operacionais premium', 'Peões personalizados', 'Dados', 'Manual especial do jogo', 'Caixa rígida premium'];
+  if (k.includes('kids')) return ['Tabuleiro infantil', 'Cartas coloridas', 'Peças educativas', 'Manual infantil', 'Dinâmicas lúdicas'];
+  if (k.includes('logístico') || k.includes('logistico')) return ['Tabuleiro premium', 'Cartas operacionais', 'Peões personalizados', 'Dados', 'Manual do jogo', 'Dinâmicas educacionais'];
+  if (k.includes('professor')) return ['Material pedagógico', 'Cartas avançadas', 'Guia do educador', 'Dinâmicas em grupo', 'Aplicação em sala'];
+  return [];
 };
 
 export function ConfirmacaoCompraView({ orcamento, clienteData }: ConfirmacaoCompraViewProps) {
@@ -163,7 +172,8 @@ export function ConfirmacaoCompraView({ orcamento, clienteData }: ConfirmacaoCom
   }
 
   const produtoImagem = getProdutoImagem(orcamento.produto);
-  const produtoDesc = getProdutoDescricao(orcamento.produto);
+  const diferenciais = getProdutoDiferenciais(orcamento.produto);
+  const conteudo = getProdutoConteudo(orcamento.produto);
 
   return (
     <div id="print-area" className="print-area">
@@ -258,7 +268,7 @@ export function ConfirmacaoCompraView({ orcamento, clienteData }: ConfirmacaoCom
       </div>
 
       <div className="print-section">
-        <h2 className="print-section-title">Itens Confirmados</h2>
+        <h2 className="print-section-title">Produto / Serviço</h2>
         <table className="print-table">
           <thead>
             <tr>
@@ -270,15 +280,7 @@ export function ConfirmacaoCompraView({ orcamento, clienteData }: ConfirmacaoCom
           </thead>
           <tbody>
             <tr>
-              <td className="print-td">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  {produtoImagem && <img src={produtoImagem} alt={orcamento.produto} style={{ height: '40px', width: '40px', objectFit: 'contain' }} />}
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontWeight: 700, fontSize: '10px' }}>{orcamento.produto}</span>
-                    {produtoDesc && <span style={{ fontSize: '8.5px', color: '#64748b', marginTop: '2px', lineHeight: '1.2' }}>{produtoDesc}</span>}
-                  </div>
-                </div>
-              </td>
+              <td className="print-td">{orcamento.produto}</td>
               <td className="print-td print-td-center">{orcamento.quantidade}</td>
               <td className="print-td print-td-right">{fmt(orcamento.valor_unitario)}</td>
               <td className="print-td print-td-right">{fmt(orcamento.subtotal)}</td>
@@ -287,7 +289,15 @@ export function ConfirmacaoCompraView({ orcamento, clienteData }: ConfirmacaoCom
         </table>
       </div>
 
-      <div className="print-summary-wrapper" style={{ justifyContent: 'flex-end', marginTop: '4px' }}>
+      <div className="print-summary-wrapper">
+        {produtoImagem && (
+          <div className="print-product-image-card">
+            <h3 className="print-product-image-title">Imagem do Produto</h3>
+            <div className="print-product-image-frame">
+              <img src={produtoImagem} alt={orcamento.produto} className="print-product-image" />
+            </div>
+          </div>
+        )}
         <div className="print-summary">
           <div className="print-summary-row">
             <span>Subtotal</span>
@@ -310,6 +320,34 @@ export function ConfirmacaoCompraView({ orcamento, clienteData }: ConfirmacaoCom
           </div>
         </div>
       </div>
+
+      {diferenciais.length > 0 && (
+        <div className="print-section">
+          <h2 className="print-section-title">Diferenciais do Produto</h2>
+          <div className="print-diferenciais-grid">
+            {diferenciais.map((item, idx) => (
+              <div key={idx} className="print-diferenciais-item">
+                <span className="print-diferenciais-check">&#10003;</span>
+                <span className="print-diferenciais-text">{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {conteudo.length > 0 && (
+        <div className="print-section">
+          <h2 className="print-section-title">Conteúdo da Caixa</h2>
+          <div className="print-conteudo-grid">
+            {conteudo.map((item, idx) => (
+              <div key={idx} className="print-conteudo-item">
+                <span className="print-conteudo-dot" />
+                <span className="print-conteudo-text">{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="print-section">
         <h2 className="print-section-title">Condições Comerciais</h2>
