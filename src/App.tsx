@@ -7,6 +7,7 @@ import {
 import { supabase } from './supabase.ts';
 import { Orcamento, Cliente, EMPRESA, PRODUTOS, emptyOrcamento, SolicitacaoOrcamento } from './types';
 import { PrintView } from './components/PrintView';
+import { ConfirmacaoCompraView } from './components/ConfirmacaoCompraView';
 import { HistoricoModal } from './components/HistoricoModal';
 import { ClientesModal } from './components/ClientesModal';
 import { DashboardModal } from './components/DashboardModal';
@@ -132,6 +133,7 @@ const getProdutoInfo = (nome: string): ProdutoInfo | null => {
 function App() {
   const [form, setForm] = useState<Omit<Orcamento, 'id' | 'created_at'>>(emptyOrcamento());
   const [currentId, setCurrentId] = useState<string | null>(null);
+  const [printMode, setPrintMode] = useState<'orcamento' | 'confirmacao'>('orcamento');
   const [historico, setHistorico] = useState<Orcamento[]>([]);
   const [showHistorico, setShowHistorico] = useState(false);
   const [loadingHistorico, setLoadingHistorico] = useState(false);
@@ -441,6 +443,36 @@ function App() {
     }, 100);
   };
 
+  const imprimirConfirmacaoCompra = () => {
+    setPrintMode('confirmacao');
+    
+    const originalTitle = document.title;
+    
+    const sanitize = (str: string) => {
+      if (!str) return '';
+      return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // remove acentos
+        .replace(/[^a-zA-Z0-9]/g, "_")  // substitui caracteres especiais por underline
+        .replace(/_+/g, "_")            // remove underlines duplicados
+        .replace(/^_|_$/g, "");         // remove underline das pontas
+    };
+
+    const numLimpo = (form.numero || 'S-N').replace(/#/g, '');
+    let fileName = `Confirmacao_Compra_${numLimpo}_FormaPlay`;
+    if (fileName.length > 120) fileName = fileName.substring(0, 120);
+    
+    document.title = fileName;
+    
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        document.title = originalTitle;
+        setPrintMode('orcamento');
+      }, 500);
+    }, 100);
+  };
+
   const enviarWhatsApp = () => {
     const mensagem = `Olá, segue o orçamento referente ao jogo Desafio Logístico.\nA FormaPlay fica à disposição para qualquer dúvida.`;
     let url = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
@@ -504,7 +536,11 @@ function App() {
     <>
       {/* Print-only area */}
       <div className="hidden print:block">
-        <PrintView orcamento={{ ...form, id: currentId ?? undefined }} clienteData={clienteData} />
+        {printMode === 'orcamento' ? (
+          <PrintView orcamento={{ ...form, id: currentId ?? undefined }} clienteData={clienteData} />
+        ) : (
+          <ConfirmacaoCompraView orcamento={{ ...form, id: currentId ?? undefined }} clienteData={clienteData} />
+        )}
       </div>
 
       {/* Screen UI */}
@@ -623,6 +659,14 @@ function App() {
               className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-700 to-blue-800 text-white rounded-lg hover:from-blue-800 hover:to-blue-900 active:scale-95 transition-all font-bold text-sm shadow-md"
             >
               <Printer size={18} /> PDF
+            </button>
+            <button
+              onClick={imprimirConfirmacaoCompra}
+              disabled={form.status !== 'Aprovado'}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg active:scale-95 transition-all font-bold text-sm shadow-md ${form.status === 'Aprovado' ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white hover:from-emerald-700 hover:to-emerald-800' : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'}`}
+              title={form.status !== 'Aprovado' ? 'Disponível após aprovação' : 'Gerar Confirmação de Compra'}
+            >
+              <FileText size={18} /> {form.status !== 'Aprovado' ? 'Disponível após aprovação' : 'Confirmação de Compra'}
             </button>
             <button
               onClick={enviarWhatsApp}
