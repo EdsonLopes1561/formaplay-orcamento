@@ -151,7 +151,21 @@ function App() {
   const [clienteData, setClienteData] = useState<Cliente | null>(null);
 
   const converterSolicitacao = async (s: SolicitacaoOrcamento) => {
-    const unitPrice = PRODUTOS.find((p) => p.nome === s.jogo_escolhido)?.preco || 0;
+    // Mapeamento seguro de nomes do formulário público para o orçamento interno
+    const mapNomeProduto = (nome: string) => {
+      if (nome === 'Edição do Professor') return 'Edição Professor';
+      if (nome === 'Desafio Premium') return 'Desafio Logístico Premium';
+      return nome;
+    };
+    
+    const nomeNormalizado = mapNomeProduto(s.jogo_escolhido);
+    const produtoEncontrado = PRODUTOS.find((p) => p.nome === nomeNormalizado);
+    
+    // Fallback: se não achar, calcula o unitário a partir do valor estimado, garantindo que não fique 0
+    let unitPrice = produtoEncontrado?.preco || 0;
+    if (unitPrice === 0 && s.valor_estimado > 0 && s.quantidade > 0) {
+      unitPrice = s.valor_estimado / s.quantidade;
+    }
     const numeroAtual = form.numero || await calcularNumeroOrcamento();
     
     let infoComple = `Origem: Solicitação pública ${s.codigo}`;
@@ -171,7 +185,7 @@ function App() {
       telefone: s.telefone,
       email: s.email || '',
       cidade: `${s.cidade || ''}/${s.estado || ''}`,
-      produto: s.jogo_escolhido,
+      produto: produtoEncontrado ? nomeNormalizado : '',
       quantidade: s.quantidade,
       valor_unitario: unitPrice,
       frete: s.frete_estimado,
@@ -196,7 +210,12 @@ function App() {
     setCurrentId(null);
     setSolicitacaoOrigemId(s.id);
     setShowSolicitacoes(false);
-    showToast('success', 'Dados preenchidos. Revise e clique em Salvar Orçamento.');
+    
+    if (!produtoEncontrado) {
+      showToast('warning', `Produto "${s.jogo_escolhido}" não reconhecido. Valor unitário deduzido: R$ ${unitPrice.toFixed(2)}.`);
+    } else {
+      showToast('success', 'Dados preenchidos. Revise e clique em Salvar Orçamento.');
+    }
   };
 
   const carregarSolicitacoes = async () => {
