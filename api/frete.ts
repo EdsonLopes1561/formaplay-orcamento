@@ -12,11 +12,9 @@ export default async function handler(req: Request) {
   const userAgent = process.env.SUPERFRETE_USER_AGENT || 'FormaPlay Orcamento v1 (contato.formaplay@gmail.com)';
   const originCep = process.env.FORMAPLAY_ORIGIN_CEP || '17209846';
 
-  console.log('--- DIAGNÓSTICO SUPERFRETE ---');
-  console.log(`SUPERFRETE_TOKEN existe: ${token ? 'sim' : 'não'}`);
-  console.log(`SUPERFRETE_BASE_URL: ${baseUrl}`);
-  console.log(`FORMAPLAY_ORIGIN_CEP: ${originCep}`);
-
+  if (token) {
+    console.log(`[API Frete] Iniciando cálculo. URL: ${baseUrl}, Origem: ${originCep}`);
+  }
   if (!token) {
     return new Response(JSON.stringify({ error: 'Token não configurado' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
@@ -25,14 +23,10 @@ export default async function handler(req: Request) {
     const body = await req.json();
     const { cepDestino, volumes } = body;
 
-    console.log(`CEP destino recebido: ${cepDestino}`);
-    console.log(`Quantidade recebida (volumes): ${volumes?.length}`);
-
     if (!cepDestino || !volumes || !Array.isArray(volumes) || volumes.length === 0) {
       return new Response(JSON.stringify({ error: 'Dados inválidos' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
-    console.log(`Volumes calculados: ${volumes.length}`);
 
     const promessas = volumes.map(async (vol: any, index: number) => {
       const payload = {
@@ -64,10 +58,7 @@ export default async function handler(req: Request) {
         body: JSON.stringify(payload)
       });
 
-      console.log(`Status HTTP SuperFrete (Volume ${index + 1}): ${resp.status}`);
-      
       const responseData = await resp.json();
-      console.log(`Resposta SuperFrete resumida (Volume ${index + 1}):`, JSON.stringify(responseData).substring(0, 150) + '...');
 
       if (!resp.ok) {
         throw new Error(`Erro na SuperFrete: ${resp.status} - ${JSON.stringify(responseData)}`);
