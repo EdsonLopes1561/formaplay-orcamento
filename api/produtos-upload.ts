@@ -34,14 +34,12 @@ export default async function handler(req: Request) {
       return new Response(JSON.stringify({ error: 'Configuração de upload ausente.', code: 'UPLOAD_CONFIG_MISSING' }), { status: 500, headers: commonHeaders });
     }
 
-    const t0 = performance.now();
     let body;
     try {
       body = await req.json();
     } catch (e) {
       return new Response(JSON.stringify({ error: 'Falha ao ler o corpo da requisição JSON.', code: 'INVALID_BODY' }), { status: 400, headers: commonHeaders });
     }
-    const t1 = performance.now();
 
     const { sku, contentType, size } = body;
 
@@ -74,14 +72,12 @@ export default async function handler(req: Request) {
     const randomId = Math.random().toString(36).substring(2, 8);
     const filePath = `produtos/${sanitizedSku}/${timestamp}-${randomId}.${ext}`;
 
-    const t2 = performance.now();
     console.log(`[Upload] request received - method: POST, contentType: ${contentType}, size: ${size}, sku: ${sanitizedSku}, hasSupabaseUrl: ${!!supabaseUrl}, hasServiceRoleKey: ${!!serviceRoleKey}`);
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    const t3 = performance.now();
     
     // Create signed upload URL with 15s timeout protection
     const signedDataPromise = supabase.storage
@@ -93,11 +89,7 @@ export default async function handler(req: Request) {
       timeoutPromise(15000, 'Tempo excedido ao preparar upload.')
     ]) as any;
 
-    const t4 = performance.now();
-    console.log(`[Diagnostic] createSignedUploadUrl time: ${(t4 - t3).toFixed(2)} ms`);
-
     if (signedError || !signedData) {
-      console.log(`[Diagnostic] Supabase error code: SIGNED_URL_FAILED`);
       return new Response(JSON.stringify({ error: 'Falha ao gerar autorização de upload.', code: 'SIGNED_URL_FAILED' }), { status: 500, headers: commonHeaders });
     }
 

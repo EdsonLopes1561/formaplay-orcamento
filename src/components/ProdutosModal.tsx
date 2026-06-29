@@ -125,7 +125,6 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
     
     setSaving(true);
     setError(null);
-    const tStart = performance.now();
     try {
       let finalImageUrl = editingProduto.imagem_url;
 
@@ -139,7 +138,6 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
         const timeoutId = setTimeout(() => controller.abort(), 20000);
         
         let urlRes;
-        const tPrepStart = performance.now();
         try {
           urlRes = await fetch('/api/produtos-upload', {
             method: 'POST',
@@ -165,7 +163,6 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
 
         if (!urlRes.ok) {
           const errData = await urlRes.json().catch(() => ({}));
-          console.log(`[Diagnostic] API Error Code: ${errData.code || 'UNKNOWN'}`);
           
           let msg = errData.error || 'Erro ao preparar o upload da imagem.';
           if (errData.code === 'UPLOAD_CONFIG_MISSING') msg = 'Configuração de upload ausente.';
@@ -177,11 +174,8 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
         }
 
         const { path, token, publicUrl } = await urlRes.json();
-        const tPrepEnd = performance.now();
-        console.log(`[Diagnostic] Preparando upload tempo: ${(tPrepEnd - tPrepStart).toFixed(2)} ms`);
 
         setSavingMessage('Enviando imagem...');
-        const tUploadStart = performance.now();
         
         const { error: uploadError } = await supabase.storage
           .from('product-images')
@@ -192,8 +186,6 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
         }
 
         finalImageUrl = publicUrl;
-        const tUploadEnd = performance.now();
-        console.log(`[Diagnostic] Enviando imagem tempo: ${(tUploadEnd - tUploadStart).toFixed(2)} ms`);
       }
 
       setSavingMessage('Salvando produto...');
@@ -205,7 +197,6 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
         imagem_url: finalImageUrl
       };
 
-      const tSaveStart = performance.now();
       const res = await fetch('/api/produtos', {
         method,
         headers: { 
@@ -219,8 +210,6 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.error || 'Erro ao salvar produto.');
       }
-      const tSaveEnd = performance.now();
-      console.log(`[Diagnostic] Frontend API save tempo: ${(tSaveEnd - tSaveStart).toFixed(2)} ms`);
 
       setIsFormOpen(false);
       setEditingProduto(null);
@@ -228,12 +217,8 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
       setPreviewUrl(null);
       
       setSavingMessage('Atualizando catálogo...');
-      const tFetchStart = performance.now();
       await fetchProdutos(isAdminMode, adminToken);
-      const tFetchEnd = performance.now();
-      console.log(`[Diagnostic] Frontend refetch tempo: ${(tFetchEnd - tFetchStart).toFixed(2)} ms`);
       
-      console.log(`[Diagnostic] Fluxo total (Upload + Save + Refetch): ${(performance.now() - tStart).toFixed(2)} ms`);
     } catch (err: any) {
       setError(err.message);
     } finally {
