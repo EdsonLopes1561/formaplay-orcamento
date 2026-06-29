@@ -19,29 +19,28 @@ const PRODUTOS_INFO = [
   {
     nome: 'Desafio Logístico' as Jogo,
     imagem: '/desafio-logistico.png',
-    descricao: 'Jogo educacional de logística para desenvolver planejamento, tomada de decisão, custos, rotas e estratégia.',
+    descricao: 'Jogo educacional de tabuleiro que simula decisões logísticas, custos, imprevistos e estratégias de entrega de forma prática e dinâmica.',
     diferenciais: [
-      'Simula situações reais da logística',
-      'Trabalha custos, imprevistos e decisões',
-      'Ideal para cursos técnicos, escolas e treinamentos',
-      'Estimula participação e aprendizado prático'
+      'Aprendizado prático',
+      'Aplicação educacional',
+      'Estratégia e tomada de decisão',
+      'Dinâmica em grupo'
     ]
   },
   {
     nome: 'Desafio Logístico Premium' as Jogo,
     imagem: '/desafio-logistico-premium.png',
-    descricao: 'Versão especial do Desafio Logístico com apresentação diferenciada e acabamento superior.',
+    descricao: 'Versão sob encomenda, com layout exclusivo e experiência visual diferenciada.',
     diferenciais: [
-      'Apresentação mais premium',
-      'Ideal para presentes, eventos e instituições',
-      'Maior impacto visual na entrega',
-      'Experiência mais marcante para o cliente'
+      'Layout premium',
+      'Apresentação mais sofisticada',
+      'Experiência visual diferenciada'
     ]
   },
   {
     nome: 'Desafio Kids' as Jogo,
     imagem: '/desafio-kids.png',
-    descricao: 'Versão infantil em desenvolvimento, com proposta lúdica e educativa para crianças.',
+    descricao: 'Versão infantil sob encomenda, com linguagem mais simples, visual lúdico e atividades educativas para crianças.',
     diferenciais: [
       'Linguagem mais simples e visual',
       'Foco em aprendizado lúdico',
@@ -52,12 +51,12 @@ const PRODUTOS_INFO = [
   {
     nome: 'Edição do Professor' as Jogo,
     imagem: '/edicao-professor.png',
-    descricao: 'Versão voltada para o educador com materiais de apoio e facilitação de dinâmicas.',
+    descricao: 'Versão sob encomenda preparada para apoiar a aplicação do Desafio Logístico em sala de aula, facilitando a condução da atividade e o reforço dos conceitos trabalhados.',
     diferenciais: [
-      'Material de apoio ao professor',
-      'Facilita a aplicação de dinâmicas',
-      'Guia prático de turmas',
-      'Versão ampliada para sala de aula'
+      'Apoio para aplicação em turma',
+      'Organização da dinâmica em sala',
+      'Reforço dos conceitos de logística',
+      'Material pensado para uso educacional'
     ]
   }
 ];
