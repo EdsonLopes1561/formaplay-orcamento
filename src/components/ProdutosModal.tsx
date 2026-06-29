@@ -47,28 +47,24 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
     setLoading(true);
     setError(null);
     try {
-      if (isAdminMode && adminToken) {
-        // Fetch do backend Edge Function (ignora RLS e traz inativos)
-        const res = await fetch('/api/produtos', {
-          headers: { 'x-admin-token': adminToken },
-          cache: 'no-store'
-        });
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || 'Erro de autenticação ou servidor.');
-        }
-        const data = await res.json();
-        setProdutos(data || []);
-      } else {
-        // Fetch via client normal (apenas leitura pública)
-        const { data, error: sbError } = await supabase
-          .from('produtos')
-          .select('*')
-          .order('nome', { ascending: true });
+      const ts = Date.now();
+      let url = `/api/produtos?_ts=${ts}`;
+      let headers: HeadersInit = {};
 
-        if (sbError) throw sbError;
-        setProdutos(data || []);
+      if (isAdminMode && adminToken) {
+        url = `/api/produtos?admin=1&_ts=${ts}`;
+        headers = { 'x-admin-token': adminToken };
       }
+
+      const res = await fetch(url, { headers, cache: 'no-store' });
+      
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Erro ao carregar produtos.');
+      }
+      
+      const data = await res.json();
+      setProdutos(data || []);
     } catch (err: any) {
       console.error('Erro ao buscar produtos:', err);
       setError(err.message || 'Erro ao carregar produtos');
@@ -331,8 +327,11 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-1">URL da imagem do produto</label>
+                  <label className="block text-sm font-medium text-slate-400 mb-1">URL pública da imagem do produto</label>
                   <input type="text" value={editingProduto.imagem_url || ''} onChange={e => setEditingProduto({...editingProduto, imagem_url: e.target.value})} className="w-full bg-blue-950 border border-blue-800 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500" placeholder="https://..." />
+                  <p className="text-[10px] text-slate-500 mt-1.5">
+                    Use uma imagem já hospedada na internet. Exemplo: Supabase Storage, site da FormaPlay ou pasta pública do projeto. Caminhos do computador não funcionam.
+                  </p>
                 </div>
 
                 <div>

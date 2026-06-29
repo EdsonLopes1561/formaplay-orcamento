@@ -18,13 +18,17 @@ export default async function handler(req: Request) {
     const adminToken = req.headers.get('x-admin-token')?.trim();
     const secret = process.env.FORMAPLAY_ADMIN_SECRET?.trim();
 
-    // Apenas GET pode passar sem token se formos permitir GET público, 
-    // mas como o frontend atual usa supabase client, deixaremos esta API estritamente para admin.
-    if (!adminToken || adminToken !== secret) {
-      return new Response(JSON.stringify({ error: 'Acesso negado. Token administrativo inválido.' }), { 
-        status: 401, 
-        headers: { 'Content-Type': 'application/json' } 
-      });
+    const isGet = req.method === 'GET';
+    const isAdminParam = req.url.includes('admin=1');
+    const isAdminRequest = !isGet || isAdminParam;
+
+    if (isAdminRequest) {
+      if (!adminToken || adminToken !== secret) {
+        return new Response(JSON.stringify({ error: 'Acesso negado. Token administrativo inválido.' }), { 
+          status: 401, 
+          headers: { 'Content-Type': 'application/json' } 
+        });
+      }
     }
 
     const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -44,19 +48,26 @@ export default async function handler(req: Request) {
       }
     });
 
-    if (req.method === 'GET') {
-      const { data, error } = await supabase
-        .from('produtos')
-        .select('*')
-        .order('nome', { ascending: true });
+    const commonHeaders = {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
 
+    if (req.method === 'GET') {
+      let query = supabase.from('produtos').select('*').order('nome', { ascending: true });
+      
+      if (!isAdminRequest) {
+        query = query.eq('ativo', true);
+      }
+
+      const { data, error } = await query;
+      
       if (error) throw error;
       return new Response(JSON.stringify(data), { 
         status: 200, 
-        headers: { 
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-store, max-age=0'
-        } 
+        headers: commonHeaders
       });
     }
 
@@ -76,7 +87,7 @@ export default async function handler(req: Request) {
       }
       return new Response(JSON.stringify(data), { 
         status: 201, 
-        headers: { 'Content-Type': 'application/json' } 
+        headers: commonHeaders
       });
     }
 
@@ -100,20 +111,20 @@ export default async function handler(req: Request) {
       }
       return new Response(JSON.stringify(data), { 
         status: 200, 
-        headers: { 'Content-Type': 'application/json' } 
+        headers: commonHeaders
       });
     }
 
     return new Response(JSON.stringify({ error: 'Método não permitido.' }), { 
       status: 405, 
-      headers: { 'Content-Type': 'application/json' } 
+      headers: commonHeaders
     });
 
   } catch (error: any) {
     console.error('Erro na API de Produtos:', error);
     return new Response(JSON.stringify({ error: error.message || 'Erro interno do servidor.' }), { 
       status: 400, 
-      headers: { 'Content-Type': 'application/json' } 
+      headers: commonHeaders
     });
   }
 }
