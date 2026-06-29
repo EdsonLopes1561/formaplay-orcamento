@@ -43,17 +43,17 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
   const [editingProduto, setEditingProduto] = useState<Partial<Produto> | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const fetchProdutos = async () => {
+  const fetchProdutos = async (forceAdmin = isAdminMode, forceToken = adminToken) => {
     setLoading(true);
     setError(null);
     try {
       const ts = Date.now();
-      let url = `/api/produtos?_ts=${ts}`;
+      let url = `/api/produtos?public=1&_ts=${ts}`;
       let headers: HeadersInit = {};
 
-      if (isAdminMode && adminToken) {
+      if (forceAdmin && forceToken) {
         url = `/api/produtos?admin=1&_ts=${ts}`;
-        headers = { 'x-admin-token': adminToken };
+        headers = { 'x-admin-token': forceToken };
       }
 
       const res = await fetch(url, { headers, cache: 'no-store' });
@@ -68,7 +68,7 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
     } catch (err: any) {
       console.error('Erro ao buscar produtos:', err);
       setError(err.message || 'Erro ao carregar produtos');
-      if (isAdminMode && err.message.includes('Acesso negado')) {
+      if (forceAdmin && err.message.includes('Acesso negado')) {
         setIsAdminMode(false);
         setAdminToken('');
       }
@@ -78,13 +78,15 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
   };
 
   useEffect(() => {
-    fetchProdutos();
-  }, [isAdminMode]);
+    fetchProdutos(false, ''); // Initial public load only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleAdminAuth = async () => {
     if (isAdminMode) {
       setIsAdminMode(false);
       setAdminToken('');
+      await fetchProdutos(false, '');
       return;
     }
     const token = window.prompt('Digite a senha administrativa:');
@@ -102,6 +104,7 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
       }
       setAdminToken(token);
       setIsAdminMode(true);
+      await fetchProdutos(true, token);
     } catch (err: any) {
       setError('Senha administrativa inválida.');
       setAdminToken('');
@@ -137,7 +140,7 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
       
       setIsFormOpen(false);
       setEditingProduto(null);
-      await fetchProdutos();
+      await fetchProdutos(isAdminMode, adminToken);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -160,7 +163,7 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
       });
       
       if (!res.ok) throw new Error('Erro ao alterar status do produto.');
-      await fetchProdutos();
+      await fetchProdutos(isAdminMode, adminToken);
     } catch (err: any) {
       setError(err.message);
       setLoading(false);
@@ -221,7 +224,7 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
             )}
 
             <button
-              onClick={fetchProdutos}
+              onClick={() => fetchProdutos(isAdminMode, adminToken)}
               disabled={loading || isFormOpen}
               className="p-2.5 rounded-xl bg-blue-900/80 text-indigo-400 hover:text-indigo-300 hover:bg-blue-800 transition-all border border-blue-800 shadow-sm disabled:opacity-50 active:scale-95"
               title="Atualizar"
