@@ -1,4 +1,4 @@
-import { calcularVolumes } from '../config/produtosLogisticos';
+import { calcularVolumes, calcularVolumesMultiProdutos } from '../config/produtosLogisticos';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { Produto, ItemOrcamentoSnapshot } from '../types';
@@ -139,9 +139,9 @@ export const SolicitacaoPublica: React.FC = () => {
     return () => { active = false; };
   }, []);
 
-  // Limpar frete se o carrinho mudar e não houver exatamente 1 produto diferente
+  // Limpar frete se o carrinho estiver vazio
   useEffect(() => {
-    if (itensCarrinho.length !== 1) {
+    if (itensCarrinho.length === 0) {
       setOpcoesFrete(null);
       setFreteSelecionado(null);
     }
@@ -220,9 +220,8 @@ export const SolicitacaoPublica: React.FC = () => {
   };
 
   const calcularFrete = async () => {
-    if (itensCarrinho.length !== 1) return;
-    const item = itensCarrinho[0];
-    if (!form.cep || !item) return;
+    if (itensCarrinho.length === 0) return;
+    if (!form.cep) return;
     
     setLoadingFrete(true);
     setErroFrete(null);
@@ -230,7 +229,11 @@ export const SolicitacaoPublica: React.FC = () => {
     setFreteSelecionado(null);
 
     try {
-      const volumes = calcularVolumes(item.nome, item.quantidade);
+      const volumes = calcularVolumesMultiProdutos(itensCarrinho, produtosDisponiveis);
+
+      if (!volumes) {
+        throw new Error('Produtos sem dados logísticos válidos.');
+      }
 
       const res = await fetch('/api/frete', {
         method: 'POST',
@@ -253,9 +256,13 @@ export const SolicitacaoPublica: React.FC = () => {
       } else {
         throw new Error('Sem opções de frete');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setErroFrete("Não foi possível calcular o frete automaticamente no momento. Você ainda pode enviar sua solicitação e a FormaPlay confirmará o frete depois.");
+      if (err.message === 'Produtos sem dados logísticos válidos.') {
+        setErroFrete("Cálculo automático indisponível: alguns produtos no carrinho não possuem dados logísticos configurados. Prossiga com o envio e confirmaremos o frete a combinar.");
+      } else {
+        setErroFrete("Não foi possível calcular o frete automaticamente no momento. Você ainda pode enviar sua solicitação e a FormaPlay confirmará o frete depois.");
+      }
     } finally {
       setLoadingFrete(false);
     }
@@ -282,11 +289,13 @@ export const SolicitacaoPublica: React.FC = () => {
   }
 
   const descontoPix = subtotalProdutos * 0.03;
-  const totalEstimado = itensCarrinho.length === 1 
+  const temCalculoFrete = !!freteSelecionado || (itensCarrinho.length === 1 && !!form.estado);
+
+  const totalEstimado = temCalculoFrete 
     ? (subtotalProdutos + freteEstimado) 
     : subtotalProdutos;
 
-  const totalComPix = itensCarrinho.length === 1
+  const totalComPix = temCalculoFrete
     ? ((subtotalProdutos - descontoPix) + freteEstimado)
     : (subtotalProdutos - descontoPix);
 
@@ -385,6 +394,9 @@ export const SolicitacaoPublica: React.FC = () => {
       </div>
     );
   }
+
+  const volumesDisponiveis = calcularVolumesMultiProdutos(itensCarrinho, produtosDisponiveis);
+  const isCalculoFreteDisponivel = volumesDisponiveis !== null && volumesDisponiveis.length > 0;
 
   return (
     <div className="min-h-screen bg-[#0A0F1C] py-10 px-4 font-sans text-slate-200">
@@ -679,14 +691,14 @@ export const SolicitacaoPublica: React.FC = () => {
             {/* Secao Frete */}
             {itensCarrinho.length > 0 && form?.cep?.length >= 8 && (
               <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700 mt-6">
-                {itensCarrinho.length === 1 ? (
+                {isCalculoFreteDisponivel ? (
                   <>
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
                       <div>
                         <h3 className="font-bold text-white text-lg flex items-center gap-2">
                           🚚 Opções de Frete
                         </h3>
-                        <p className="text-sm text-slate-400">Calcule o frete para {form.cep} ({itensCarrinho[0].quantidade}x {itensCarrinho[0].nome})</p>
+                        <p className="text-sm text-slate-400">Calcule o frete para {form.cep} ({totalItensQtd} item/itens no total)</p>
                       </div>
                       <button
                         type="button"
@@ -736,7 +748,7 @@ export const SolicitacaoPublica: React.FC = () => {
                       🚚 Opções de Frete
                     </h3>
                     <div className="bg-blue-900/30 border border-blue-500/30 text-blue-200 p-4 rounded-lg text-sm">
-                      ℹ️ <strong>Para múltiplos produtos diferentes</strong>, o cálculo automático de frete não está disponível. Confirmaremos o valor exato do frete no orçamento enviado por WhatsApp.
+                      ℹ️ <strong>Cálculo automático de frete indisponível:</strong> alguns produtos selecionados não possuem peso ou medidas cadastrados. Prossiga com o envio e confirmaremos o valor exato no WhatsApp.
                     </div>
                   </div>
                 )}
@@ -764,9 +776,9 @@ export const SolicitacaoPublica: React.FC = () => {
                       {form.estado && <span className="bg-slate-700 text-slate-200 text-xs px-2 py-0.5 rounded-full font-bold">{form.estado.toUpperCase()}</span>}
                     </div>
                     <span className="font-semibold text-white">
-                      {itensCarrinho.length === 1 
-                        ? (freteEstimado > 0 ? fmtCurrency(freteEstimado) : 'A calcular')
-                        : 'A combinar'
+                      {freteSelecionado 
+                        ? fmtCurrency(freteEstimado) 
+                        : (temCalculoFrete ? 'A calcular' : 'A combinar')
                       }
                     </span>
                   </div>
@@ -775,7 +787,7 @@ export const SolicitacaoPublica: React.FC = () => {
                     <div className="flex justify-between items-center mb-1">
                       <span className={`font-medium ${form.forma_pagamento !== 'Pix com desconto' ? 'text-white font-bold text-lg' : 'text-slate-500'}`}>Total Estimado (Prazo)</span>
                       <span className={`${form.forma_pagamento !== 'Pix com desconto' ? 'text-2xl font-black text-white' : 'text-lg font-bold text-slate-300'}`}>
-                        {itensCarrinho.length === 1 
+                        {temCalculoFrete 
                           ? fmtCurrency(totalEstimado) 
                           : 'A combinar'
                         }
@@ -784,7 +796,7 @@ export const SolicitacaoPublica: React.FC = () => {
                     <div className={`flex justify-between items-center ${form.forma_pagamento !== 'Pix com desconto' ? 'opacity-50' : ''}`}>
                       <span className="text-green-500 font-bold">Total com Desconto PIX</span>
                       <span className={`${form.forma_pagamento === 'Pix com desconto' ? 'text-2xl font-black' : 'text-lg font-bold'} text-green-400`}>
-                        {itensCarrinho.length === 1 
+                        {temCalculoFrete 
                           ? fmtCurrency(totalComPix) 
                           : `${fmtCurrency(subtotalProdutos - descontoPix)} + frete`
                         }
