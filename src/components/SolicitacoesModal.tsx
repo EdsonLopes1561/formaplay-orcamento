@@ -177,25 +177,45 @@ export function SolicitacoesModal({
                     <div className="flex flex-wrap gap-2 md:justify-end pl-2 md:pl-0">
                       <button
                         onClick={() => enviarWhatsApp(sol)}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/30 text-xs font-bold rounded-xl hover:bg-[#25D366] hover:text-white transition-all shadow-sm active:scale-95"
+                        className="flex items-center gap-1.5 px-4 py-2 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/30 text-xs font-bold rounded-xl hover:bg-[#25D366] hover:text-white transition-all shadow-sm active:scale-95 cursor-pointer"
                       >
                         <MessageCircle size={16} strokeWidth={2.5} /> WhatsApp
                       </button>
-                      {sol.status === 'Pendente' && (
-                        <button
-                          onClick={() => onConverter(sol)}
-                          disabled={updating === sol.id}
-                          className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white border border-blue-500/50 text-xs font-bold rounded-xl hover:bg-blue-500 transition-all shadow-[0_0_10px_rgba(37,99,235,0.3)] disabled:opacity-50 active:scale-95"
-                          title="Preencher no Painel de Orçamentos"
-                        >
-                          <Check size={16} strokeWidth={2.5} /> Converter
-                        </button>
-                      )}
+                      {sol.status === 'Pendente' && (() => {
+                        const temItens = sol.itens && Array.isArray(sol.itens) && sol.itens.length > 0;
+                        const isMultiItens = temItens && sol.itens.length > 1;
+                        if (isMultiItens) {
+                          return (
+                            <div className="flex flex-col items-end gap-1">
+                              <button
+                                disabled
+                                className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-slate-500 border border-slate-700 text-xs font-bold rounded-xl cursor-not-allowed opacity-60"
+                                title="Conversão desabilitada para múltiplos produtos"
+                              >
+                                <Check size={16} strokeWidth={2.5} /> Converter
+                              </button>
+                              <span className="text-[9px] text-orange-400 font-bold max-w-[200px] text-right leading-tight">
+                                Conversão de solicitação com múltiplos produtos será liberada na próxima fase.
+                              </span>
+                            </div>
+                          );
+                        }
+                        return (
+                          <button
+                            onClick={() => onConverter(sol)}
+                            disabled={updating === sol.id}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white border border-blue-500/50 text-xs font-bold rounded-xl hover:bg-blue-500 transition-all shadow-[0_0_10px_rgba(37,99,235,0.3)] disabled:opacity-50 active:scale-95 cursor-pointer"
+                            title="Preencher no Painel de Orçamentos"
+                          >
+                            <Check size={16} strokeWidth={2.5} /> Converter
+                          </button>
+                        );
+                      })()}
                       {sol.status === 'Pendente' && (
                         <button
                           onClick={() => atualizarStatus(sol.id, 'Arquivada')}
                           disabled={updating === sol.id}
-                          className="flex items-center justify-center p-2 bg-slate-700/50 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-600 hover:text-white transition-all shadow-sm border border-slate-600 disabled:opacity-50 active:scale-95"
+                          className="flex items-center justify-center p-2 bg-slate-700/50 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-600 hover:text-white transition-all shadow-sm border border-slate-600 disabled:opacity-50 active:scale-95 cursor-pointer"
                           title="Arquivar"
                         >
                           <Archive size={16} strokeWidth={2.5} />
@@ -206,20 +226,67 @@ export function SolicitacoesModal({
 
                   {/* Detalhes da Solicitacao */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 bg-blue-900/30 p-4 rounded-xl border border-blue-800/50 ml-2">
-                    <div>
-                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5">Pedido Solicitado</p>
-                      <p className="text-base font-bold text-slate-200">{sol.quantidade}x {sol.jogo_escolhido}</p>
-                      {sol.embrulho_presente && (
-                        <span className="inline-block mt-2 bg-pink-500/10 text-pink-400 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-pink-500/20">
-                          🎁 Embrulho para presente incluso
-                        </span>
-                      )}
-                    </div>
-                    <div className="md:text-right">
-                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5">Total Estimado</p>
-                      <p className="text-xl font-black text-emerald-400">{fmt(sol.total_estimado)}</p>
-                      <p className="text-xs text-slate-400 font-bold mt-1">Pgto: <span className="text-slate-300">{sol.forma_pagamento}</span></p>
-                    </div>
+                    {sol.itens && Array.isArray(sol.itens) && sol.itens.length > 0 ? (
+                      <>
+                        <div>
+                          <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">Itens Solicitados</p>
+                          <div className="space-y-2">
+                            {sol.itens.map((item: any, idx: number) => (
+                              <div key={item.sku || idx} className="text-sm text-slate-300 leading-tight">
+                                <span className="font-bold text-white">{item.quantidade}x</span> {item.nome} <span className="text-[10px] text-slate-500 font-mono">({item.sku}{item.revisao ? ` ${item.revisao}` : ''})</span>
+                                <div className="text-xs text-slate-400 pl-4 mt-0.5">
+                                  {fmt(item.valor_unitario)} cada • subtotal: <span className="font-bold text-slate-300">{fmt(item.subtotal)}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          {sol.embrulho_presente && (
+                            <div className="mt-2">
+                              <span className="inline-block bg-pink-500/10 text-pink-400 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-pink-500/20">
+                                🎁 Embrulho para presente incluso
+                              </span>
+                            </div>
+                          )}
+                          {sol.frete_estimado === 0 && sol.observacoes_cliente?.toLowerCase().includes('frete a combinar') && (
+                            <div className="mt-2">
+                              <span className="inline-block bg-blue-500/15 text-blue-400 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-blue-500/20 uppercase tracking-wider">
+                                🚚 Frete a Combinar
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="md:text-right flex flex-col justify-between">
+                          <div>
+                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Total dos Produtos</p>
+                            <p className="text-lg font-bold text-slate-200">{fmt(sol.valor_estimado)}</p>
+                          </div>
+                          <div className="mt-2">
+                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Total Estimado</p>
+                            <p className="text-xl font-black text-emerald-400">
+                              {sol.frete_estimado > 0 ? fmt(sol.total_estimado) : `${fmt(sol.total_estimado)} + frete`}
+                            </p>
+                            <p className="text-xs text-slate-400 font-bold mt-1">Pgto: <span className="text-slate-300">{sol.forma_pagamento}</span></p>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5">Pedido Solicitado</p>
+                          <p className="text-base font-bold text-slate-200">{sol.quantidade}x {sol.jogo_escolhido}</p>
+                          {sol.embrulho_presente && (
+                            <span className="inline-block mt-2 bg-pink-500/10 text-pink-400 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-pink-500/20">
+                              🎁 Embrulho para presente incluso
+                            </span>
+                          )}
+                        </div>
+                        <div className="md:text-right">
+                          <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5">Total Estimado</p>
+                          <p className="text-xl font-black text-emerald-400">{fmt(sol.total_estimado)}</p>
+                          <p className="text-xs text-slate-400 font-bold mt-1">Pgto: <span className="text-slate-300">{sol.forma_pagamento}</span></p>
+                        </div>
+                      </>
+                    )}
                   </div>
                   
                   {/* Endereco e Observacoes */}
