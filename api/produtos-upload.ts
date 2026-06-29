@@ -1,12 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
-export const config = {
-  api: {
-    bodyParser: true,
-  },
-};
+const timeoutPromise = (ms: number, message: string) => 
+  new Promise<never>((_, reject) => setTimeout(() => reject(new Error(message)), ms));
 
-export default async function handler(req: Request) {
+export default async function handler(req: any) {
   const commonHeaders = {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
@@ -19,7 +16,7 @@ export default async function handler(req: Request) {
       return new Response(JSON.stringify({ error: 'Método não permitido.' }), { status: 405, headers: commonHeaders });
     }
 
-    const adminToken = req.headers.get('x-admin-token')?.trim();
+    const adminToken = (req.headers.get ? req.headers.get('x-admin-token') : req.headers['x-admin-token'])?.trim();
     const secret = process.env.FORMAPLAY_ADMIN_SECRET?.trim();
 
     if (!adminToken || adminToken !== secret) {
@@ -30,13 +27,17 @@ export default async function handler(req: Request) {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
-      return new Response(JSON.stringify({ error: 'Configuração de banco de dados ausente no servidor.' }), { status: 500, headers: commonHeaders });
+      return new Response(JSON.stringify({ error: 'Configuração de upload ausente.' }), { status: 500, headers: commonHeaders });
     }
 
     const t0 = performance.now();
-    const body = await req.json();
+    let body;
+    try {
+      body = req.body && typeof req.body === 'object' ? req.body : await req.json();
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'Falha ao ler o corpo da requisição JSON.' }), { status: 400, headers: commonHeaders });
+    }
     const t1 = performance.now();
-    console.log(`[Diagnostic] JSON parse time: ${(t1 - t0).toFixed(2)} ms`);
 
     const { sku, contentType, size } = body;
 
@@ -70,31 +71,36 @@ export default async function handler(req: Request) {
     const filePath = `produtos/${sanitizedSku}/${timestamp}-${randomId}.${ext}`;
 
     const t2 = performance.now();
-    console.log(`[Diagnostic] validation time: ${(t2 - t1).toFixed(2)} ms`);
+    console.log(`[Diagnostic] upload-url request received - contentType: ${contentType}, size: ${size}, sku: ${sanitizedSku}`);
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
     const t3 = performance.now();
-    // Create signed upload URL
-    const { data: signedData, error: signedError } = await supabase.storage
+    
+    // Create signed upload URL with 15s timeout protection
+    const signedDataPromise = supabase.storage
       .from('product-images')
       .createSignedUploadUrl(filePath);
+      
+    const { data: signedData, error: signedError } = await Promise.race([
+      signedDataPromise,
+      timeoutPromise(15000, 'Tempo excedido ao preparar upload.')
+    ]) as any;
 
     const t4 = performance.now();
     console.log(`[Diagnostic] createSignedUploadUrl time: ${(t4 - t3).toFixed(2)} ms`);
 
     if (signedError || !signedData) {
-      console.error('Erro ao gerar URL assinada:', signedError);
-      throw new Error('Falha ao preparar o ambiente de upload.');
+      console.log(`[Diagnostic] Supabase Error: ${signedError?.message || 'Unknown'}`);
+      return new Response(JSON.stringify({ error: 'Falha ao preparar o ambiente de upload. Tente novamente.' }), { status: 500, headers: commonHeaders });
     }
 
     const { data: urlData } = supabase.storage
       .from('product-images')
       .getPublicUrl(filePath);
 
-    console.log(`[Diagnostic] total api time: ${(performance.now() - t0).toFixed(2)} ms`);
     return new Response(JSON.stringify({ 
       path: filePath,
       token: signedData.token,
@@ -102,6 +108,9 @@ export default async function handler(req: Request) {
     }), { status: 200, headers: commonHeaders });
 
   } catch (error: any) {
+    if (error.message === 'Tempo excedido ao preparar upload.') {
+      return new Response(JSON.stringify({ error: error.message }), { status: 504, headers: commonHeaders });
+    }
     return new Response(JSON.stringify({ error: error.message || 'Erro interno do servidor.' }), { status: 400, headers: commonHeaders });
   }
 }

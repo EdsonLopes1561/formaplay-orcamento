@@ -135,19 +135,33 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
           throw new Error('SKU é obrigatório para enviar uma imagem.');
         }
         
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+        
+        let urlRes;
         const tPrepStart = performance.now();
-        const urlRes = await fetch('/api/produtos-upload', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-admin-token': adminToken 
-          },
-          body: JSON.stringify({
-            sku: editingProduto.sku,
-            contentType: selectedFile.type,
-            size: selectedFile.size
-          })
-        });
+        try {
+          urlRes = await fetch('/api/produtos-upload', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-admin-token': adminToken 
+            },
+            body: JSON.stringify({
+              sku: editingProduto.sku,
+              contentType: selectedFile.type,
+              size: selectedFile.size
+            }),
+            signal: controller.signal
+          });
+        } catch (err: any) {
+          if (err.name === 'AbortError') {
+            throw new Error('Não foi possível preparar o upload. Tente novamente ou use uma imagem menor.');
+          }
+          throw err;
+        } finally {
+          clearTimeout(timeoutId);
+        }
 
         if (!urlRes.ok) {
           const errData = await urlRes.json().catch(() => ({}));
@@ -156,7 +170,7 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
 
         const { path, token, publicUrl } = await urlRes.json();
         const tPrepEnd = performance.now();
-        console.log(`[Diagnostic] Tempo para obter Signed URL: ${(tPrepEnd - tPrepStart).toFixed(2)} ms`);
+        console.log(`[Diagnostic] Preparando upload tempo: ${(tPrepEnd - tPrepStart).toFixed(2)} ms`);
 
         setSavingMessage('Enviando imagem...');
         const tUploadStart = performance.now();
@@ -171,7 +185,7 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
 
         finalImageUrl = publicUrl;
         const tUploadEnd = performance.now();
-        console.log(`[Diagnostic] Frontend direto upload tempo: ${(tUploadEnd - tUploadStart).toFixed(2)} ms`);
+        console.log(`[Diagnostic] Enviando imagem tempo: ${(tUploadEnd - tUploadStart).toFixed(2)} ms`);
       }
 
       setSavingMessage('Salvando produto...');
