@@ -25,7 +25,8 @@ const DEFAULT_PRODUTO: Partial<Produto> = {
   mensagem_publica: '',
   descricao_curta: '',
   descricao_completa: '',
-  observacao_interna: ''
+  observacao_interna: '',
+  imagem_url: ''
 };
 
 export function ProdutosModal({ onClose }: ProdutosModalProps) {
@@ -49,7 +50,8 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
       if (isAdminMode && adminToken) {
         // Fetch do backend Edge Function (ignora RLS e traz inativos)
         const res = await fetch('/api/produtos', {
-          headers: { 'x-admin-token': adminToken }
+          headers: { 'x-admin-token': adminToken },
+          cache: 'no-store'
         });
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
@@ -96,7 +98,8 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
     setError(null);
     try {
       const res = await fetch('/api/produtos?admin=1', {
-        headers: { 'x-admin-token': token }
+        headers: { 'x-admin-token': token },
+        cache: 'no-store'
       });
       if (!res.ok) {
         throw new Error('Senha administrativa inválida.');
@@ -328,6 +331,11 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
                 </div>
 
                 <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-1">URL da imagem do produto</label>
+                  <input type="text" value={editingProduto.imagem_url || ''} onChange={e => setEditingProduto({...editingProduto, imagem_url: e.target.value})} className="w-full bg-blue-950 border border-blue-800 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500" placeholder="https://..." />
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium text-slate-400 mb-1">Mensagem Pública (Formulário Site)</label>
                   <input type="text" value={editingProduto.mensagem_publica || ''} onChange={e => setEditingProduto({...editingProduto, mensagem_publica: e.target.value})} className="w-full bg-blue-950 border border-blue-800 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500" placeholder="Ex: Produto em reposição. Envie sua solicitação e avisaremos." />
                 </div>
@@ -368,6 +376,12 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
                       <button onClick={() => handleToggleActive(p)} className={`p-1.5 rounded-lg transition-colors border ${p.ativo ? 'bg-blue-800/80 hover:bg-rose-600 text-rose-300 hover:text-white border-blue-700/50' : 'bg-rose-900/80 hover:bg-emerald-600 text-emerald-300 hover:text-white border-rose-800/50'}`} title={p.ativo ? 'Inativar' : 'Reativar'}>
                         {p.ativo ? <XCircle size={16} /> : <CheckCircle2 size={16} />}
                       </button>
+                    </div>
+                  )}
+
+                  {p.imagem_url && (
+                    <div className="w-full h-48 mb-4 rounded-xl overflow-hidden bg-blue-950/50 border border-blue-900/50 flex-shrink-0">
+                      <img src={p.imagem_url} alt={p.nome} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                     </div>
                   )}
 

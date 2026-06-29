@@ -53,7 +53,10 @@ export default async function handler(req: Request) {
       if (error) throw error;
       return new Response(JSON.stringify(data), { 
         status: 200, 
-        headers: { 'Content-Type': 'application/json' } 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, max-age=0'
+        } 
       });
     }
 
@@ -127,5 +130,8 @@ function validarProduto(p: any) {
   if (p.maximo_unidades_por_volume === undefined || p.maximo_unidades_por_volume < 1) throw new Error('Máximo de unidades por volume deve ser ao menos 1.');
   if (p.status_comercial && !STATUS_COMERCIAIS.includes(p.status_comercial)) {
     throw new Error(`Status Comercial inválido. Deve ser um de: ${STATUS_COMERCIAIS.join(', ')}`);
+  }
+  if (p.imagem_url && typeof p.imagem_url === 'string') {
+    p.imagem_url = p.imagem_url.trim();
   }
 }
