@@ -181,36 +181,16 @@ export function SolicitacoesModal({
                       >
                         <MessageCircle size={16} strokeWidth={2.5} /> WhatsApp
                       </button>
-                      {sol.status === 'Pendente' && (() => {
-                        const temItens = sol.itens && Array.isArray(sol.itens) && sol.itens.length > 0;
-                        const isMultiItens = temItens && sol.itens.length > 1;
-                        if (isMultiItens) {
-                          return (
-                            <div className="flex flex-col items-end gap-1">
-                              <button
-                                disabled
-                                className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-slate-500 border border-slate-700 text-xs font-bold rounded-xl cursor-not-allowed opacity-60"
-                                title="Conversão desabilitada para múltiplos produtos"
-                              >
-                                <Check size={16} strokeWidth={2.5} /> Converter
-                              </button>
-                              <span className="text-[9px] text-orange-400 font-bold max-w-[200px] text-right leading-tight">
-                                Conversão de solicitação com múltiplos produtos será liberada na próxima fase.
-                              </span>
-                            </div>
-                          );
-                        }
-                        return (
-                          <button
-                            onClick={() => onConverter(sol)}
-                            disabled={updating === sol.id}
-                            className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white border border-blue-500/50 text-xs font-bold rounded-xl hover:bg-blue-500 transition-all shadow-[0_0_10px_rgba(37,99,235,0.3)] disabled:opacity-50 active:scale-95 cursor-pointer"
-                            title="Preencher no Painel de Orçamentos"
-                          >
-                            <Check size={16} strokeWidth={2.5} /> Converter
-                          </button>
-                        );
-                      })()}
+                      {sol.status === 'Pendente' && (
+                        <button
+                          onClick={() => onConverter(sol)}
+                          disabled={updating === sol.id}
+                          className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white border border-blue-500/50 text-xs font-bold rounded-xl hover:bg-blue-500 transition-all shadow-[0_0_10px_rgba(37,99,235,0.3)] disabled:opacity-50 active:scale-95 cursor-pointer"
+                          title="Preencher no Painel de Orçamentos"
+                        >
+                          <Check size={16} strokeWidth={2.5} /> Converter
+                        </button>
+                      )}
                       {sol.status === 'Pendente' && (
                         <button
                           onClick={() => atualizarStatus(sol.id, 'Arquivada')}

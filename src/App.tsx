@@ -160,14 +160,7 @@ function App() {
       return nome;
     };
     
-    const nomeNormalizado = mapNomeProduto(s.jogo_escolhido);
-    const produtoEncontrado = PRODUTOS.find((p) => p.nome === nomeNormalizado);
-    
-    // Fallback: se não achar, calcula o unitário a partir do valor estimado, garantindo que não fique 0
-    let unitPrice = produtoEncontrado?.preco || 0;
-    if (unitPrice === 0 && s.valor_estimado > 0 && s.quantidade > 0) {
-      unitPrice = s.valor_estimado / s.quantidade;
-    }
+    const temItens = s.itens && Array.isArray(s.itens) && s.itens.length > 0;
     const numeroAtual = form.numero || await calcularNumeroOrcamento();
     
     let infoComple = `Origem: Solicitação pública ${s.codigo}`;
@@ -179,30 +172,72 @@ function App() {
       ? `${s.endereco}, ${s.numero || 'S/N'}${s.complemento ? `, ${s.complemento}` : ''}, ${s.bairro || ''}, ${s.cidade || ''}/${s.estado || ''} - CEP ${s.cep || ''}`
       : '';
 
-    const novo = {
-      ...emptyOrcamento(),
-      numero: numeroAtual,
-      data_orcamento: form.data_orcamento || new Date().toLocaleDateString('pt-BR'),
-      cliente: s.nome_razao,
-      telefone: s.telefone,
-      email: s.email || '',
-      cidade: `${s.cidade || ''}/${s.estado || ''}`,
-      produto: produtoEncontrado ? nomeNormalizado : '',
-      quantidade: s.quantidade,
-      valor_unitario: unitPrice,
-      frete: s.frete_estimado,
-      pagamento: s.forma_pagamento,
-      observacoes: s.observacoes_cliente && s.observacoes_cliente !== 'Nenhuma' ? s.observacoes_cliente : '',
-      informacoes_complementares: infoComple,
-      cliente_logradouro: s.endereco || '',
-      cliente_numero: s.numero || '',
-      cliente_complemento: s.complemento || '',
-      cliente_bairro: s.bairro || '',
-      cliente_cidade: s.cidade || '',
-      cliente_uf: s.estado || '',
-      cliente_cep: s.cep || '',
-      cliente_endereco_completo: enderecoCompleto,
-    };
+    let novo: any;
+
+    if (temItens) {
+      const totalItensQtd = s.itens!.reduce((acc, item) => acc + (item.quantidade || 0), 0);
+      const subtotalProdutos = s.itens!.reduce((acc, item) => acc + (item.subtotal || 0), 0);
+      const valorUnitarioMedio = totalItensQtd > 0 ? (subtotalProdutos / totalItensQtd) : 0;
+
+      novo = {
+        ...emptyOrcamento(),
+        numero: numeroAtual,
+        data_orcamento: form.data_orcamento || new Date().toLocaleDateString('pt-BR'),
+        cliente: s.nome_razao,
+        telefone: s.telefone,
+        email: s.email || '',
+        cidade: `${s.cidade || ''}/${s.estado || ''}`,
+        produto: s.jogo_escolhido,
+        quantidade: totalItensQtd,
+        valor_unitario: valorUnitarioMedio,
+        frete: s.frete_estimado || 0,
+        pagamento: s.forma_pagamento,
+        observacoes: s.observacoes_cliente && s.observacoes_cliente !== 'Nenhuma' ? s.observacoes_cliente : '',
+        informacoes_complementares: infoComple,
+        cliente_logradouro: s.endereco || '',
+        cliente_numero: s.numero || '',
+        cliente_complemento: s.complemento || '',
+        cliente_bairro: s.bairro || '',
+        cliente_cidade: s.cidade || '',
+        cliente_uf: s.estado || '',
+        cliente_cep: s.cep || '',
+        cliente_endereco_completo: enderecoCompleto,
+        itens: s.itens,
+      };
+    } else {
+      const nomeNormalizado = mapNomeProduto(s.jogo_escolhido);
+      const produtoEncontrado = PRODUTOS.find((p) => p.nome === nomeNormalizado);
+      
+      let unitPrice = produtoEncontrado?.preco || 0;
+      if (unitPrice === 0 && s.valor_estimado > 0 && s.quantidade > 0) {
+        unitPrice = s.valor_estimado / s.quantidade;
+      }
+
+      novo = {
+        ...emptyOrcamento(),
+        numero: numeroAtual,
+        data_orcamento: form.data_orcamento || new Date().toLocaleDateString('pt-BR'),
+        cliente: s.nome_razao,
+        telefone: s.telefone,
+        email: s.email || '',
+        cidade: `${s.cidade || ''}/${s.estado || ''}`,
+        produto: produtoEncontrado ? nomeNormalizado : '',
+        quantidade: s.quantidade,
+        valor_unitario: unitPrice,
+        frete: s.frete_estimado,
+        pagamento: s.forma_pagamento,
+        observacoes: s.observacoes_cliente && s.observacoes_cliente !== 'Nenhuma' ? s.observacoes_cliente : '',
+        informacoes_complementares: infoComple,
+        cliente_logradouro: s.endereco || '',
+        cliente_numero: s.numero || '',
+        cliente_complemento: s.complemento || '',
+        cliente_bairro: s.bairro || '',
+        cliente_cidade: s.cidade || '',
+        cliente_uf: s.estado || '',
+        cliente_cep: s.cep || '',
+        cliente_endereco_completo: enderecoCompleto,
+      };
+    }
     
     if (s.forma_pagamento === 'Pix com desconto') {
       novo.desconto = s.desconto_pix;
@@ -212,12 +247,7 @@ function App() {
     setCurrentId(null);
     setSolicitacaoOrigemId(s.id);
     setShowSolicitacoes(false);
-    
-    if (!produtoEncontrado) {
-      showToast('warning', `Produto "${s.jogo_escolhido}" não reconhecido. Valor unitário deduzido: R$ ${unitPrice.toFixed(2)}.`);
-    } else {
-      showToast('success', 'Dados preenchidos. Revise e clique em Salvar Orçamento.');
-    }
+    showToast('success', 'Dados da solicitação preenchidos. Revise e clique em Salvar Orçamento.');
   };
 
   const carregarSolicitacoes = async () => {
@@ -254,9 +284,16 @@ function App() {
   };
 
   const calcularValores = (f: Omit<Orcamento, 'id' | 'created_at'>) => {
-    const subtotal = Number(f.quantidade || 0) * Number(f.valor_unitario || 0);
+    const temItens = f.itens && Array.isArray(f.itens) && f.itens.length > 0;
+    const subtotal = temItens
+      ? f.itens!.reduce((acc, item) => acc + (Number(item.subtotal) || 0), 0)
+      : Number(f.quantidade || 0) * Number(f.valor_unitario || 0);
     const total = subtotal + Number(f.frete || 0) - Number(f.desconto || 0);
-    return { ...f, subtotal, total };
+    return {
+      ...f,
+      subtotal: isNaN(subtotal) ? 0 : subtotal,
+      total: isNaN(total) ? 0 : total,
+    };
   };
 
   const handleChange = (
@@ -866,40 +903,85 @@ function App() {
                   <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-600 to-green-700 text-white text-xs font-bold flex items-center justify-center">2</span>
                   Jogo / Produto
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                  <div className="sm:col-span-3">
-                    <label className="form-label">Jogo / Produto</label>
-                    <div className="relative">
-                      <select name="produto" value={form.produto} onChange={handleChange}
-                        className="form-input appearance-none pr-10">
-                        <option value="">Selecione um jogo...</option>
-                        {PRODUTOS.map((prod) => (
-                          <option key={prod.nome} value={prod.nome}>
-                            {prod.nome} — R$ {prod.preco.toFixed(2)}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                {form.itens && Array.isArray(form.itens) && form.itens.length > 1 ? (
+                  <div className="space-y-4">
+                    <div className="bg-blue-950/40 border border-blue-900 text-blue-300 p-4 rounded-xl text-xs flex items-start gap-2">
+                      <span className="text-base leading-none">ℹ️</span>
+                      <p>Este orçamento é composto por múltiplos produtos importados de uma solicitação pública. A alteração individual de produtos estará disponível em atualizações futuras. Descontos e frete geral podem ser editados na seção seguinte.</p>
+                    </div>
+                    <div className="overflow-x-auto rounded-xl border border-slate-800 bg-[#070b14]">
+                      <table className="w-full text-left text-xs text-slate-300 border-collapse">
+                        <thead>
+                          <tr className="bg-slate-900 border-b border-slate-800 text-[10px] font-black uppercase text-slate-400">
+                            <th className="px-4 py-3">Produto</th>
+                            <th className="px-4 py-3">SKU / Revisão</th>
+                            <th className="px-4 py-3 text-center">Qtd</th>
+                            <th className="px-4 py-3 text-right">Unitário</th>
+                            <th className="px-4 py-3 text-right">Subtotal</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800">
+                          {form.itens.map((item, idx) => (
+                            <tr key={item.sku || idx} className="hover:bg-slate-900/30">
+                              <td className="px-4 py-3 font-bold text-white">{item.nome}</td>
+                              <td className="px-4 py-3 text-slate-400 font-mono text-[10px]">{item.sku}{item.revisao ? ` ${item.revisao}` : ''}</td>
+                              <td className="px-4 py-3 text-center font-bold text-slate-200">{item.quantidade}</td>
+                              <td className="px-4 py-3 text-right">{fmtCurrency(item.valor_unitario)}</td>
+                              <td className="px-4 py-3 text-right font-semibold text-emerald-400">{fmtCurrency(item.subtotal)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                      <div>
+                        <label className="form-label">Quantidade Total (Legada)</label>
+                        <input value={form.quantidade} readOnly
+                          className="form-input bg-blue-950/60 border-blue-800 text-blue-300 cursor-not-allowed font-semibold" />
+                      </div>
+                      <div>
+                        <label className="form-label">Subtotal Geral</label>
+                        <input value={fmtCurrency(form.subtotal)} readOnly
+                          className="form-input bg-blue-950/60 border-blue-800 text-blue-300 cursor-not-allowed font-semibold" />
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <label className="form-label">Quantidade</label>
-                    <input name="quantidade" type="number" min="1" value={form.quantidade} onChange={handleChange}
-                      className="form-input" />
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    <div className="sm:col-span-3">
+                      <label className="form-label">Jogo / Produto</label>
+                      <div className="relative">
+                        <select name="produto" value={form.produto} onChange={handleChange}
+                          className="form-input appearance-none pr-10">
+                          <option value="">Selecione um jogo...</option>
+                          {PRODUTOS.map((prod) => (
+                            <option key={prod.nome} value={prod.nome}>
+                              {prod.nome} — R$ {prod.preco.toFixed(2)}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="form-label">Quantidade</label>
+                      <input name="quantidade" type="number" min="1" value={form.quantidade} onChange={handleChange}
+                        className="form-input" />
+                    </div>
+                    <div>
+                      <label className="form-label">Valor Unitário (R$)</label>
+                      <input name="valor_unitario" type="number" min="0" step="0.01" value={form.valor_unitario} onChange={handleChange}
+                        className={form.produto ? "form-input bg-blue-950/60 border-blue-800 text-blue-300 cursor-not-allowed font-semibold" : "form-input"}
+                        readOnly={!!form.produto}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label">Subtotal</label>
+                      <input value={fmtCurrency(form.subtotal)} readOnly
+                        className="form-input bg-blue-950/60 border-blue-800 text-blue-300 cursor-not-allowed font-semibold" />
+                    </div>
                   </div>
-                  <div>
-                    <label className="form-label">Valor Unitário (R$)</label>
-                    <input name="valor_unitario" type="number" min="0" step="0.01" value={form.valor_unitario} onChange={handleChange}
-                      className={form.produto ? "form-input bg-blue-950/60 border-blue-800 text-blue-300 cursor-not-allowed font-semibold" : "form-input"}
-                      readOnly={!!form.produto}
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label">Subtotal</label>
-                    <input value={fmtCurrency(form.subtotal)} readOnly
-                      className="form-input bg-blue-950/60 border-blue-800 text-blue-300 cursor-not-allowed font-semibold" />
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Conditions */}
