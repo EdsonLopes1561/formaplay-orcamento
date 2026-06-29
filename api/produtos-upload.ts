@@ -1,9 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
+export const config = {
+  runtime: 'edge',
+};
+
 const timeoutPromise = (ms: number, message: string) => 
   new Promise<never>((_, reject) => setTimeout(() => reject(new Error(message)), ms));
 
-export default async function handler(req: any) {
+export default async function handler(req: Request) {
   const commonHeaders = {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
@@ -13,41 +17,41 @@ export default async function handler(req: any) {
 
   try {
     if (req.method !== 'POST') {
-      return new Response(JSON.stringify({ error: 'Método não permitido.' }), { status: 405, headers: commonHeaders });
+      return new Response(JSON.stringify({ error: 'Método não permitido.', code: 'METHOD_NOT_ALLOWED' }), { status: 405, headers: commonHeaders });
     }
 
-    const adminToken = (req.headers.get ? req.headers.get('x-admin-token') : req.headers['x-admin-token'])?.trim();
+    const adminToken = req.headers.get('x-admin-token')?.trim();
     const secret = process.env.FORMAPLAY_ADMIN_SECRET?.trim();
 
     if (!adminToken || adminToken !== secret) {
-      return new Response(JSON.stringify({ error: 'Acesso negado. Token administrativo inválido.' }), { status: 401, headers: commonHeaders });
+      return new Response(JSON.stringify({ error: 'Acesso negado. Token administrativo inválido.', code: 'UNAUTHORIZED' }), { status: 401, headers: commonHeaders });
     }
 
     const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
-      return new Response(JSON.stringify({ error: 'Configuração de upload ausente.' }), { status: 500, headers: commonHeaders });
+      return new Response(JSON.stringify({ error: 'Configuração de upload ausente.', code: 'UPLOAD_CONFIG_MISSING' }), { status: 500, headers: commonHeaders });
     }
 
     const t0 = performance.now();
     let body;
     try {
-      body = req.body && typeof req.body === 'object' ? req.body : await req.json();
+      body = await req.json();
     } catch (e) {
-      return new Response(JSON.stringify({ error: 'Falha ao ler o corpo da requisição JSON.' }), { status: 400, headers: commonHeaders });
+      return new Response(JSON.stringify({ error: 'Falha ao ler o corpo da requisição JSON.', code: 'INVALID_BODY' }), { status: 400, headers: commonHeaders });
     }
     const t1 = performance.now();
 
     const { sku, contentType, size } = body;
 
     if (!sku || typeof sku !== 'string') {
-      return new Response(JSON.stringify({ error: 'SKU é obrigatório para estruturar a pasta da imagem.' }), { status: 400, headers: commonHeaders });
+      return new Response(JSON.stringify({ error: 'SKU é obrigatório para estruturar a pasta da imagem.', code: 'INVALID_BODY' }), { status: 400, headers: commonHeaders });
     }
 
     const sanitizedSku = sku.replace(/[^a-zA-Z0-9_-]/g, '').toUpperCase();
     if (!sanitizedSku) {
-      return new Response(JSON.stringify({ error: 'SKU inválido.' }), { status: 400, headers: commonHeaders });
+      return new Response(JSON.stringify({ error: 'SKU inválido.', code: 'INVALID_BODY' }), { status: 400, headers: commonHeaders });
     }
 
     const validMimes: Record<string, string> = {
@@ -57,12 +61,12 @@ export default async function handler(req: any) {
     };
 
     if (!validMimes[contentType]) {
-      return new Response(JSON.stringify({ error: 'Tipo de arquivo não suportado. Envie apenas JPG, PNG ou WEBP.' }), { status: 400, headers: commonHeaders });
+      return new Response(JSON.stringify({ error: 'Tipo de arquivo não suportado. Envie apenas JPG, PNG ou WEBP.', code: 'INVALID_FILE' }), { status: 400, headers: commonHeaders });
     }
 
     const MAX_SIZE = 3 * 1024 * 1024; // 3 MB
     if (size > MAX_SIZE) {
-      return new Response(JSON.stringify({ error: 'O arquivo excede o limite máximo de 3 MB.' }), { status: 400, headers: commonHeaders });
+      return new Response(JSON.stringify({ error: 'O arquivo excede o limite máximo de 3 MB.', code: 'INVALID_FILE' }), { status: 400, headers: commonHeaders });
     }
 
     const ext = validMimes[contentType];
@@ -71,7 +75,7 @@ export default async function handler(req: any) {
     const filePath = `produtos/${sanitizedSku}/${timestamp}-${randomId}.${ext}`;
 
     const t2 = performance.now();
-    console.log(`[Diagnostic] upload-url request received - contentType: ${contentType}, size: ${size}, sku: ${sanitizedSku}`);
+    console.log(`[Upload] request received - method: POST, contentType: ${contentType}, size: ${size}, sku: ${sanitizedSku}, hasSupabaseUrl: ${!!supabaseUrl}, hasServiceRoleKey: ${!!serviceRoleKey}`);
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false }
@@ -93,8 +97,8 @@ export default async function handler(req: any) {
     console.log(`[Diagnostic] createSignedUploadUrl time: ${(t4 - t3).toFixed(2)} ms`);
 
     if (signedError || !signedData) {
-      console.log(`[Diagnostic] Supabase Error: ${signedError?.message || 'Unknown'}`);
-      return new Response(JSON.stringify({ error: 'Falha ao preparar o ambiente de upload. Tente novamente.' }), { status: 500, headers: commonHeaders });
+      console.log(`[Diagnostic] Supabase error code: SIGNED_URL_FAILED`);
+      return new Response(JSON.stringify({ error: 'Falha ao gerar autorização de upload.', code: 'SIGNED_URL_FAILED' }), { status: 500, headers: commonHeaders });
     }
 
     const { data: urlData } = supabase.storage
@@ -109,8 +113,8 @@ export default async function handler(req: any) {
 
   } catch (error: any) {
     if (error.message === 'Tempo excedido ao preparar upload.') {
-      return new Response(JSON.stringify({ error: error.message }), { status: 504, headers: commonHeaders });
+      return new Response(JSON.stringify({ error: error.message, code: 'SIGNED_URL_TIMEOUT' }), { status: 504, headers: commonHeaders });
     }
-    return new Response(JSON.stringify({ error: error.message || 'Erro interno do servidor.' }), { status: 400, headers: commonHeaders });
+    return new Response(JSON.stringify({ error: error.message || 'Erro interno do servidor.', code: 'INTERNAL_ERROR' }), { status: 400, headers: commonHeaders });
   }
 }

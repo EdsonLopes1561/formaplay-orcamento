@@ -165,7 +165,15 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
 
         if (!urlRes.ok) {
           const errData = await urlRes.json().catch(() => ({}));
-          throw new Error(errData.error || 'Erro ao preparar o upload da imagem.');
+          console.log(`[Diagnostic] API Error Code: ${errData.code || 'UNKNOWN'}`);
+          
+          let msg = errData.error || 'Erro ao preparar o upload da imagem.';
+          if (errData.code === 'UPLOAD_CONFIG_MISSING') msg = 'Configuração de upload ausente.';
+          else if (errData.code === 'INVALID_FILE') msg = 'Arquivo inválido.';
+          else if (errData.code === 'SIGNED_URL_TIMEOUT') msg = 'Tempo excedido ao preparar upload.';
+          else if (errData.code === 'SIGNED_URL_FAILED') msg = 'Falha ao gerar autorização de upload.';
+          
+          throw new Error(msg);
         }
 
         const { path, token, publicUrl } = await urlRes.json();
