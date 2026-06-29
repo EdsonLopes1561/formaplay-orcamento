@@ -68,6 +68,7 @@ export interface Orcamento {
   observacao_interna?: string;
   prioridade?: string;
   created_at?: string;
+  itens?: ItemOrcamentoSnapshot[];
 }
 
 export interface Produto {
@@ -120,6 +121,7 @@ export interface SolicitacaoOrcamento {
   status: string;
   observacoes_cliente: string | null;
   created_at: string;
+  itens?: ItemOrcamentoSnapshot[];
 }
 
 export const EMPRESA = {
@@ -167,3 +169,23 @@ export const emptyOrcamento = (): Omit<Orcamento, 'id' | 'created_at'> => ({
   data_retorno: '',
   observacao_interna: '',
 });
+
+export interface ItemOrcamentoSnapshot {
+  produto_id?: string;
+  sku: string;
+  revisao: string;
+  nome: string;
+  quantidade: number;
+  valor_unitario: number;
+  desconto_item?: number;
+  subtotal: number;
+  peso_kg: number;
+  altura_cm: number;
+  largura_cm: number;
+  comprimento_cm: number;
+  maximo_unidades_por_volume: number;
+  imagem_url?: string;
+  descricao_curta?: string;
+  origem: 'catalogo' | 'fallback' | 'legado';
+}
+
