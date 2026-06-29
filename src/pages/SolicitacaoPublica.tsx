@@ -1,15 +1,19 @@
 import { calcularVolumes } from '../config/produtosLogisticos';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
+import { Produto, ItemOrcamentoSnapshot } from '../types';
+import { PRODUTOS_FALLBACK } from '../config/produtosFallback';
+import { criarItemSnapshot, calcularSubtotalItens, calcularQuantidadeTotalItens } from '../utils/orcamentoItens';
 
-type Jogo = 'Desafio Logístico' | 'Desafio Logístico Premium' | 'Desafio Kids' | 'Edição do Professor';
+type Jogo = string;
 
-const PRECOS: Record<Jogo, number> = {
+const PRECOS: Record<string, number> = {
   'Desafio Logístico': 290,
   'Desafio Logístico Premium': 390,
   'Desafio Kids': 190,
   'Edição do Professor': 390,
 };
+
 
 const PRODUTOS_INFO = [
   {
@@ -73,14 +77,16 @@ export const SolicitacaoPublica: React.FC = () => {
     bairro: '',
     cidade: '',
     estado: '',
-    jogo: '' as Jogo | '',
-    quantidade: 1,
+    jogo: '' as string,
     observacoes: '',
     embrulho_presente: false,
     forma_pagamento: 'Pix com desconto',
   });
   
   const [quantidadeStr, setQuantidadeStr] = useState<string>('1');
+  const [itensCarrinho, setItensCarrinho] = useState<ItemOrcamentoSnapshot[]>([]);
+  const [produtosDisponiveis, setProdutosDisponiveis] = useState<Produto[]>([]);
+  const [loadingProdutos, setLoadingProdutos] = useState<boolean>(true);
 
   const [loadingCep, setLoadingCep] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
@@ -98,6 +104,50 @@ export const SolicitacaoPublica: React.FC = () => {
     return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
+  // Carregar produtos da API ou Fallback
+  useEffect(() => {
+    let active = true;
+    const fetchProdutos = async () => {
+      try {
+        const res = await fetch('/api/produtos');
+        if (!res.ok) throw new Error('Falha ao obter produtos');
+        const data = await res.json();
+        if (active && Array.isArray(data)) {
+          const filtrados = data.filter((p: any) => 
+            p.ativo && ['disponivel', 'baixo_estoque', 'sob_encomenda'].includes(p.status_comercial)
+          );
+          setProdutosDisponiveis(filtrados);
+          if (filtrados.length > 0) {
+            setForm(prev => ({ ...prev, jogo: filtrados[0].nome }));
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao buscar produtos, usando fallback:', err);
+        if (active) {
+          const filtradosFallback = PRODUTOS_FALLBACK.filter((p: any) =>
+            p.ativo && ['disponivel', 'baixo_estoque', 'sob_encomenda'].includes(p.status_comercial)
+          );
+          setProdutosDisponiveis(filtradosFallback);
+          if (filtradosFallback.length > 0) {
+            setForm(prev => ({ ...prev, jogo: filtradosFallback[0].nome }));
+          }
+        }
+      } finally {
+        if (active) setLoadingProdutos(false);
+      }
+    };
+    fetchProdutos();
+    return () => { active = false; };
+  }, []);
+
+  // Limpar frete se o carrinho mudar e não houver exatamente 1 produto diferente
+  useEffect(() => {
+    if (itensCarrinho.length !== 1) {
+      setOpcoesFrete(null);
+      setFreteSelecionado(null);
+    }
+  }, [itensCarrinho]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
 
@@ -112,11 +162,6 @@ export const SolicitacaoPublica: React.FC = () => {
       if (justNumbers.length === 8) {
         fetchCep(justNumbers);
       }
-      return;
-    }
-
-    if (name === 'quantidade') {
-      // Ignored here, handled by custom input
       return;
     }
 
@@ -144,9 +189,41 @@ export const SolicitacaoPublica: React.FC = () => {
     }
   };
 
+  const handleAdicionarProduto = () => {
+    if (!form.jogo) return;
+    const prod = produtosDisponiveis.find(p => p.nome === form.jogo);
+    if (!prod) return;
+
+    const qty = Math.max(1, parseInt(quantidadeStr) || 1);
+    const itemSnapshot = criarItemSnapshot(prod, qty);
+
+    setItensCarrinho(prev => {
+      const index = prev.findIndex(item => item.nome === itemSnapshot.nome);
+      if (index > -1) {
+        const novoCarrinho = [...prev];
+        const novaQtd = novoCarrinho[index].quantidade + qty;
+        novoCarrinho[index] = {
+          ...novoCarrinho[index],
+          quantidade: novaQtd,
+          subtotal: novaQtd * novoCarrinho[index].valor_unitario
+        };
+        return novoCarrinho;
+      } else {
+        return [...prev, itemSnapshot];
+      }
+    });
+
+    setQuantidadeStr('1');
+  };
+
+  const handleRemoverProduto = (nome: string) => {
+    setItensCarrinho(prev => prev.filter(item => item.nome !== nome));
+  };
+
   const calcularFrete = async () => {
-    const qtdNum = Math.max(1, parseInt(quantidadeStr) || 1);
-    if (!form.cep || !form.jogo || qtdNum < 1) return;
+    if (itensCarrinho.length !== 1) return;
+    const item = itensCarrinho[0];
+    if (!form.cep || !item) return;
     
     setLoadingFrete(true);
     setErroFrete(null);
@@ -154,8 +231,7 @@ export const SolicitacaoPublica: React.FC = () => {
     setFreteSelecionado(null);
 
     try {
-      
-      const volumes = calcularVolumes(form.jogo, qtdNum);
+      const volumes = calcularVolumes(item.nome, item.quantidade);
 
       const res = await fetch('/api/frete', {
         method: 'POST',
@@ -186,11 +262,16 @@ export const SolicitacaoPublica: React.FC = () => {
     }
   };
 
-  const qtdParseada = Math.max(1, parseInt(quantidadeStr) || 1);
-  const valorProdutos = form.jogo ? PRECOS[form.jogo] * qtdParseada : 0;
+  const subtotalProdutos = calcularSubtotalItens(itensCarrinho);
+  const totalItensQtd = calcularQuantidadeTotalItens(itensCarrinho);
+
+  const obterPrecoProduto = (nome: string): number => {
+    const prod = produtosDisponiveis.find(p => p.nome === nome);
+    return prod ? prod.preco_base : (PRECOS[nome] || 0);
+  };
   
   let freteEstimado = freteSelecionado ? freteSelecionado.price : 0;
-  if (!freteSelecionado && form.estado) {
+  if (!freteSelecionado && form.estado && itensCarrinho.length === 1) {
     const uf = form.estado.toUpperCase();
     if (uf === 'SP') {
       freteEstimado = 20;
@@ -201,20 +282,21 @@ export const SolicitacaoPublica: React.FC = () => {
     }
   }
 
-  const descontoPix = valorProdutos * 0.03;
-  const totalEstimado = valorProdutos + freteEstimado;
-  const totalComPix = (valorProdutos - descontoPix) + freteEstimado;
+  const descontoPix = subtotalProdutos * 0.03;
+  const totalEstimado = itensCarrinho.length === 1 
+    ? (subtotalProdutos + freteEstimado) 
+    : subtotalProdutos;
+
+  const totalComPix = itensCarrinho.length === 1
+    ? ((subtotalProdutos - descontoPix) + freteEstimado)
+    : (subtotalProdutos - descontoPix);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const qtdFinal = Math.max(1, parseInt(quantidadeStr) || 1);
-    // Atualiza o estado com a quantidade final ao submeter (opcional, já usaremos qtdFinal)
-    setQuantidadeStr(qtdFinal.toString());
 
     // Validacao basica front-end
-    if (!form.nome || !form.telefone || !form.cep || !form.endereco || !form.numero || !form.cidade || !form.estado || !form.jogo || qtdFinal < 1) {
-      setSubmitError("Por favor, preencha todos os campos obrigatórios.");
+    if (!form.nome || !form.telefone || !form.cep || !form.endereco || !form.numero || !form.cidade || !form.estado || itensCarrinho.length === 0) {
+      setSubmitError("Por favor, preencha todos os campos obrigatórios e adicione pelo menos um produto.");
       return;
     }
 
@@ -222,6 +304,15 @@ export const SolicitacaoPublica: React.FC = () => {
     setSubmitError(null);
 
     try {
+      const firstItem = itensCarrinho[0];
+      const jogoEscolhido = itensCarrinho.length === 1 
+        ? firstItem.nome 
+        : firstItem.nome + " + outros";
+
+      const quantidadeFinal = itensCarrinho.length === 1
+        ? firstItem.quantidade
+        : totalItensQtd;
+
       const { error } = await supabase
         .from('solicitacoes_orcamento')
         .insert({
@@ -236,16 +327,18 @@ export const SolicitacaoPublica: React.FC = () => {
           bairro: form.bairro,
           cidade: form.cidade,
           estado: form.estado,
-          jogo_escolhido: form.jogo,
-          quantidade: Number(qtdFinal) || 1,
-          valor_estimado: Number(form.jogo ? PRECOS[form.jogo] * qtdFinal : 0) || 0,
+          jogo_escolhido: jogoEscolhido,
+          quantidade: Number(quantidadeFinal) || 1,
+          valor_estimado: Number(subtotalProdutos) || 0,
           frete_estimado: Number(freteEstimado) || 0,
-          desconto_pix: Number(form.jogo ? (PRECOS[form.jogo] * qtdFinal) * 0.03 : 0) || 0,
+          desconto_pix: Number(descontoPix) || 0,
           total_estimado: Number(totalEstimado) || 0,
           observacoes_cliente: (() => {
             let obsFrete = '';
-            if (freteSelecionado) {
+            if (freteSelecionado && itensCarrinho.length === 1) {
               obsFrete = ` | FRETE: ${freteSelecionado.company || ''} ${freteSelecionado.name || ''} (${freteSelecionado.delivery_time || 0}d) ${fmtCurrency(freteSelecionado.price)}`;
+            } else if (itensCarrinho.length > 1) {
+              obsFrete = ` | Múltiplos produtos. FRETE A COMBINAR.`;
             }
             let obsFinal = ((form.observacoes || '') + obsFrete).trim();
             if (obsFinal.length > 250) {
@@ -254,7 +347,8 @@ export const SolicitacaoPublica: React.FC = () => {
             return obsFinal || null;
           })(),
           embrulho_presente: form.embrulho_presente,
-          forma_pagamento: form.forma_pagamento
+          forma_pagamento: form.forma_pagamento,
+          itens: itensCarrinho
         });
 
       if (error) {
@@ -387,14 +481,19 @@ export const SolicitacaoPublica: React.FC = () => {
                 Seu Pedido
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="md:col-span-3">
-                  <label className="block text-sm font-semibold text-slate-300 mb-1">Jogo escolhido *</label>
-                  <select required name="jogo" value={form.jogo} onChange={handleChange} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none text-white transition-all">
-                    <option value="" disabled>Selecione uma opção...</option>
-                    <option value="Desafio Logístico">Desafio Logístico (R$ 290,00)</option>
-                    <option value="Desafio Logístico Premium">Desafio Logístico Premium (R$ 390,00)</option>
-                    <option value="Desafio Kids">Desafio Kids (R$ 190,00)</option>
-                    <option value="Edição do Professor">Edição do Professor (R$ 390,00)</option>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-slate-300 mb-1">Escolher Produto *</label>
+                  <select name="jogo" value={form.jogo} onChange={handleChange} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none text-white transition-all cursor-pointer">
+                    {loadingProdutos ? (
+                      <option value="" disabled>Carregando produtos...</option>
+                    ) : (
+                      <>
+                        <option value="" disabled>Selecione um jogo...</option>
+                        {produtosDisponiveis.map(p => (
+                          <option key={p.id} value={p.nome}>{p.nome} ({fmtCurrency(p.preco_base)})</option>
+                        ))}
+                      </>
+                    )}
                   </select>
                 </div>
                 <div className="md:col-span-1">
@@ -406,7 +505,7 @@ export const SolicitacaoPublica: React.FC = () => {
                         const val = parseInt(quantidadeStr) || 1;
                         if (val > 1) setQuantidadeStr((val - 1).toString());
                       }}
-                      className="w-10 h-[42px] bg-slate-700 hover:bg-slate-600 text-white rounded-l-lg border border-slate-600 border-r-0 flex items-center justify-center font-bold transition-colors"
+                      className="w-10 h-[42px] bg-slate-700 hover:bg-slate-600 text-white rounded-l-lg border border-slate-600 border-r-0 flex items-center justify-center font-bold transition-colors cursor-pointer"
                     >
                       -
                     </button>
@@ -426,7 +525,7 @@ export const SolicitacaoPublica: React.FC = () => {
                           setQuantidadeStr(val.toString());
                         }
                       }}
-                      className="w-full h-[42px] px-2 text-center bg-[#0A0F1C] border border-slate-600 focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white" 
+                      className="w-full h-[42px] px-2 text-center bg-[#0A0F1C] border border-slate-600 focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white font-bold" 
                     />
                     <button 
                       type="button" 
@@ -434,15 +533,68 @@ export const SolicitacaoPublica: React.FC = () => {
                         const val = parseInt(quantidadeStr) || 1;
                         setQuantidadeStr((val + 1).toString());
                       }}
-                      className="w-10 h-[42px] bg-slate-700 hover:bg-slate-600 text-white rounded-r-lg border border-slate-600 border-l-0 flex items-center justify-center font-bold transition-colors"
+                      className="w-10 h-[42px] bg-slate-700 hover:bg-slate-600 text-white rounded-r-lg border border-slate-600 border-l-0 flex items-center justify-center font-bold transition-colors cursor-pointer"
                     >
                       +
                     </button>
                   </div>
                 </div>
+                <div className="md:col-span-1 flex items-end">
+                  <button
+                    type="button"
+                    onClick={handleAdicionarProduto}
+                    disabled={!form.jogo}
+                    className="w-full h-[42px] bg-blue-600 text-white hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-400 font-bold px-4 py-2 rounded-lg transition-all active:scale-95 shadow-md flex items-center justify-center gap-1 cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    <span>➕ Adicionar</span>
+                  </button>
+                </div>
+
+                {/* Carrinho / Itens adicionados */}
+                <div className="md:col-span-4">
+                  {itensCarrinho.length === 0 ? (
+                    <div className="bg-[#0A0F1C] border border-dashed border-slate-700 p-6 rounded-xl text-center text-slate-400 text-sm">
+                      🛒 Nenhum produto adicionado ao seu orçamento ainda. Selecione um jogo acima e clique em "Adicionar".
+                    </div>
+                  ) : (
+                    <div className="bg-slate-900/40 border border-slate-700 rounded-xl p-4 space-y-3">
+                      <h4 className="font-bold text-white text-xs uppercase tracking-wider text-slate-400">Produtos no Orçamento</h4>
+                      <div className="divide-y divide-slate-800">
+                        {itensCarrinho.map((item) => (
+                          <div key={item.sku} className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 gap-2">
+                            <div className="flex items-center gap-3">
+                              {item.imagem_url ? (
+                                <img src={item.imagem_url} alt={item.nome} className="w-10 h-10 object-contain rounded bg-[#0A0F1C] p-1 border border-slate-700" />
+                              ) : (
+                                <div className="w-10 h-10 flex items-center justify-center rounded bg-[#0A0F1C] text-lg border border-slate-700">📦</div>
+                              )}
+                              <div>
+                                <p className="font-bold text-white text-sm">{item.nome}</p>
+                                <p className="text-xs text-slate-400">Unitário: {fmtCurrency(item.valor_unitario)}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between w-full sm:w-auto gap-4">
+                              <span className="text-xs bg-slate-800 text-slate-300 font-bold px-2 py-1 rounded-full">
+                                Qtd: {item.quantidade}
+                              </span>
+                              <span className="font-bold text-slate-200 text-sm whitespace-nowrap">{fmtCurrency(item.subtotal)}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoverProduto(item.nome)}
+                                className="text-red-400 hover:text-red-300 p-1 font-bold text-xs cursor-pointer transition-colors"
+                              >
+                                Remover
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {form.jogo && (
-                  <div className="md:col-span-4 mt-4 animate-fade-in-up">
+                  <div className="md:col-span-4 mt-2 animate-fade-in-up">
                     {PRODUTOS_INFO.filter(p => p.nome === form.jogo).map(produto => (
                       <div key={produto.nome} className="bg-slate-800 border-2 border-slate-600 rounded-xl overflow-hidden shadow-md">
                         <div className="flex flex-col md:flex-row">
@@ -453,7 +605,7 @@ export const SolicitacaoPublica: React.FC = () => {
                             <div className="flex justify-between items-start mb-2">
                               <h3 className="text-xl font-black text-white">{produto.nome}</h3>
                               <span className="bg-green-500/20 text-green-400 font-bold px-3 py-1 rounded-full text-sm whitespace-nowrap ml-2">
-                                {fmtCurrency(PRECOS[produto.nome])}
+                                {fmtCurrency(obterPrecoProduto(produto.nome))}
                               </span>
                             </div>
                             <p className="text-slate-300 mb-4">{produto.descricao}</p>
@@ -492,7 +644,7 @@ export const SolicitacaoPublica: React.FC = () => {
                                 <img src={outraOpcao.imagem} alt={outraOpcao.nome} className="max-h-full object-contain transition-transform group-hover:scale-110" />
                               </div>
                               <h5 className="font-bold text-white text-sm mb-1 leading-tight">{outraOpcao.nome}</h5>
-                              <span className="text-green-400 font-semibold text-sm mt-auto">{fmtCurrency(PRECOS[outraOpcao.nome])}</span>
+                              <span className="text-green-400 font-semibold text-sm mt-auto">{fmtCurrency(obterPrecoProduto(outraOpcao.nome))}</span>
                             </button>
                           ))}
                         </div>
@@ -526,67 +678,80 @@ export const SolicitacaoPublica: React.FC = () => {
             </div>
 
             {/* Secao Frete */}
-            {form?.jogo && form?.cep?.length >= 8 && (
+            {itensCarrinho.length > 0 && form?.cep?.length >= 8 && (
               <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700 mt-6">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
-                  <div>
+                {itensCarrinho.length === 1 ? (
+                  <>
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
+                      <div>
+                        <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                          🚚 Opções de Frete
+                        </h3>
+                        <p className="text-sm text-slate-400">Calcule o frete para {form.cep} ({itensCarrinho[0].quantidade}x {itensCarrinho[0].nome})</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={calcularFrete}
+                        disabled={loadingFrete}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 active:scale-95 transition-all font-bold text-sm shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer"
+                      >
+                        {loadingFrete ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : null}
+                        {loadingFrete ? 'Calculando...' : 'Calcular Frete'}
+                      </button>
+                    </div>
+
+                    {erroFrete && (
+                      <div className="bg-orange-900/30 border border-orange-500/30 text-orange-200 p-4 rounded-lg text-sm mb-4">
+                        {erroFrete}
+                      </div>
+                    )}
+
+                    {opcoesFrete && opcoesFrete.length > 0 && (
+                      <div className="space-y-3">
+                        {opcoesFrete.map((opcao: any) => (
+                          <label key={opcao.name} className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${freteSelecionado?.name === opcao.name ? 'border-green-500 bg-green-900/20 shadow-md ring-1 ring-green-500' : 'border-slate-700 bg-[#0A0F1C] hover:border-slate-500'}`}>
+                            <div className="flex items-center gap-3">
+                              <input 
+                                type="radio" 
+                                name="frete" 
+                                checked={freteSelecionado?.name === opcao?.name} 
+                                onChange={() => setFreteSelecionado(opcao)}
+                                className="w-4 h-4 text-green-600 bg-slate-800 border-slate-600 focus:ring-green-500 focus:ring-offset-slate-900 cursor-pointer"
+                              />
+                              <div>
+                                <p className="font-bold text-white leading-tight">{opcao?.company || 'Transportadora'} - {opcao?.name || 'Serviço'}</p>
+                                <p className="text-xs text-slate-400 mt-0.5">{opcao?.delivery_time || 0} dias úteis • {opcao?.volumes_validos || 1} volume(s)</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-green-400">{fmtCurrency(opcao?.price || 0)}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex flex-col gap-2">
                     <h3 className="font-bold text-white text-lg flex items-center gap-2">
                       🚚 Opções de Frete
                     </h3>
-                    <p className="text-sm text-slate-400">Calcule o frete para {form.cep} ({qtdParseada}x {form.jogo})</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={calcularFrete}
-                    disabled={loadingFrete}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 active:scale-95 transition-all font-bold text-sm shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                  >
-                    {loadingFrete ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : null}
-                    {loadingFrete ? 'Calculando...' : 'Calcular Frete'}
-                  </button>
-                </div>
-
-                {erroFrete && (
-                  <div className="bg-orange-900/30 border border-orange-500/30 text-orange-200 p-4 rounded-lg text-sm mb-4">
-                    {erroFrete}
-                  </div>
-                )}
-
-                {opcoesFrete && opcoesFrete.length > 0 && (
-                  <div className="space-y-3">
-                    {opcoesFrete.map((opcao: any) => (
-                      <label key={opcao.name} className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${freteSelecionado?.name === opcao.name ? 'border-green-500 bg-green-900/20 shadow-md ring-1 ring-green-500' : 'border-slate-700 bg-[#0A0F1C] hover:border-slate-500'}`}>
-                        <div className="flex items-center gap-3">
-                          <input 
-                            type="radio" 
-                            name="frete" 
-                            checked={freteSelecionado?.name === opcao?.name} 
-                            onChange={() => setFreteSelecionado(opcao)}
-                            className="w-4 h-4 text-green-600 bg-slate-800 border-slate-600 focus:ring-green-500 focus:ring-offset-slate-900"
-                          />
-                          <div>
-                            <p className="font-bold text-white leading-tight">{opcao?.company || 'Transportadora'} - {opcao?.name || 'Serviço'}</p>
-                            <p className="text-xs text-slate-400 mt-0.5">{opcao?.delivery_time || 0} dias úteis • {opcao?.volumes_validos || 1} volume(s)</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-green-400">{fmtCurrency(opcao?.price || 0)}</p>
-                        </div>
-                      </label>
-                    ))}
+                    <div className="bg-blue-900/30 border border-blue-500/30 text-blue-200 p-4 rounded-lg text-sm">
+                      ℹ️ <strong>Para múltiplos produtos diferentes</strong>, o cálculo automático de frete não está disponível. Confirmaremos o valor exato do frete no orçamento enviado por WhatsApp.
+                    </div>
                   </div>
                 )}
               </div>
             )}
 
             {/* Resumo */}
-            {form.jogo && (
+            {itensCarrinho.length > 0 && (
               <div className="bg-[#0A0F1C] p-6 rounded-xl border border-slate-700 shadow-sm mt-8">
                 <h3 className="font-bold text-white mb-4 uppercase tracking-wide text-sm">Resumo Estimado</h3>
                 <div className="space-y-3 text-sm text-slate-300">
                   <div className="flex justify-between">
-                    <span>Produtos ({qtdParseada}x {form.jogo})</span>
-                    <span className="font-semibold text-white">{fmtCurrency(valorProdutos)}</span>
+                    <span>Produtos ({totalItensQtd} item/itens)</span>
+                    <span className="font-semibold text-white">{fmtCurrency(subtotalProdutos)}</span>
                   </div>
                   
                   <div className="flex justify-between">
@@ -599,17 +764,32 @@ export const SolicitacaoPublica: React.FC = () => {
                       <span>Frete Estimado</span>
                       {form.estado && <span className="bg-slate-700 text-slate-200 text-xs px-2 py-0.5 rounded-full font-bold">{form.estado.toUpperCase()}</span>}
                     </div>
-                    <span className="font-semibold text-white">{freteEstimado > 0 ? fmtCurrency(freteEstimado) : 'A calcular'}</span>
+                    <span className="font-semibold text-white">
+                      {itensCarrinho.length === 1 
+                        ? (freteEstimado > 0 ? fmtCurrency(freteEstimado) : 'A calcular')
+                        : 'A combinar'
+                      }
+                    </span>
                   </div>
 
                   <div className="pt-2">
                     <div className="flex justify-between items-center mb-1">
                       <span className={`font-medium ${form.forma_pagamento !== 'Pix com desconto' ? 'text-white font-bold text-lg' : 'text-slate-500'}`}>Total Estimado (Prazo)</span>
-                      <span className={`${form.forma_pagamento !== 'Pix com desconto' ? 'text-2xl font-black text-white' : 'text-lg font-bold text-slate-300'}`}>{fmtCurrency(totalEstimado)}</span>
+                      <span className={`${form.forma_pagamento !== 'Pix com desconto' ? 'text-2xl font-black text-white' : 'text-lg font-bold text-slate-300'}`}>
+                        {itensCarrinho.length === 1 
+                          ? fmtCurrency(totalEstimado) 
+                          : 'A combinar'
+                        }
+                      </span>
                     </div>
                     <div className={`flex justify-between items-center ${form.forma_pagamento !== 'Pix com desconto' ? 'opacity-50' : ''}`}>
                       <span className="text-green-500 font-bold">Total com Desconto PIX</span>
-                      <span className={`${form.forma_pagamento === 'Pix com desconto' ? 'text-2xl font-black' : 'text-lg font-bold'} text-green-400`}>{fmtCurrency(totalComPix)}</span>
+                      <span className={`${form.forma_pagamento === 'Pix com desconto' ? 'text-2xl font-black' : 'text-lg font-bold'} text-green-400`}>
+                        {itensCarrinho.length === 1 
+                          ? fmtCurrency(totalComPix) 
+                          : `${fmtCurrency(subtotalProdutos - descontoPix)} + frete`
+                        }
+                      </span>
                     </div>
                     {form.forma_pagamento !== 'Pix com desconto' && (
                       <p className="text-xs text-orange-400 font-medium mt-2 text-right">Desconto de 3% exclusivo para pagamento via Pix.</p>
@@ -636,10 +816,10 @@ export const SolicitacaoPublica: React.FC = () => {
             <div className="pt-6">
               <button 
                 type="submit" 
-                disabled={loadingSubmit}
+                disabled={loadingSubmit || itensCarrinho.length === 0}
                 className={`w-full font-bold text-lg py-4 px-8 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${
-                  loadingSubmit 
-                    ? 'bg-slate-700 text-slate-400 cursor-not-allowed' 
+                  loadingSubmit || itensCarrinho.length === 0
+                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed' 
                     : 'bg-green-600 text-white hover:bg-green-500 hover:shadow-green-500/20 hover:-translate-y-1'
                 }`}
               >
@@ -648,6 +828,8 @@ export const SolicitacaoPublica: React.FC = () => {
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Enviando...
                   </>
+                ) : itensCarrinho.length === 0 ? (
+                  "Adicione produtos ao seu pedido"
                 ) : (
                   "Enviar solicitação para a FormaPlay"
                 )}
