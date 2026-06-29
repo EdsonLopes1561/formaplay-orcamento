@@ -42,6 +42,7 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduto, setEditingProduto] = useState<Partial<Produto> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [savingMessage, setSavingMessage] = useState<string>('');
   
   // File upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -124,10 +125,12 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
     
     setSaving(true);
     setError(null);
+    const tStart = performance.now();
     try {
       let finalImageUrl = editingProduto.imagem_url;
 
       if (selectedFile) {
+        setSavingMessage('Enviando imagem...');
         if (!editingProduto.sku) {
           throw new Error('SKU é obrigatório para enviar uma imagem.');
         }
@@ -136,6 +139,7 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
         formData.append('file', selectedFile);
         formData.append('sku', editingProduto.sku);
 
+        const tUploadStart = performance.now();
         const uploadRes = await fetch('/api/produtos-upload', {
           method: 'POST',
           headers: { 'x-admin-token': adminToken },
@@ -149,8 +153,11 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
 
         const uploadData = await uploadRes.json();
         finalImageUrl = uploadData.imageUrl;
+        const tUploadEnd = performance.now();
+        console.log(`[Diagnostic] Frontend upload tempo: ${(tUploadEnd - tUploadStart).toFixed(2)} ms`);
       }
 
+      setSavingMessage('Salvando produto...');
       const isEditing = !!editingProduto.id;
       const method = isEditing ? 'PUT' : 'POST';
       
@@ -159,6 +166,7 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
         imagem_url: finalImageUrl
       };
 
+      const tSaveStart = performance.now();
       const res = await fetch('/api/produtos', {
         method,
         headers: { 
@@ -172,15 +180,26 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.error || 'Erro ao salvar produto.');
       }
+      const tSaveEnd = performance.now();
+      console.log(`[Diagnostic] Frontend API save tempo: ${(tSaveEnd - tSaveStart).toFixed(2)} ms`);
+
       setIsFormOpen(false);
       setEditingProduto(null);
       setSelectedFile(null);
       setPreviewUrl(null);
+      
+      setSavingMessage('Atualizando catálogo...');
+      const tFetchStart = performance.now();
       await fetchProdutos(isAdminMode, adminToken);
+      const tFetchEnd = performance.now();
+      console.log(`[Diagnostic] Frontend refetch tempo: ${(tFetchEnd - tFetchStart).toFixed(2)} ms`);
+      
+      console.log(`[Diagnostic] Fluxo total (Upload + Save + Refetch): ${(performance.now() - tStart).toFixed(2)} ms`);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setSaving(false);
+      setSavingMessage('');
     }
   };
 
@@ -409,7 +428,7 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
                   </button>
                   <button type="submit" disabled={saving} className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 transition-all font-bold shadow-md flex items-center gap-2 disabled:opacity-50">
                     {saving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <CheckCircle2 size={18} />}
-                    Salvar Produto
+                    {savingMessage || 'Salvar Produto'}
                   </button>
                 </div>
               </form>

@@ -33,7 +33,11 @@ export default async function handler(req: Request) {
       return new Response(JSON.stringify({ error: 'Configuração de banco de dados ausente no servidor.' }), { status: 500, headers: commonHeaders });
     }
 
+    const t0 = performance.now();
     const formData = await req.formData();
+    const t1 = performance.now();
+    console.log(`[Diagnostic] formData parse time: ${(t1 - t0).toFixed(2)} ms`);
+
     const file = formData.get('file');
     const sku = formData.get('sku');
 
@@ -71,6 +75,9 @@ export default async function handler(req: Request) {
     const randomId = Math.random().toString(36).substring(2, 8);
     const filePath = `produtos/${sanitizedSku}/${timestamp}-${randomId}.${ext}`;
 
+    const t2 = performance.now();
+    console.log(`[Diagnostic] validation time: ${(t2 - t1).toFixed(2)} ms, file size: ${file.size} bytes`);
+
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
@@ -78,12 +85,15 @@ export default async function handler(req: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = new Uint8Array(arrayBuffer);
 
+    const t3 = performance.now();
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('product-images')
       .upload(filePath, buffer, {
         contentType: mimeType,
         upsert: false
       });
+    const t4 = performance.now();
+    console.log(`[Diagnostic] supabase upload time: ${(t4 - t3).toFixed(2)} ms`);
 
     if (uploadError) {
       console.error('Erro no upload para o Supabase Storage:', uploadError);
@@ -94,6 +104,7 @@ export default async function handler(req: Request) {
       .from('product-images')
       .getPublicUrl(filePath);
 
+    console.log(`[Diagnostic] total api time: ${(performance.now() - t0).toFixed(2)} ms. Public URL generated.`);
     return new Response(JSON.stringify({ imageUrl: urlData.publicUrl }), { status: 200, headers: commonHeaders });
 
   } catch (error: any) {
