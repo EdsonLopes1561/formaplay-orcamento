@@ -130,31 +130,48 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
       let finalImageUrl = editingProduto.imagem_url;
 
       if (selectedFile) {
-        setSavingMessage('Enviando imagem...');
+        setSavingMessage('Preparando upload...');
         if (!editingProduto.sku) {
           throw new Error('SKU é obrigatório para enviar uma imagem.');
         }
         
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-        formData.append('sku', editingProduto.sku);
-
-        const tUploadStart = performance.now();
-        const uploadRes = await fetch('/api/produtos-upload', {
+        const tPrepStart = performance.now();
+        const urlRes = await fetch('/api/produtos-upload', {
           method: 'POST',
-          headers: { 'x-admin-token': adminToken },
-          body: formData
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-admin-token': adminToken 
+          },
+          body: JSON.stringify({
+            sku: editingProduto.sku,
+            contentType: selectedFile.type,
+            size: selectedFile.size
+          })
         });
 
-        if (!uploadRes.ok) {
-          const errData = await uploadRes.json().catch(() => ({}));
-          throw new Error(errData.error || 'Erro ao enviar a imagem.');
+        if (!urlRes.ok) {
+          const errData = await urlRes.json().catch(() => ({}));
+          throw new Error(errData.error || 'Erro ao preparar o upload da imagem.');
         }
 
-        const uploadData = await uploadRes.json();
-        finalImageUrl = uploadData.imageUrl;
+        const { path, token, publicUrl } = await urlRes.json();
+        const tPrepEnd = performance.now();
+        console.log(`[Diagnostic] Tempo para obter Signed URL: ${(tPrepEnd - tPrepStart).toFixed(2)} ms`);
+
+        setSavingMessage('Enviando imagem...');
+        const tUploadStart = performance.now();
+        
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .uploadToSignedUrl(path, token, selectedFile);
+          
+        if (uploadError) {
+          throw new Error('Falha ao enviar a imagem diretamente para o storage.');
+        }
+
+        finalImageUrl = publicUrl;
         const tUploadEnd = performance.now();
-        console.log(`[Diagnostic] Frontend upload tempo: ${(tUploadEnd - tUploadStart).toFixed(2)} ms`);
+        console.log(`[Diagnostic] Frontend direto upload tempo: ${(tUploadEnd - tUploadStart).toFixed(2)} ms`);
       }
 
       setSavingMessage('Salvando produto...');

@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 export const config = {
   api: {
-    bodyParser: false,
+    bodyParser: true,
   },
 };
 
@@ -34,16 +34,11 @@ export default async function handler(req: Request) {
     }
 
     const t0 = performance.now();
-    const formData = await req.formData();
+    const body = await req.json();
     const t1 = performance.now();
-    console.log(`[Diagnostic] formData parse time: ${(t1 - t0).toFixed(2)} ms`);
+    console.log(`[Diagnostic] JSON parse time: ${(t1 - t0).toFixed(2)} ms`);
 
-    const file = formData.get('file');
-    const sku = formData.get('sku');
-
-    if (!file || !(file instanceof Blob)) {
-      return new Response(JSON.stringify({ error: 'Nenhum arquivo enviado.' }), { status: 400, headers: commonHeaders });
-    }
+    const { sku, contentType, size } = body;
 
     if (!sku || typeof sku !== 'string') {
       return new Response(JSON.stringify({ error: 'SKU é obrigatório para estruturar a pasta da imagem.' }), { status: 400, headers: commonHeaders });
@@ -54,58 +49,57 @@ export default async function handler(req: Request) {
       return new Response(JSON.stringify({ error: 'SKU inválido.' }), { status: 400, headers: commonHeaders });
     }
 
-    const mimeType = file.type;
     const validMimes: Record<string, string> = {
       'image/jpeg': 'jpg',
       'image/png': 'png',
       'image/webp': 'webp'
     };
 
-    if (!validMimes[mimeType]) {
+    if (!validMimes[contentType]) {
       return new Response(JSON.stringify({ error: 'Tipo de arquivo não suportado. Envie apenas JPG, PNG ou WEBP.' }), { status: 400, headers: commonHeaders });
     }
 
     const MAX_SIZE = 3 * 1024 * 1024; // 3 MB
-    if (file.size > MAX_SIZE) {
+    if (size > MAX_SIZE) {
       return new Response(JSON.stringify({ error: 'O arquivo excede o limite máximo de 3 MB.' }), { status: 400, headers: commonHeaders });
     }
 
-    const ext = validMimes[mimeType];
+    const ext = validMimes[contentType];
     const timestamp = Date.now();
     const randomId = Math.random().toString(36).substring(2, 8);
     const filePath = `produtos/${sanitizedSku}/${timestamp}-${randomId}.${ext}`;
 
     const t2 = performance.now();
-    console.log(`[Diagnostic] validation time: ${(t2 - t1).toFixed(2)} ms, file size: ${file.size} bytes`);
+    console.log(`[Diagnostic] validation time: ${(t2 - t1).toFixed(2)} ms`);
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = new Uint8Array(arrayBuffer);
-
     const t3 = performance.now();
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    // Create signed upload URL
+    const { data: signedData, error: signedError } = await supabase.storage
       .from('product-images')
-      .upload(filePath, buffer, {
-        contentType: mimeType,
-        upsert: false
-      });
-    const t4 = performance.now();
-    console.log(`[Diagnostic] supabase upload time: ${(t4 - t3).toFixed(2)} ms`);
+      .createSignedUploadUrl(filePath);
 
-    if (uploadError) {
-      console.error('Erro no upload para o Supabase Storage:', uploadError);
-      throw new Error('Falha ao processar o upload no servidor de armazenamento.');
+    const t4 = performance.now();
+    console.log(`[Diagnostic] createSignedUploadUrl time: ${(t4 - t3).toFixed(2)} ms`);
+
+    if (signedError || !signedData) {
+      console.error('Erro ao gerar URL assinada:', signedError);
+      throw new Error('Falha ao preparar o ambiente de upload.');
     }
 
     const { data: urlData } = supabase.storage
       .from('product-images')
       .getPublicUrl(filePath);
 
-    console.log(`[Diagnostic] total api time: ${(performance.now() - t0).toFixed(2)} ms. Public URL generated.`);
-    return new Response(JSON.stringify({ imageUrl: urlData.publicUrl }), { status: 200, headers: commonHeaders });
+    console.log(`[Diagnostic] total api time: ${(performance.now() - t0).toFixed(2)} ms`);
+    return new Response(JSON.stringify({ 
+      path: filePath,
+      token: signedData.token,
+      publicUrl: urlData.publicUrl 
+    }), { status: 200, headers: commonHeaders });
 
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message || 'Erro interno do servidor.' }), { status: 400, headers: commonHeaders });
