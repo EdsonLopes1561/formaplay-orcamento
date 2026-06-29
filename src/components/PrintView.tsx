@@ -40,9 +40,15 @@ const getProdutoConteudo = (nome: string): string[] => {
 };
 
 export function PrintView({ orcamento, clienteData }: PrintViewProps) {
-  const produtoImagem = getProdutoImagem(orcamento.produto);
-  const diferenciais = getProdutoDiferenciais(orcamento.produto);
-  const conteudo = getProdutoConteudo(orcamento.produto);
+  const temItens = orcamento.itens && Array.isArray(orcamento.itens) && orcamento.itens.length > 0;
+  const isMultiItens = temItens && orcamento.itens!.length > 1;
+  const produtoNomeParaInfo = temItens
+    ? (isMultiItens ? '' : orcamento.itens![0].nome)
+    : orcamento.produto;
+
+  const produtoImagem = getProdutoImagem(produtoNomeParaInfo);
+  const diferenciais = getProdutoDiferenciais(produtoNomeParaInfo);
+  const conteudo = getProdutoConteudo(produtoNomeParaInfo);
 
   function extrairEnderecoDasObservacoes(texto?: string): string {
     if (!texto) return '';
@@ -302,12 +308,30 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td className="print-td">{orcamento.produto}</td>
-              <td className="print-td print-td-center">{orcamento.quantidade}</td>
-              <td className="print-td print-td-right">{fmt(orcamento.valor_unitario)}</td>
-              <td className="print-td print-td-right">{fmt(orcamento.subtotal)}</td>
-            </tr>
+            {orcamento.itens && Array.isArray(orcamento.itens) && orcamento.itens.length > 0 ? (
+              orcamento.itens.map((item, idx) => (
+                <tr key={item.sku || idx}>
+                  <td className="print-td">
+                    <strong>{item.nome}</strong>
+                    {item.sku && (
+                      <span className="print-item-sku-sub" style={{ fontSize: '10px', color: '#64748b', display: 'block', marginTop: '2px' }}>
+                        SKU: {item.sku}{item.revisao ? ` - ${item.revisao}` : ''}
+                      </span>
+                    )}
+                  </td>
+                  <td className="print-td print-td-center">{item.quantidade}</td>
+                  <td className="print-td print-td-right">{fmt(item.valor_unitario)}</td>
+                  <td className="print-td print-td-right">{fmt(item.subtotal)}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td className="print-td">{orcamento.produto}</td>
+                <td className="print-td print-td-center">{orcamento.quantidade}</td>
+                <td className="print-td print-td-right">{fmt(orcamento.valor_unitario)}</td>
+                <td className="print-td print-td-right">{fmt(orcamento.subtotal)}</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
