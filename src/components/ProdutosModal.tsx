@@ -42,6 +42,10 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduto, setEditingProduto] = useState<Partial<Produto> | null>(null);
   const [saving, setSaving] = useState(false);
+  
+  // File upload state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const fetchProdutos = async (forceAdmin = isAdminMode, forceToken = adminToken) => {
     setLoading(true);
@@ -121,25 +125,57 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
     setSaving(true);
     setError(null);
     try {
+      let finalImageUrl = editingProduto.imagem_url;
+
+      if (selectedFile) {
+        if (!editingProduto.sku) {
+          throw new Error('SKU é obrigatório para enviar uma imagem.');
+        }
+        
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('sku', editingProduto.sku);
+
+        const uploadRes = await fetch('/api/produtos-upload', {
+          method: 'POST',
+          headers: { 'x-admin-token': adminToken },
+          body: formData
+        });
+
+        if (!uploadRes.ok) {
+          const errData = await uploadRes.json().catch(() => ({}));
+          throw new Error(errData.error || 'Erro ao enviar a imagem.');
+        }
+
+        const uploadData = await uploadRes.json();
+        finalImageUrl = uploadData.imageUrl;
+      }
+
       const isEditing = !!editingProduto.id;
       const method = isEditing ? 'PUT' : 'POST';
       
+      const payload = {
+        ...editingProduto,
+        imagem_url: finalImageUrl
+      };
+
       const res = await fetch('/api/produtos', {
         method,
         headers: { 
           'Content-Type': 'application/json',
           'x-admin-token': adminToken
         },
-        body: JSON.stringify(editingProduto)
+        body: JSON.stringify(payload)
       });
       
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.error || 'Erro ao salvar produto.');
       }
-      
       setIsFormOpen(false);
       setEditingProduto(null);
+      setSelectedFile(null);
+      setPreviewUrl(null);
       await fetchProdutos(isAdminMode, adminToken);
     } catch (err: any) {
       setError(err.message);
@@ -329,13 +365,38 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-1">URL pública da imagem do produto</label>
-                  <input type="text" value={editingProduto.imagem_url || ''} onChange={e => setEditingProduto({...editingProduto, imagem_url: e.target.value})} className="w-full bg-blue-950 border border-blue-800 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500" placeholder="https://..." />
-                  <p className="text-[10px] text-slate-500 mt-1.5">
-                    Use uma imagem já hospedada na internet. Exemplo: Supabase Storage, site da FormaPlay ou pasta pública do projeto. Caminhos do computador não funcionam.
-                  </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-1">URL pública da imagem do produto</label>
+                    <input type="text" value={editingProduto.imagem_url || ''} onChange={e => setEditingProduto({...editingProduto, imagem_url: e.target.value})} className="w-full bg-blue-950 border border-blue-800 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500" placeholder="https://..." />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-1">Ou enviar imagem do computador</label>
+                    <input type="file" accept=".jpg,.jpeg,.png,.webp" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 3 * 1024 * 1024) {
+                        window.alert('O arquivo excede o limite máximo de 3 MB.');
+                        e.target.value = '';
+                        return;
+                      }
+                      setSelectedFile(file);
+                      setPreviewUrl(URL.createObjectURL(file));
+                    }} className="w-full bg-blue-950 border border-blue-800 rounded-lg px-4 py-2 text-white file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-900 file:text-indigo-300 hover:file:bg-indigo-800" />
+                  </div>
                 </div>
+                <p className="text-[10px] text-slate-500 mt-1.5">
+                  Você pode colar uma URL pública ou enviar uma imagem do computador. A imagem enviada será salva no Supabase Storage. Caminhos do computador não funcionam como URL pública.
+                </p>
+
+                {previewUrl && (
+                  <div className="mt-3">
+                    <p className="text-xs text-slate-400 mb-1">Prévia da imagem selecionada:</p>
+                    <div className="w-24 h-24 rounded-lg overflow-hidden border border-blue-800 bg-blue-950">
+                      <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-1">Mensagem Pública (Formulário Site)</label>
@@ -343,7 +404,7 @@ export function ProdutosModal({ onClose }: ProdutosModalProps) {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-blue-800/50">
-                  <button type="button" onClick={() => setIsFormOpen(false)} disabled={saving} className="px-6 py-2.5 rounded-xl border border-blue-800 text-slate-300 hover:bg-slate-800 transition-colors">
+                  <button type="button" onClick={() => { setIsFormOpen(false); setSelectedFile(null); setPreviewUrl(null); }} disabled={saving} className="px-6 py-2.5 rounded-xl border border-blue-800 text-slate-300 hover:bg-slate-800 transition-colors">
                     Cancelar
                   </button>
                   <button type="submit" disabled={saving} className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 transition-all font-bold shadow-md flex items-center gap-2 disabled:opacity-50">
