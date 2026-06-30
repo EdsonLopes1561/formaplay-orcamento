@@ -343,10 +343,10 @@ export const SolicitacaoPublica: React.FC = () => {
           total_estimado: Number(totalEstimado) || 0,
           observacoes_cliente: (() => {
             let obsFrete = '';
-            if (freteSelecionado && itensCarrinho.length === 1) {
+            if (freteSelecionado) {
               obsFrete = ` | FRETE: ${freteSelecionado.company || ''} ${freteSelecionado.name || ''} (${freteSelecionado.delivery_time || 0}d) ${fmtCurrency(freteSelecionado.price)}`;
-            } else if (itensCarrinho.length > 1) {
-              obsFrete = ` | Múltiplos produtos. FRETE A COMBINAR.`;
+            } else if (!temCalculoFrete) {
+              obsFrete = ` | FRETE A COMBINAR.`;
             }
             let obsFinal = ((form.observacoes || '') + obsFrete).trim();
             if (obsFinal.length > 250) {

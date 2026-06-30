@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, MessageCircle, RefreshCw, Mailbox, Check, Archive, AlertCircle } from 'lucide-react';
+import { X, MessageCircle, RefreshCw, Mailbox, Check, Archive, AlertCircle, Copy } from 'lucide-react';
 import { SolicitacaoOrcamento } from '../types';
 import { supabase } from '../supabase';
 
@@ -23,6 +23,7 @@ export function SolicitacoesModal({
 
   const [filtro, setFiltro] = useState<string>('Pendente');
   const [updating, setUpdating] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const counts = {
     Pendente: solicitacoes.filter(s => s.status === 'Pendente').length,
@@ -66,6 +67,83 @@ export function SolicitacoesModal({
     const num = solicitacao.telefone.replace(/\D/g, '');
     const url = `https://wa.me/55${num}?text=${encodeURIComponent(texto)}`;
     window.open(url, '_blank');
+  };
+
+  const copiarMensagemResponderLead = async (sol: SolicitacaoOrcamento) => {
+    const nome = sol.nome_razao.split(' ')[0];
+
+    let itensTexto = '';
+    if (sol.itens && Array.isArray(sol.itens) && sol.itens.length > 0) {
+      itensTexto = sol.itens.map((item: any) => `* ${item.quantidade}x ${item.nome}`).join('\n');
+    } else {
+      itensTexto = `* ${sol.quantidade}x ${sol.jogo_escolhido}`;
+    }
+
+    let freteTexto = 'A combinar';
+    if (sol.frete_estimado > 0) {
+      const regexFrete = /FRETE:\s*([^|]+)/i;
+      const match = sol.observacoes_cliente?.match(regexFrete);
+      if (match && match[1]) {
+        const rawFrete = match[1].trim();
+        const regexPartes = /([^(]+)\s*\((\d+)d\)\s*(?:R\$\s*)?([\d.,]+)/i;
+        const partesMatch = rawFrete.match(regexPartes);
+        if (partesMatch) {
+          let servico = partesMatch[1].trim();
+          const dias = partesMatch[2];
+          const valor = partesMatch[3];
+
+          servico = servico
+            .replace(/\bjadlog\b/gi, 'Jadlog')
+            .replace(/\bJADLOG\.PACKAGE\b/gi, 'Package')
+            .replace(/\bJADLOG\.COM\b/gi, '.com')
+            .replace(/\bcorreios\b/gi, 'Correios')
+            .replace(/\bpac\b/gi, 'PAC')
+            .replace(/\bsedex\b/gi, 'SEDEX');
+
+          freteTexto = `${servico} — ${dias} ${Number(dias) === 1 ? 'dia' : 'dias'} — R$ ${valor}`;
+        } else {
+          freteTexto = rawFrete;
+        }
+      } else {
+        const valFmt = sol.frete_estimado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        freteTexto = `Padrão — R$ ${valFmt}`;
+      }
+    }
+
+    const valFmtTotal = sol.total_estimado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const totalTexto = sol.frete_estimado > 0 
+      ? `R$ ${valFmtTotal}` 
+      : `R$ ${valFmtTotal} + frete`;
+
+    const mensagem = `Olá, ${nome}! Tudo bem?
+
+Recebemos sua solicitação pelo site da FormaPlay.
+
+Itens solicitados:
+${itensTexto}
+
+Frete selecionado: ${freteTexto}
+Total estimado: ${totalTexto}
+
+Vou conferir os dados e já te envio o orçamento formal em PDF.
+
+Qualquer dúvida, fico à disposição.
+
+Edson Lopes
+FormaPlay — Jogos Educacionais`;
+
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(mensagem);
+        setCopiedId(sol.id);
+        setTimeout(() => setCopiedId(null), 2000);
+      } else {
+        throw new Error('Clipboard API not available');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Não foi possível copiar a mensagem. Copie manualmente.');
+    }
   };
 
   return (
@@ -180,6 +258,16 @@ export function SolicitacoesModal({
                         className="flex items-center gap-1.5 px-4 py-2 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/30 text-xs font-bold rounded-xl hover:bg-[#25D366] hover:text-white transition-all shadow-sm active:scale-95 cursor-pointer"
                       >
                         <MessageCircle size={16} strokeWidth={2.5} /> WhatsApp
+                      </button>
+                      <button
+                        onClick={() => copiarMensagemResponderLead(sol)}
+                        className={`flex items-center gap-1.5 px-4 py-2 border text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer ${
+                          copiedId === sol.id
+                            ? 'bg-blue-600/20 text-blue-400 border-blue-500/30'
+                            : 'bg-indigo-600/10 text-indigo-400 border-indigo-500/30 hover:bg-indigo-600 hover:text-white'
+                        }`}
+                      >
+                        <Copy size={16} strokeWidth={2.5} /> {copiedId === sol.id ? 'Copiado!' : 'Responder Lead'}
                       </button>
                       {sol.status === 'Pendente' && (
                         <button
