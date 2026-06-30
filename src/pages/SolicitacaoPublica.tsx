@@ -61,6 +61,8 @@ const PRODUTOS_INFO = [
   }
 ];
 
+const FORMAPLAY_SITE_URL = 'https://www.formaplayjogos.com.br/';
+
 const SUL_SUDESTE = ['PR', 'SC', 'RS', 'RJ', 'MG', 'ES'];
 
 export const SolicitacaoPublica: React.FC = () => {
@@ -445,7 +447,7 @@ export const SolicitacaoPublica: React.FC = () => {
           </div>
           <h2 className="text-2xl font-black text-white mb-2">Solicitação enviada com sucesso!</h2>
           <p className="text-slate-300 mb-8 font-medium">A FormaPlay recebeu seus dados e entrará em contato em breve pelo WhatsApp informado.</p>
-          <a href="http://localhost:5000" className="inline-block px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-500 transition-all shadow-md w-full">
+          <a href={FORMAPLAY_SITE_URL} className="inline-block px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-500 transition-all shadow-md w-full">
             Voltar para o site da FormaPlay
           </a>
         </div>
@@ -928,7 +930,7 @@ export const SolicitacaoPublica: React.FC = () => {
 
         {/* Footer */}
         <div className="bg-[#0A0F1C] py-4 text-center border-t border-slate-700">
-          <a href="http://localhost:5000" className="text-green-500 hover:text-green-400 text-sm font-semibold transition-colors">
+          <a href={FORMAPLAY_SITE_URL} className="text-green-500 hover:text-green-400 text-sm font-semibold transition-colors">
             &larr; Voltar para o site da FormaPlay
           </a>
         </div>
