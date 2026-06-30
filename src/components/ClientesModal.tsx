@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Plus, Edit, Trash2, Search, User, Users, Building2, Mail, Phone, MapPin } from 'lucide-react';
 import { Cliente } from '../types';
 import { supabase } from '../supabase';
@@ -37,9 +37,38 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
 
   const [isSearchingCep, setIsSearchingCep] = useState(false);
   const [cepError, setCepError] = useState<string | null>(null);
+  const [hasCepFailed, setHasCepFailed] = useState(false);
+
+  const numeroInputRef = useRef<HTMLInputElement>(null);
+  const enderecoInputRef = useRef<HTMLInputElement>(null);
+
+  // Progressive validation logic
+  const isNomeFilled = !!formData.nome?.trim();
+  const isCepComplete = (formData.cep || '').replace(/\D/g, '').length === 8;
+  const isEnderecoFilled = !!formData.endereco?.trim();
+  const isNumeroFilled = !!formData.numero?.trim();
+  const isBairroFilled = !!formData.bairro?.trim();
+  const isCidadeFilled = !!formData.cidade?.trim();
+  const isEstadoFilled = !!formData.estado?.trim();
+
+  const isNonAddressEnabled = isNomeFilled;
+  const isCepEnabled = isNomeFilled;
+
+  // Address fields progressive unlocking:
+  const isEnderecoEnabled = isNomeFilled && (!formData.cep || isCepComplete || isEnderecoFilled || hasCepFailed);
+  const isNumeroEnabled = isNomeFilled && (isEnderecoFilled || isNumeroFilled);
+  const isComplementoEnabled = isNomeFilled && (isEnderecoFilled || isNumeroFilled);
+  const isBairroEnabled = isNomeFilled && (isNumeroFilled || isBairroFilled || isCepComplete || hasCepFailed);
+  const isCidadeEnabled = isNomeFilled && (isBairroFilled || isCidadeFilled || isCepComplete || hasCepFailed);
+  const isEstadoEnabled = isNomeFilled && (isCidadeFilled || isEstadoFilled || isCepComplete || hasCepFailed);
+
+  // Form validation:
+  const hasAddressOrCep = isEnderecoFilled || !!formData.cep?.trim();
+  const isFormValid = isNomeFilled && (!hasAddressOrCep || isNumeroFilled);
 
   const fetchCep = async (cepStr: string, formattedCep: string) => {
     setIsSearchingCep(true);
+    setHasCepFailed(false);
     try {
       const url = `https://viacep.com.br/ws/${cepStr}/json/`;
       const res = await fetch(url);
@@ -47,6 +76,10 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
       
       if (data.erro) {
         setCepError('CEP não encontrado. Preencha o endereço manualmente.');
+        setHasCepFailed(true);
+        setTimeout(() => {
+          enderecoInputRef.current?.focus();
+        }, 50);
       } else {
         setFormData((prev) => ({
           ...prev,
@@ -56,10 +89,21 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
           cidade: data.localidade || prev.cidade,
           estado: data.uf || prev.estado,
         }));
+        setTimeout(() => {
+          if (data.logradouro) {
+            numeroInputRef.current?.focus();
+          } else {
+            enderecoInputRef.current?.focus();
+          }
+        }, 50);
       }
     } catch (err) {
       console.error('Erro ao buscar CEP:', err);
       setCepError('Não foi possível consultar o CEP agora. Preencha o endereço manualmente.');
+      setHasCepFailed(true);
+      setTimeout(() => {
+        enderecoInputRef.current?.focus();
+      }, 50);
     } finally {
       setIsSearchingCep(false);
     }
@@ -75,6 +119,9 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
     
     setFormData((prev) => ({ ...prev, cep: formattedCep }));
     setCepError(null);
+    if (rawValue.length < 8) {
+      setHasCepFailed(false);
+    }
 
     if (rawValue.length === 8) {
       fetchCep(rawValue, formattedCep);
@@ -117,6 +164,11 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
   const handleSave = async () => {
     if (!formData.nome?.trim()) {
       alert('Nome do cliente é obrigatório');
+      return;
+    }
+    const hasAddressOrCep = !!formData.endereco?.trim() || !!formData.cep?.trim();
+    if (hasAddressOrCep && !formData.numero?.trim()) {
+      alert('O campo Número é obrigatório quando há endereço preenchido ou CEP informado.');
       return;
     }
 
@@ -164,6 +216,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
         tipo_cliente: '',
         observacoes: '',
       });
+      setHasCepFailed(false);
     } catch (error) {
       console.error('Erro ao salvar cliente:', error);
       alert('Erro ao salvar cliente');
@@ -211,7 +264,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
   };
 
   // Classes para inputs escuros
-  const inputClassName = "w-full px-4 py-2.5 bg-blue-900/50 border border-blue-800 rounded-xl text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 focus:outline-none transition-all placeholder-slate-600";
+  const inputClassName = "w-full px-4 py-2.5 bg-blue-900/50 border border-blue-800 rounded-xl text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 focus:outline-none transition-all placeholder-slate-600 disabled:opacity-40 disabled:bg-blue-950/40 disabled:cursor-not-allowed disabled:border-blue-900/50";
   const labelClassName = "block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1";
 
   if (showForm) {
@@ -238,6 +291,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                   estado: '', complemento: '', contato_responsavel: '', tipo_cliente: '', observacoes: '',
                 });
                 setCepError(null);
+                setHasCepFailed(false);
               }}
               className="p-2.5 rounded-xl bg-blue-900 hover:bg-slate-700 hover:text-white transition-all border border-blue-800 text-slate-400"
             >
@@ -264,6 +318,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                   type="text"
                   value={formData.razao_social || ''}
                   onChange={(e) => setFormData({ ...formData, razao_social: e.target.value })}
+                  disabled={!isNonAddressEnabled}
                   className={inputClassName}
                 />
               </div>
@@ -274,6 +329,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                   type="text"
                   value={formData.nome_fantasia || ''}
                   onChange={(e) => setFormData({ ...formData, nome_fantasia: e.target.value })}
+                  disabled={!isNonAddressEnabled}
                   className={inputClassName}
                 />
               </div>
@@ -284,6 +340,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                   type="text"
                   value={formData.documento || ''}
                   onChange={(e) => setFormData({ ...formData, documento: e.target.value })}
+                  disabled={!isNonAddressEnabled}
                   className={inputClassName}
                 />
               </div>
@@ -294,6 +351,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                   type="text"
                   value={formData.inscricao_estadual || ''}
                   onChange={(e) => setFormData({ ...formData, inscricao_estadual: e.target.value })}
+                  disabled={!isNonAddressEnabled}
                   className={inputClassName}
                 />
               </div>
@@ -304,6 +362,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                   type="email"
                   value={formData.email || ''}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  disabled={!isNonAddressEnabled}
                   className={inputClassName}
                 />
               </div>
@@ -314,6 +373,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                   type="text"
                   value={formData.contato_responsavel || ''}
                   onChange={(e) => setFormData({ ...formData, contato_responsavel: e.target.value })}
+                  disabled={!isNonAddressEnabled}
                   className={inputClassName}
                 />
               </div>
@@ -324,6 +384,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                   type="text"
                   value={formData.telefone || ''}
                   onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                  disabled={!isNonAddressEnabled}
                   className={inputClassName}
                 />
               </div>
@@ -333,6 +394,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                 <select
                   value={formData.tipo_cliente || ''}
                   onChange={(e) => setFormData({ ...formData, tipo_cliente: e.target.value })}
+                  disabled={!isNonAddressEnabled}
                   className={`${inputClassName} cursor-pointer`}
                 >
                   <option value="" className="bg-blue-900">Selecione...</option>
@@ -353,6 +415,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                     value={formData.cep || ''}
                     onChange={handleCepChange}
                     maxLength={9}
+                    disabled={!isCepEnabled}
                     className={inputClassName}
                     placeholder="00000-000"
                   />
@@ -372,9 +435,11 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
               <div className="md:col-span-2">
                 <label className={labelClassName}>Rua / Logradouro</label>
                 <input
+                  ref={enderecoInputRef}
                   type="text"
                   value={formData.endereco || ''}
                   onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
+                  disabled={!isEnderecoEnabled}
                   className={inputClassName}
                 />
               </div>
@@ -382,9 +447,11 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
               <div>
                 <label className={labelClassName}>Número</label>
                 <input
+                  ref={numeroInputRef}
                   type="text"
                   value={formData.numero || ''}
                   onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+                  disabled={!isNumeroEnabled}
                   className={inputClassName}
                 />
               </div>
@@ -395,6 +462,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                   type="text"
                   value={formData.complemento || ''}
                   onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
+                  disabled={!isComplementoEnabled}
                   className={inputClassName}
                 />
               </div>
@@ -405,6 +473,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                   type="text"
                   value={formData.bairro || ''}
                   onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
+                  disabled={!isBairroEnabled}
                   className={inputClassName}
                 />
               </div>
@@ -416,6 +485,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                     type="text"
                     value={formData.cidade || ''}
                     onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
+                    disabled={!isCidadeEnabled}
                     className={inputClassName}
                   />
                 </div>
@@ -425,6 +495,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                     type="text"
                     value={formData.estado || ''}
                     onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+                    disabled={!isEstadoEnabled}
                     className={inputClassName}
                     maxLength={2}
                   />
@@ -436,6 +507,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                 <textarea
                   value={formData.observacoes || ''}
                   onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                  disabled={!isNonAddressEnabled}
                   rows={3}
                   className={`${inputClassName} resize-none`}
                 />
@@ -444,33 +516,34 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
           </div>
 
           <div className="p-6 border-t border-blue-900 bg-blue-950 flex justify-end gap-3 z-10">
-            <button
-              onClick={() => {
-                setShowForm(false);
-                setEditingCliente(null);
-                setFormData({
-                  nome: '', razao_social: '', nome_fantasia: '', documento: '', inscricao_estadual: '',
-                  email: '', telefone: '', cep: '', endereco: '', numero: '', bairro: '', cidade: '',
-                  estado: '', complemento: '', contato_responsavel: '', tipo_cliente: '', observacoes: '',
-                });
-                setCepError(null);
-              }}
-              className="px-6 py-2.5 bg-blue-900 text-slate-300 border border-blue-800 rounded-xl hover:bg-slate-800 hover:text-white transition-all font-bold text-sm shadow-sm active:scale-95"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={loading}
-              className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-500 transition-all font-bold text-sm shadow-[0_0_15px_rgba(16,185,129,0.3)] border border-emerald-500/50 active:scale-95 disabled:opacity-50 flex items-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Salvando...
-                </>
-              ) : 'Salvar'}
-            </button>
+             <button
+               onClick={() => {
+                 setShowForm(false);
+                 setEditingCliente(null);
+                 setFormData({
+                   nome: '', razao_social: '', nome_fantasia: '', documento: '', inscricao_estadual: '',
+                   email: '', telefone: '', cep: '', endereco: '', numero: '', bairro: '', cidade: '',
+                   estado: '', complemento: '', contato_responsavel: '', tipo_cliente: '', observacoes: '',
+                 });
+                 setCepError(null);
+                 setHasCepFailed(false);
+               }}
+               className="px-6 py-2.5 bg-blue-900 text-slate-300 border border-blue-800 rounded-xl hover:bg-slate-800 hover:text-white transition-all font-bold text-sm shadow-sm active:scale-95"
+             >
+               Cancelar
+             </button>
+             <button
+               onClick={handleSave}
+               disabled={loading || !isFormValid}
+               className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-500 transition-all font-bold text-sm shadow-[0_0_15px_rgba(16,185,129,0.3)] border border-emerald-500/50 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
+             >
+               {loading ? (
+                 <>
+                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                   Salvando...
+                 </>
+               ) : 'Salvar'}
+             </button>
           </div>
         </div>
       </div>

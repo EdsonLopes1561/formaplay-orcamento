@@ -1,5 +1,5 @@
 import { calcularVolumes, calcularVolumesMultiProdutos } from '../config/produtosLogisticos';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabase';
 import { Produto, ItemOrcamentoSnapshot } from '../types';
 import { PRODUTOS_FALLBACK } from '../config/produtosFallback';
@@ -97,6 +97,44 @@ export const SolicitacaoPublica: React.FC = () => {
   const [loadingFrete, setLoadingFrete] = useState(false);
   const [erroFrete, setErroFrete] = useState<string | null>(null);
 
+  const numeroInputRef = useRef<HTMLInputElement>(null);
+  const enderecoInputRef = useRef<HTMLInputElement>(null);
+  const [hasCepFailed, setHasCepFailed] = useState(false);
+
+  // Progressive validation logic
+  const isNomeFilled = !!form.nome.trim();
+  const isTelefoneFilled = !!form.telefone.trim();
+  const isCepComplete = form.cep.replace(/\D/g, '').length === 8;
+  const isEnderecoFilled = !!form.endereco.trim();
+  const isNumeroFilled = !!form.numero.trim();
+  const isBairroFilled = !!form.bairro.trim();
+  const isCidadeFilled = !!form.cidade.trim();
+  const isEstadoFilled = form.estado.trim().length === 2;
+
+  const isTelefoneEnabled = isNomeFilled;
+  const isDocumentoEnabled = isNomeFilled;
+  const isEmailEnabled = isNomeFilled;
+  const isCepEnabled = isNomeFilled && isTelefoneFilled;
+
+  // Address fields progressive unlocking:
+  const isEnderecoEnabled = isCepEnabled && (isCepComplete || isEnderecoFilled || hasCepFailed);
+  const isNumeroEnabled = isCepEnabled && (isEnderecoFilled || isNumeroFilled);
+  const isComplementoEnabled = isCepEnabled && (isEnderecoFilled || isNumeroFilled);
+  const isBairroEnabled = isCepEnabled && (isNumeroFilled || isBairroFilled || isCepComplete || hasCepFailed);
+  const isCidadeEnabled = isCepEnabled && (isBairroFilled || isCidadeFilled || isCepComplete || hasCepFailed);
+  const isEstadoEnabled = isCepEnabled && (isCidadeFilled || isEstadoFilled || isCepComplete || hasCepFailed);
+
+  const isFormValid =
+    isNomeFilled &&
+    isTelefoneFilled &&
+    isCepComplete &&
+    isEnderecoFilled &&
+    isNumeroFilled &&
+    isBairroFilled &&
+    isCidadeFilled &&
+    isEstadoFilled &&
+    itensCarrinho.length > 0;
+
   const fmtCurrency = (v: any) => {
     const num = Number(v);
     if (isNaN(num)) return 'R$ 0,00';
@@ -158,6 +196,9 @@ export const SolicitacaoPublica: React.FC = () => {
     if (name === 'cep') {
       const justNumbers = value.replace(/\D/g, '');
       setForm(prev => ({ ...prev, [name]: justNumbers }));
+      if (justNumbers.length < 8) {
+        setHasCepFailed(false);
+      }
       if (justNumbers.length === 8) {
         fetchCep(justNumbers);
       }
@@ -170,6 +211,7 @@ export const SolicitacaoPublica: React.FC = () => {
   const fetchCep = async (cepStr: string) => {
     try {
       setLoadingCep(true);
+      setHasCepFailed(false);
       const res = await fetch(`https://viacep.com.br/ws/${cepStr}/json/`);
       const data = await res.json();
       if (!data.erro) {
@@ -180,9 +222,25 @@ export const SolicitacaoPublica: React.FC = () => {
           cidade: data.localidade || prev.cidade,
           estado: data.uf || prev.estado,
         }));
+        setTimeout(() => {
+          if (data.logradouro) {
+            numeroInputRef.current?.focus();
+          } else {
+            enderecoInputRef.current?.focus();
+          }
+        }, 50);
+      } else {
+        setHasCepFailed(true);
+        setTimeout(() => {
+          enderecoInputRef.current?.focus();
+        }, 50);
       }
     } catch (err) {
       console.error('Erro ao buscar CEP', err);
+      setHasCepFailed(true);
+      setTimeout(() => {
+        enderecoInputRef.current?.focus();
+      }, 50);
     } finally {
       setLoadingCep(false);
     }
@@ -424,24 +482,32 @@ export const SolicitacaoPublica: React.FC = () => {
                 <span className="w-8 h-8 rounded-lg bg-green-500/20 text-green-400 flex items-center justify-center text-sm font-bold">1</span>
                 Seus Dados
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-300 mb-1">Nome completo ou Razão Social *</label>
-                  <input required name="nome" value={form.nome} onChange={handleChange} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white placeholder-slate-500" placeholder="Como deseja ser chamado?" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-300 mb-1">CPF / CNPJ</label>
-                  <input name="documento" value={form.documento} onChange={handleChange} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white placeholder-slate-500" placeholder="Opcional" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-300 mb-1">Telefone (WhatsApp) *</label>
-                  <input required name="telefone" value={form.telefone} onChange={handleChange} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white placeholder-slate-500" placeholder="(00) 00000-0000" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-300 mb-1">E-mail</label>
-                  <input type="email" name="email" value={form.email} onChange={handleChange} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white placeholder-slate-500" placeholder="seu@email.com" />
-                </div>
-              </div>
+              {(() => {
+                const inputClass = "w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white placeholder-slate-500 disabled:opacity-50 disabled:bg-slate-900/30 disabled:border-slate-700 disabled:cursor-not-allowed";
+                const inputBaseClass = "w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white disabled:opacity-50 disabled:bg-slate-900/30 disabled:border-slate-700 disabled:cursor-not-allowed";
+                const stateInputClass = "w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none uppercase transition-all text-white placeholder-slate-500 disabled:opacity-50 disabled:bg-slate-900/30 disabled:border-slate-700 disabled:cursor-not-allowed";
+
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">Nome completo ou Razão Social *</label>
+                      <input required name="nome" value={form.nome} onChange={handleChange} className={inputClass} placeholder="Como deseja ser chamado?" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">CPF / CNPJ</label>
+                      <input name="documento" value={form.documento} onChange={handleChange} disabled={!isDocumentoEnabled} className={inputClass} placeholder="Opcional" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">Telefone (WhatsApp) *</label>
+                      <input required name="telefone" value={form.telefone} onChange={handleChange} disabled={!isTelefoneEnabled} className={inputClass} placeholder="(00) 00000-0000" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">E-mail</label>
+                      <input type="email" name="email" value={form.email} onChange={handleChange} disabled={!isEmailEnabled} className={inputClass} placeholder="seu@email.com" />
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Secao 2: Endereço */}
@@ -450,39 +516,47 @@ export const SolicitacaoPublica: React.FC = () => {
                 <span className="w-8 h-8 rounded-lg bg-green-500/20 text-green-400 flex items-center justify-center text-sm font-bold">2</span>
                 Endereço de Entrega
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-semibold text-slate-300 mb-1">CEP *</label>
-                  <div className="relative">
-                    <input required name="cep" value={form.cep} onChange={handleChange} maxLength={8} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white placeholder-slate-500" placeholder="Apenas números" />
-                    {loadingCep && <div className="absolute right-3 top-3 w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>}
+              {(() => {
+                const inputClass = "w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white placeholder-slate-500 disabled:opacity-50 disabled:bg-slate-900/30 disabled:border-slate-700 disabled:cursor-not-allowed";
+                const inputBaseClass = "w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white disabled:opacity-50 disabled:bg-slate-900/30 disabled:border-slate-700 disabled:cursor-not-allowed";
+                const stateInputClass = "w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none uppercase transition-all text-white placeholder-slate-500 disabled:opacity-50 disabled:bg-slate-900/30 disabled:border-slate-700 disabled:cursor-not-allowed";
+
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">CEP *</label>
+                      <div className="relative">
+                        <input required name="cep" value={form.cep} onChange={handleChange} maxLength={8} disabled={!isCepEnabled} className={inputClass} placeholder="Apenas números" />
+                        {loadingCep && <div className="absolute right-3 top-3 w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>}
+                      </div>
+                    </div>
+                    <div className="md:col-span-3">
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">Endereço (Rua, Av...) *</label>
+                      <input ref={enderecoInputRef} required name="endereco" value={form.endereco} onChange={handleChange} disabled={!isEnderecoEnabled} className={inputBaseClass} />
+                    </div>
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">Número *</label>
+                      <input ref={numeroInputRef} required name="numero" value={form.numero} onChange={handleChange} disabled={!isNumeroEnabled} className={inputBaseClass} />
+                    </div>
+                    <div className="md:col-span-3">
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">Complemento</label>
+                      <input name="complemento" value={form.complemento} onChange={handleChange} disabled={!isComplementoEnabled} className={inputClass} placeholder="Apto, Bloco, Casa 2..." />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">Bairro *</label>
+                      <input required name="bairro" value={form.bairro} onChange={handleChange} disabled={!isBairroEnabled} className={inputBaseClass} />
+                    </div>
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">Cidade *</label>
+                      <input required name="cidade" value={form.cidade} onChange={handleChange} disabled={!isCidadeEnabled} className={inputBaseClass} />
+                    </div>
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">Estado (UF) *</label>
+                      <input required name="estado" value={form.estado} onChange={handleChange} maxLength={2} disabled={!isEstadoEnabled} className={stateInputClass} placeholder="SP" />
+                    </div>
                   </div>
-                </div>
-                <div className="md:col-span-3">
-                  <label className="block text-sm font-semibold text-slate-300 mb-1">Endereço (Rua, Av...) *</label>
-                  <input required name="endereco" value={form.endereco} onChange={handleChange} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white" />
-                </div>
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-semibold text-slate-300 mb-1">Número *</label>
-                  <input required name="numero" value={form.numero} onChange={handleChange} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white" />
-                </div>
-                <div className="md:col-span-3">
-                  <label className="block text-sm font-semibold text-slate-300 mb-1">Complemento</label>
-                  <input name="complemento" value={form.complemento} onChange={handleChange} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white placeholder-slate-500" placeholder="Apto, Bloco, Casa 2..." />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-300 mb-1">Bairro *</label>
-                  <input required name="bairro" value={form.bairro} onChange={handleChange} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white" />
-                </div>
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-semibold text-slate-300 mb-1">Cidade *</label>
-                  <input required name="cidade" value={form.cidade} onChange={handleChange} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white" />
-                </div>
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-semibold text-slate-300 mb-1">Estado (UF) *</label>
-                  <input required name="estado" value={form.estado} onChange={handleChange} maxLength={2} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none uppercase transition-all text-white placeholder-slate-500" placeholder="SP" />
-                </div>
-              </div>
+                );
+              })()}
             </div>
 
             {/* Secao 3: Pedido */}
@@ -827,9 +901,9 @@ export const SolicitacaoPublica: React.FC = () => {
             <div className="pt-6">
               <button 
                 type="submit" 
-                disabled={loadingSubmit || itensCarrinho.length === 0}
+                disabled={loadingSubmit || !isFormValid}
                 className={`w-full font-bold text-lg py-4 px-8 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${
-                  loadingSubmit || itensCarrinho.length === 0
+                  loadingSubmit || !isFormValid
                     ? 'bg-slate-700 text-slate-500 cursor-not-allowed' 
                     : 'bg-green-600 text-white hover:bg-green-500 hover:shadow-green-500/20 hover:-translate-y-1'
                 }`}
@@ -841,6 +915,8 @@ export const SolicitacaoPublica: React.FC = () => {
                   </>
                 ) : itensCarrinho.length === 0 ? (
                   "Adicione produtos ao seu pedido"
+                ) : !isFormValid ? (
+                  "Preencha todos os campos obrigatórios"
                 ) : (
                   "Enviar solicitação para a FormaPlay"
                 )}
