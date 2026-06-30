@@ -440,14 +440,154 @@ export const SolicitacaoPublica: React.FC = () => {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-[#0A0F1C] py-10 px-4 font-sans flex items-center justify-center text-slate-200">
-        <div className="max-w-md mx-auto bg-slate-800 p-8 rounded-2xl shadow-2xl text-center border-t-4 border-green-500 animate-fade-in-up">
-          <div className="w-20 h-20 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+      <div className="min-h-screen bg-[#0A0F1C] py-10 px-4 font-sans flex items-center justify-center text-slate-200 relative overflow-hidden">
+        {/* CSS Animations */}
+        <style>{`
+          @keyframes fadeInUp {
+            from {
+              opacity: 0;
+              transform: translateY(24px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          @keyframes scaleIn {
+            from {
+              opacity: 0;
+              transform: scale(0.7);
+            }
+            to {
+              opacity: 1;
+              transform: scale(1);
+            }
+          }
+          @keyframes drawCheck {
+            to {
+              stroke-dashoffset: 0;
+            }
+          }
+          @keyframes drive {
+            0% {
+              transform: translateX(-120%);
+            }
+            70% {
+              transform: translateX(10px);
+            }
+            85% {
+              transform: translateX(-5px);
+            }
+            100% {
+              transform: translateX(0);
+            }
+          }
+          @keyframes wheelRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(1080deg); }
+          }
+          @keyframes pulseGlow {
+            0%, 100% {
+              opacity: 0.1;
+              transform: scale(1);
+            }
+            50% {
+              opacity: 0.2;
+              transform: scale(1.08);
+            }
+          }
+          .animate-card-enter {
+            animation: fadeInUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          }
+          .animate-success-check {
+            animation: scaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          }
+          .animate-truck-drive {
+            animation: drive 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+          }
+          .animate-wheel {
+            animation: wheelRotate 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            transform-origin: center;
+          }
+          .animate-pulse-glow {
+            animation: pulseGlow 4s ease-in-out infinite;
+          }
+        `}</style>
+
+        {/* Pulsing Background Glow */}
+        <div className="absolute w-[500px] h-[500px] bg-green-500/10 rounded-full blur-[120px] -top-40 -left-40 pointer-events-none animate-pulse-glow" />
+        <div className="absolute w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] -bottom-40 -right-40 pointer-events-none animate-pulse-glow" style={{ animationDelay: '2s' }} />
+
+        <div className="max-w-md w-full bg-slate-800/90 backdrop-blur-md p-8 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-slate-700/80 text-center relative overflow-hidden animate-card-enter">
+          {/* Card Border Glow */}
+          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-green-500 to-blue-500" />
+          
+          {/* Glow Behind Icons */}
+          <div className="absolute left-1/2 top-20 -translate-x-1/2 w-40 h-40 bg-green-500/10 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
+
+          {/* 1. Success Check Icon */}
+          <div className="relative w-20 h-20 mx-auto mb-6 animate-success-check">
+            {/* Pulsing outer ring */}
+            <div className="absolute inset-0 rounded-full bg-green-500/20 animate-ping" style={{ animationDuration: '2s' }} />
+            
+            {/* Solid check circle */}
+            <div className="relative w-full h-full bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg border border-green-400/20">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" className="animate-[drawCheck_0.5s_ease-out_0.5s_both]" style={{ strokeDasharray: 20, strokeDashoffset: 20 }} />
+              </svg>
+            </div>
           </div>
-          <h2 className="text-2xl font-black text-white mb-2">Solicitação enviada com sucesso!</h2>
-          <p className="text-slate-300 mb-8 font-medium">A FormaPlay recebeu seus dados e entrará em contato em breve pelo WhatsApp informado.</p>
-          <a href={FORMAPLAY_SITE_URL} className="inline-block px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-500 transition-all shadow-md w-full">
+
+          {/* 2. Logistics Truck Motion */}
+          <div className="relative h-16 w-36 mx-auto mb-6 overflow-hidden">
+            {/* Road Line */}
+            <div className="absolute bottom-1 left-0 right-0 h-[2px] bg-slate-700/50 rounded" />
+            
+            {/* Animated Truck */}
+            <div className="absolute bottom-1 left-1/2 -ml-12 w-24 h-12 animate-truck-drive">
+              <svg viewBox="0 0 96 48" className="w-full h-full text-green-400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Truck shadow */}
+                <path d="M6 32h70l14-14V6H52v4H20v22H6z" fill="currentColor" fillOpacity="0.03" />
+                
+                {/* Cargo Container */}
+                <rect x="6" y="8" width="52" height="24" rx="2" fill="#1E293B" stroke="currentColor" strokeWidth="2" />
+                <line x1="20" y1="8" x2="20" y2="32" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" />
+                <line x1="40" y1="8" x2="40" y2="32" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" />
+                
+                {/* Cabin */}
+                <path d="M58 14h18l12 12v6H58V14z" fill="#0F172A" stroke="currentColor" strokeWidth="2" />
+                
+                {/* Window */}
+                <path d="M68 18h6l6 6h-12v-6z" fill="#38BDF8" fillOpacity="0.25" stroke="#38BDF8" strokeWidth="1.5" />
+                
+                {/* Light */}
+                <circle cx="84" cy="28" r="1.5" fill="#FDE047" />
+                
+                {/* Wheel 1 */}
+                <g className="animate-wheel" style={{ transformOrigin: '20px 36px' }}>
+                  <circle cx="20" cy="36" r="6" fill="#0F172A" stroke="currentColor" strokeWidth="2" />
+                  <circle cx="20" cy="36" r="2" fill="#64748B" />
+                  <line x1="20" y1="30" x2="20" y2="42" stroke="currentColor" strokeWidth="1" />
+                  <line x1="14" y1="36" x2="26" y2="36" stroke="currentColor" strokeWidth="1" />
+                </g>
+                
+                {/* Wheel 2 */}
+                <g className="animate-wheel" style={{ transformOrigin: '70px 36px' }}>
+                  <circle cx="70" cy="36" r="6" fill="#0F172A" stroke="currentColor" strokeWidth="2" />
+                  <circle cx="70" cy="36" r="2" fill="#64748B" />
+                  <line x1="70" y1="30" x2="70" y2="42" stroke="currentColor" strokeWidth="1" />
+                  <line x1="64" y1="36" x2="76" y2="36" stroke="currentColor" strokeWidth="1" />
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-black text-white mb-3">Solicitação enviada com sucesso!</h2>
+          <p className="text-slate-300 mb-8 font-medium leading-relaxed">
+            A FormaPlay recebeu seus dados e entrará em contato em breve pelo WhatsApp informado.
+          </p>
+
+          <a href={FORMAPLAY_SITE_URL} className="inline-block px-6 py-3.5 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_20px_rgba(22,163,74,0.3)] hover:shadow-[0_4px_25px_rgba(22,163,74,0.5)] w-full text-base">
             Voltar para o site da FormaPlay
           </a>
         </div>
