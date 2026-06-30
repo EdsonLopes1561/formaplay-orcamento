@@ -94,3 +94,57 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
+// Suporte para recebimento de eventos Push (Fases futuras)
+self.addEventListener('push', (event) => {
+  let data = { title: 'Nova solicitação recebida', body: 'Nova solicitação de orçamento disponível.' };
+
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data = { title: 'Nova solicitação recebida', body: event.data.text() };
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: '/logocircular.png',
+    badge: '/logocircular.png',
+    vibrate: [100, 50, 100],
+    data: {
+      url: data.url || '/'
+    }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// Ação ao clicar na notificação
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Tenta encontrar uma janela aberta com o app e focar nela
+        for (const client of clientList) {
+          const clientUrl = new URL(client.url);
+          // Se o app já estiver aberto no painel principal, foca nele
+          if (clientUrl.pathname === '/' || clientUrl.pathname.includes('solicitar')) {
+            if ('focus' in client) {
+              return client.focus();
+            }
+          }
+        }
+        // Caso contrário, abre uma nova janela/guia
+        if (clients.openWindow) {
+          return clients.openWindow(targetUrl);
+        }
+      })
+  );
+});
