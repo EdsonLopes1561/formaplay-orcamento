@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, MessageCircle, RefreshCw, Mailbox, Check, Archive, AlertCircle, Copy } from 'lucide-react';
 import { SolicitacaoOrcamento } from '../types';
 import { supabase } from '../supabase';
@@ -24,6 +24,50 @@ export function SolicitacoesModal({
   const [filtro, setFiltro] = useState<string>('Pendente');
   const [updating, setUpdating] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const [permission, setPermission] = useState<string>(
+    typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
+  );
+  const [testSent, setTestSent] = useState(false);
+
+  const isSupported = typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setPermission(Notification.permission);
+    }
+  }, []);
+
+  const ativarNotificacoes = async () => {
+    if (!isSupported) return;
+    try {
+      const result = await Notification.requestPermission();
+      setPermission(result);
+    } catch (err) {
+      console.error('Erro ao solicitar permissão de notificações:', err);
+    }
+  };
+
+  const enviarNotificacaoTeste = async () => {
+    if (!isSupported || permission !== 'granted') return;
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      await reg.showNotification('Nova solicitação recebida', {
+        body: 'Teste de notificação da FormaPlay.',
+        icon: '/logocircular.png',
+        badge: '/logocircular.png',
+        tag: 'teste-solicitacao',
+        data: {
+          url: '/'
+        }
+      });
+      setTestSent(true);
+      setTimeout(() => setTestSent(false), 3000);
+    } catch (err) {
+      console.error('Erro ao disparar notificação de teste:', err);
+      alert('Erro ao disparar notificação. Verifique se o Service Worker está ativo.');
+    }
+  };
 
   const counts = {
     Pendente: solicitacoes.filter(s => s.status === 'Pendente').length,
@@ -176,6 +220,63 @@ FormaPlay — Jogos Educacionais`;
             >
               <X size={20} strokeWidth={2.5} />
             </button>
+          </div>
+        </div>
+
+        {/* Push Notification Panel - Fase 1 */}
+        <div className="px-6 py-4 bg-blue-900/20 border-b border-blue-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className={`p-2 rounded-xl mt-0.5 ${permission === 'granted' ? 'bg-emerald-500/10 text-emerald-400' : permission === 'denied' ? 'bg-rose-500/10 text-rose-400' : 'bg-slate-500/10 text-slate-400'}`}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-white">Notificações no Celular</h4>
+              <p className="text-xs text-slate-400 font-medium mt-0.5">
+                {!isSupported && "Este dispositivo ou navegador não suporta notificações de aplicativo."}
+                {isSupported && permission === 'default' && "Receba alertas no celular quando clientes enviarem novos orçamentos pelo site."}
+                {isSupported && permission === 'granted' && "As notificações estão ativadas e configuradas neste dispositivo."}
+                {isSupported && permission === 'denied' && "As notificações estão bloqueadas nas configurações do navegador."}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {!isSupported && (
+              <span className="text-xs text-slate-500 font-black uppercase tracking-wider bg-slate-950/40 px-3 py-1.5 rounded-lg border border-slate-800">
+                Não compatível
+              </span>
+            )}
+            
+            {isSupported && permission === 'default' && (
+              <button
+                onClick={ativarNotificacoes}
+                className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-xl font-bold text-xs shadow-md transition-all active:scale-95"
+              >
+                Ativar Notificações
+              </button>
+            )}
+
+            {isSupported && permission === 'denied' && (
+              <span className="text-xs text-rose-400 font-black uppercase tracking-wider bg-rose-950/20 px-3 py-1.5 rounded-lg border border-rose-500/20">
+                Bloqueado
+              </span>
+            )}
+
+            {isSupported && permission === 'granted' && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-emerald-400 font-black uppercase tracking-wider bg-emerald-950/20 px-3 py-1.5 rounded-lg border border-emerald-500/20 mr-1">
+                  Ativo
+                </span>
+                <button
+                  onClick={enviarNotificacaoTeste}
+                  className={`px-4 py-2 text-white rounded-xl font-bold text-xs shadow-md transition-all active:scale-95 ${testSent ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-blue-600 hover:bg-blue-500'}`}
+                >
+                  {testSent ? 'Enviada!' : 'Enviar Teste'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
