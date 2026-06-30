@@ -84,7 +84,26 @@ export function SolicitacoesModal({
       const regexFrete = /FRETE:\s*([^|]+)/i;
       const match = sol.observacoes_cliente?.match(regexFrete);
       if (match && match[1]) {
-        freteTexto = match[1].trim();
+        const rawFrete = match[1].trim();
+        const regexPartes = /([^(]+)\s*\((\d+)d\)\s*(?:R\$\s*)?([\d.,]+)/i;
+        const partesMatch = rawFrete.match(regexPartes);
+        if (partesMatch) {
+          let servico = partesMatch[1].trim();
+          const dias = partesMatch[2];
+          const valor = partesMatch[3];
+
+          servico = servico
+            .replace(/\bjadlog\b/gi, 'Jadlog')
+            .replace(/\bJADLOG\.PACKAGE\b/gi, 'Package')
+            .replace(/\bJADLOG\.COM\b/gi, '.com')
+            .replace(/\bcorreios\b/gi, 'Correios')
+            .replace(/\bpac\b/gi, 'PAC')
+            .replace(/\bsedex\b/gi, 'SEDEX');
+
+          freteTexto = `${servico} — ${dias} ${Number(dias) === 1 ? 'dia' : 'dias'} — R$ ${valor}`;
+        } else {
+          freteTexto = rawFrete;
+        }
       } else {
         const valFmt = sol.frete_estimado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         freteTexto = `Padrão — R$ ${valFmt}`;
