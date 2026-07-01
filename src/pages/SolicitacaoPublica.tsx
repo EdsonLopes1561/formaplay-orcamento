@@ -381,7 +381,7 @@ export const SolicitacaoPublica: React.FC = () => {
         ? firstItem.quantidade
         : totalItensQtd;
 
-      const { error } = await supabase
+      const { data: requestData, error } = await supabase
         .from('solicitacoes_orcamento')
         .insert({
           nome_razao: form.nome,
@@ -417,7 +417,9 @@ export const SolicitacaoPublica: React.FC = () => {
           embrulho_presente: form.embrulho_presente,
           forma_pagamento: form.forma_pagamento,
           itens: itensCarrinho
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) {
         console.error("Erro Real do Supabase ao Inserir Solicitação:");
@@ -429,6 +431,19 @@ export const SolicitacaoPublica: React.FC = () => {
       }
 
       setIsSuccess(true);
+
+      // Dispara notificação push em segundo plano sem bloquear a interface de sucesso do usuário
+      if (requestData && requestData.id) {
+        fetch('/api/push/notify-new-request', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ id: requestData.id })
+        }).catch(pushErr => {
+          console.warn('[Push Notification] Falha ao disparar notificação automática:', pushErr);
+        });
+      }
     } catch (err: any) {
       console.error('[Solicitação Pública] Erro ao salvar solicitação:', err);
       const errorMessage = err.message || err.toString() || "Erro desconhecido";
