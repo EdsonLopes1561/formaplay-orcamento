@@ -11,6 +11,21 @@ interface SolicitacoesModalProps {
   loading: boolean;
 }
 
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
 export function SolicitacoesModal({
   solicitacoes,
   onClose,
@@ -29,43 +44,150 @@ export function SolicitacoesModal({
     typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
   );
   const [testSent, setTestSent] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [adminToken, setAdminToken] = useState(
+    typeof window !== 'undefined' ? localStorage.getItem('formaplay_push_admin_token') || '' : ''
+  );
+  const [deviceLabel, setDeviceLabel] = useState(
+    typeof window !== 'undefined' ? localStorage.getItem('formaplay_push_device_label') || '' : ''
+  );
 
-  const isSupported = typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator;
+  const isSupported = typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setPermission(Notification.permission);
     }
-  }, []);
+    if (isSupported) {
+      navigator.serviceWorker.ready.then((reg) => {
+        reg.pushManager.getSubscription().then((sub) => {
+          setIsSubscribed(!!sub);
+        });
+      });
+    }
+  }, [isSupported]);
 
   const ativarNotificacoes = async () => {
     if (!isSupported) return;
+    if (!adminToken.trim() || !deviceLabel.trim()) {
+      alert('Por favor, informe a Chave de Ativação e a Identificação do Aparelho.');
+      return;
+    }
+
     try {
       const result = await Notification.requestPermission();
       setPermission(result);
-    } catch (err) {
-      console.error('Erro ao solicitar permissão de notificações:', err);
+
+      if (result === 'granted') {
+        const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+        if (!vapidKey) {
+          alert('Chave pública VAPID (VITE_VAPID_PUBLIC_KEY) não configurada no frontend.');
+          return;
+        }
+
+        const reg = await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+
+        if (!sub) {
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(vapidKey)
+          });
+        }
+
+        const resp = await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-push-admin-token': adminToken
+          },
+          body: JSON.stringify({
+            subscription: sub,
+            user_agent: navigator.userAgent,
+            device_label: deviceLabel
+          })
+        });
+
+        if (resp.status === 401) {
+          alert('Chave de ativação inválida.');
+          // Remove a inscrição do navegador se falhar no backend
+          await sub.unsubscribe();
+          setIsSubscribed(false);
+          return;
+        }
+
+        if (!resp.ok) {
+          const errData = await resp.json();
+          throw new Error(errData.error || 'Erro ao registrar inscrição no servidor');
+        }
+
+        setIsSubscribed(true);
+        localStorage.setItem('formaplay_push_admin_token', adminToken);
+        localStorage.setItem('formaplay_push_device_label', deviceLabel);
+        alert('Dispositivo inscrito com sucesso para notificações!');
+      } else {
+        alert('Permissão de notificação negada pelo usuário.');
+      }
+    } catch (err: any) {
+      console.error('Erro ao ativar notificações:', err);
+      alert(`Erro ao ativar notificações: ${err.message || err}`);
+    }
+  };
+
+  const desativarNotificacoes = async () => {
+    if (!isSupported) return;
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        await sub.unsubscribe();
+      }
+      setIsSubscribed(false);
+      localStorage.removeItem('formaplay_push_admin_token');
+      localStorage.removeItem('formaplay_push_device_label');
+      alert('Dispositivo desinscrito com sucesso localmente.');
+    } catch (err: any) {
+      console.error('Erro ao desinscrever notificações:', err);
+      alert(`Erro ao desativar: ${err.message || err}`);
     }
   };
 
   const enviarNotificacaoTeste = async () => {
-    if (!isSupported || permission !== 'granted') return;
+    if (!isSupported || permission !== 'granted' || !adminToken.trim()) return;
     try {
       const reg = await navigator.serviceWorker.ready;
-      await reg.showNotification('Nova solicitação recebida', {
-        body: 'Teste de notificação da FormaPlay.',
-        icon: '/logocircular.png',
-        badge: '/logocircular.png',
-        tag: 'teste-solicitacao',
-        data: {
-          url: '/'
-        }
+      const sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        alert('Nenhuma inscrição ativa no navegador. Ative as notificações primeiro.');
+        return;
+      }
+
+      const resp = await fetch('/api/push/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-push-admin-token': adminToken
+        },
+        body: JSON.stringify({
+          subscription: sub
+        })
       });
-      setTestSent(true);
-      setTimeout(() => setTestSent(false), 3000);
-    } catch (err) {
+
+      if (resp.status === 401) {
+        alert('Chave de ativação inválida.');
+        return;
+      }
+
+      if (resp.ok) {
+        setTestSent(true);
+        setTimeout(() => setTestSent(false), 3000);
+      } else {
+        const errData = await resp.json();
+        alert(`Erro ao disparar teste push: ${errData.error}`);
+      }
+    } catch (err: any) {
       console.error('Erro ao disparar notificação de teste:', err);
-      alert('Erro ao disparar notificação. Verifique se o Service Worker está ativo.');
+      alert(`Erro ao enviar teste: ${err.message || err}`);
     }
   };
 
@@ -223,61 +345,81 @@ FormaPlay — Jogos Educacionais`;
           </div>
         </div>
 
-        {/* Push Notification Panel - Fase 1 */}
-        <div className="px-6 py-4 bg-blue-900/20 border-b border-blue-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className={`p-2 rounded-xl mt-0.5 ${permission === 'granted' ? 'bg-emerald-500/10 text-emerald-400' : permission === 'denied' ? 'bg-rose-500/10 text-rose-400' : 'bg-slate-500/10 text-slate-400'}`}>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
+        {/* Push Notification Panel - Fase 2 */}
+        <div className="px-6 py-5 bg-blue-900/20 border-b border-blue-900/60 flex flex-col gap-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className={`p-2 rounded-xl mt-0.5 ${permission === 'granted' && isSubscribed ? 'bg-emerald-500/10 text-emerald-400' : permission === 'denied' ? 'bg-rose-500/10 text-rose-400' : 'bg-slate-500/10 text-slate-400'}`}>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white">Notificações Push Reais</h4>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">
+                  {!isSupported && "Este dispositivo ou navegador não suporta notificações de aplicativo."}
+                  {isSupported && permission === 'default' && "Cadastre este aparelho informando o token de ativação para receber alertas de novos orçamentos."}
+                  {isSupported && permission === 'granted' && isSubscribed && `Dispositivo inscrito com sucesso como "${deviceLabel}".`}
+                  {isSupported && permission === 'granted' && !isSubscribed && "Dispositivo não inscrito. Preencha os campos abaixo e clique em inscrever."}
+                  {isSupported && permission === 'denied' && "Notificações bloqueadas nas configurações do navegador."}
+                </p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-sm font-bold text-white">Notificações no Celular</h4>
-              <p className="text-xs text-slate-400 font-medium mt-0.5">
-                {!isSupported && "Este dispositivo ou navegador não suporta notificações de aplicativo."}
-                {isSupported && permission === 'default' && "Receba alertas no celular quando clientes enviarem novos orçamentos pelo site."}
-                {isSupported && permission === 'granted' && "As notificações estão ativadas e configuradas neste dispositivo."}
-                {isSupported && permission === 'denied' && "As notificações estão bloqueadas nas configurações do navegador."}
-              </p>
+
+            <div className="flex items-center gap-2 self-end md:self-auto">
+              {isSupported && permission === 'granted' && isSubscribed && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={enviarNotificacaoTeste}
+                    className={`px-4 py-2 text-white rounded-xl font-bold text-xs shadow-md transition-all active:scale-95 ${testSent ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-blue-600 hover:bg-blue-500'}`}
+                  >
+                    {testSent ? 'Teste Real Enviado!' : 'Enviar Teste Real'}
+                  </button>
+                  <button
+                    onClick={desativarNotificacoes}
+                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-xs border border-slate-700 transition-all active:scale-95"
+                  >
+                    Desinscrever
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-          
-          <div className="flex items-center gap-3 flex-shrink-0">
-            {!isSupported && (
-              <span className="text-xs text-slate-500 font-black uppercase tracking-wider bg-slate-950/40 px-3 py-1.5 rounded-lg border border-slate-800">
-                Não compatível
-              </span>
-            )}
-            
-            {isSupported && permission === 'default' && (
-              <button
-                onClick={ativarNotificacoes}
-                className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-xl font-bold text-xs shadow-md transition-all active:scale-95"
-              >
-                Ativar Notificações
-              </button>
-            )}
 
-            {isSupported && permission === 'denied' && (
-              <span className="text-xs text-rose-400 font-black uppercase tracking-wider bg-rose-950/20 px-3 py-1.5 rounded-lg border border-rose-500/20">
-                Bloqueado
-              </span>
-            )}
-
-            {isSupported && permission === 'granted' && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-emerald-400 font-black uppercase tracking-wider bg-emerald-950/20 px-3 py-1.5 rounded-lg border border-emerald-500/20 mr-1">
-                  Ativo
-                </span>
+          {/* Configuration Fields */}
+          {isSupported && permission !== 'denied' && (!isSubscribed || permission === 'default') && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-blue-950/40 p-4 rounded-2xl border border-blue-900/50 max-w-2xl animate-fade-in">
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Identificação do Aparelho</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Samsung Edson"
+                  value={deviceLabel}
+                  onChange={(e) => setDeviceLabel(e.target.value)}
+                  className="w-full px-3.5 py-2 bg-blue-900/40 border border-blue-850 text-white rounded-xl text-xs font-semibold focus:outline-none focus:border-green-500 transition-all placeholder-slate-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Chave de Ativação (Token)</label>
+                <input
+                  type="password"
+                  placeholder="Informe o token secreto"
+                  value={adminToken}
+                  onChange={(e) => setAdminToken(e.target.value)}
+                  className="w-full px-3.5 py-2 bg-blue-900/40 border border-blue-850 text-white rounded-xl text-xs font-semibold focus:outline-none focus:border-green-500 transition-all placeholder-slate-500"
+                />
+              </div>
+              <div className="flex items-end">
                 <button
-                  onClick={enviarNotificacaoTeste}
-                  className={`px-4 py-2 text-white rounded-xl font-bold text-xs shadow-md transition-all active:scale-95 ${testSent ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-blue-600 hover:bg-blue-500'}`}
+                  onClick={ativarNotificacoes}
+                  disabled={!adminToken.trim() || !deviceLabel.trim()}
+                  className="w-full py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl font-bold text-xs shadow-md transition-all active:scale-95"
                 >
-                  {testSent ? 'Enviada!' : 'Enviar Teste'}
+                  Inscrever Dispositivo
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Filters */}
