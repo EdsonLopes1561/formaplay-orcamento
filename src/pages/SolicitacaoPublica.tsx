@@ -381,9 +381,12 @@ export const SolicitacaoPublica: React.FC = () => {
         ? firstItem.quantidade
         : totalItensQtd;
 
+      const requestId = crypto.randomUUID();
+
       const { error } = await supabase
         .from('solicitacoes_orcamento')
         .insert({
+          id: requestId,
           nome_razao: form.nome,
           cpf_cnpj: form.documento || null,
           telefone: form.telefone,
@@ -429,6 +432,17 @@ export const SolicitacaoPublica: React.FC = () => {
       }
 
       setIsSuccess(true);
+
+      // Dispara notificação push em segundo plano sem bloquear a interface de sucesso do usuário
+      fetch('/api/push/notify-new-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: requestId })
+      }).catch(pushErr => {
+        console.warn('[Push Notification] Falha ao disparar notificação automática:', pushErr);
+      });
     } catch (err: any) {
       console.error('[Solicitação Pública] Erro ao salvar solicitação:', err);
       const errorMessage = err.message || err.toString() || "Erro desconhecido";
