@@ -52,6 +52,23 @@ export default async function handler(req: any, res: any) {
       return res.status(500).json({ error: error.message });
     }
 
+    // Se um device_label foi fornecido, desativa outras inscrições ativas com o mesmo nome de aparelho e endpoint diferente
+    if (device_label && typeof device_label === 'string' && device_label.trim() !== '') {
+      try {
+        const { error: deactivateError } = await supabaseClient
+          .from('push_subscriptions')
+          .update({ ativo: false })
+          .eq('device_label', device_label.trim())
+          .neq('endpoint', subscription.endpoint);
+
+        if (deactivateError) {
+          console.error('[API Subscribe] Error deactivating duplicate device labels:', deactivateError);
+        }
+      } catch (deactErr) {
+        console.error('[API Subscribe] Exception deactivating duplicates:', deactErr);
+      }
+    }
+
     return res.status(200).json({ success: true, data });
   } catch (err: any) {
     console.error('[API Subscribe] Internal error:', err);

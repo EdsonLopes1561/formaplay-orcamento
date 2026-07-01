@@ -398,6 +398,7 @@ FormaPlay — Jogos Educacionais`;
                   onChange={(e) => setDeviceLabel(e.target.value)}
                   className="w-full px-3.5 py-2 bg-blue-900/40 border border-blue-850 text-white rounded-xl text-xs font-semibold focus:outline-none focus:border-green-500 transition-all placeholder-slate-500"
                 />
+                <span className="block text-[9px] text-slate-500 mt-1 font-medium">Use nomes distintos para cada aparelho (ex: Samsung Edson, PC Edson).</span>
               </div>
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Chave de Ativação (Token)</label>

@@ -69,8 +69,43 @@ export default async function handler(req: any, res: any) {
       return res.status(500).json({ error: subsError.message });
     }
 
+    // Deduplicação em memória por device_label (mantém apenas o registro mais recente para cada aparelho)
+    let filteredSubscriptions: any[] = [];
+    if (subscriptions && subscriptions.length > 0) {
+      const groups: Record<string, any[]> = {};
+      
+      for (const sub of subscriptions) {
+        const label = (sub.device_label || '').trim();
+        if (label === '') {
+          // Se o rótulo do aparelho estiver vazio, mantém diretamente (não agrupa)
+          filteredSubscriptions.push(sub);
+        } else {
+          if (!groups[label]) {
+            groups[label] = [];
+          }
+          groups[label].push(sub);
+        }
+      }
+
+      // Para cada grupo de aparelho com o mesmo nome, mantém o mais recente
+      for (const label of Object.keys(groups)) {
+        const list = groups[label];
+        if (list.length === 1) {
+          filteredSubscriptions.push(list[0]);
+        } else {
+          // Ordena decrescente pela data mais recente disponível
+          list.sort((a, b) => {
+            const timeA = new Date(a.updated_at || a.last_seen_at || a.created_at || 0).getTime();
+            const timeB = new Date(b.updated_at || b.last_seen_at || b.created_at || 0).getTime();
+            return timeB - timeA;
+          });
+          filteredSubscriptions.push(list[0]);
+        }
+      }
+    }
+
     // Se não houver aparelhos cadastrados, encerramos silenciosamente
-    if (!subscriptions || subscriptions.length === 0) {
+    if (!filteredSubscriptions || filteredSubscriptions.length === 0) {
       // Registrar data de notificação para marcar como processada
       await supabaseClient
         .from('solicitacoes_orcamento')
@@ -112,8 +147,8 @@ export default async function handler(req: any, res: any) {
       badge: '/logocircular.png'
     });
 
-    // 7. Enviar notificações para todos os dispositivos ativos
-    const sendPromises = subscriptions.map(async (sub) => {
+    // 7. Enviar notificações para todos os dispositivos ativos filtrados
+    const sendPromises = filteredSubscriptions.map(async (sub) => {
       try {
         await webpush.sendNotification(
           {
