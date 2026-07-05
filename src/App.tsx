@@ -1438,6 +1438,54 @@ function App() {
                 </div>
               </div>
 
+              {/* Resumo da Produção */}
+              {(() => {
+                if (!currentId) return null;
+                const totalProducao = 17;
+                const concluidoProducao = Array.isArray(form.producao_checklist) ? form.producao_checklist.length : 0;
+                const producaoPercent = Math.round((concluidoProducao / totalProducao) * 100);
+                
+                return (
+                  <div className="bg-[#0f172a] rounded-xl shadow-xl border border-slate-800 border-l-4 border-l-emerald-500 p-6 relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-5">
+                      <h2 className="font-black text-slate-100 flex items-center gap-2">
+                        <Package size={18} className="text-emerald-400" />
+                        Ficha de Produção
+                      </h2>
+                      <button onClick={() => setShowProducao(true)} className="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-950/50 hover:bg-emerald-900/50 border border-emerald-900/50 px-2 py-1 rounded transition-colors flex items-center gap-1">
+                        <ExternalLink size={12} />
+                        Abrir
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Status da Produção</p>
+                        <p className="font-bold text-white text-sm">{form.status_producao || 'Não iniciada'}</p>
+                      </div>
+                      
+                      <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800">
+                        <div className="flex justify-between items-center mb-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Progresso</p>
+                          <p className="text-[10px] font-bold text-emerald-400">{producaoPercent}%</p>
+                        </div>
+                        <p className="font-bold text-white text-sm mb-2">{concluidoProducao} de {totalProducao} itens concluídos</p>
+                        <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                          <div className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${producaoPercent}%` }} />
+                        </div>
+                      </div>
+                      
+                      {form.producao_atualizado_em && (
+                        <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Última Atualização</p>
+                          <p className="text-xs font-medium text-slate-300">{new Date(form.producao_atualizado_em).toLocaleString('pt-BR')}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Selected product card */}
               {(() => {
                 const imgSrc = getProdutoImagem(form.produto);
