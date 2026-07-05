@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Save, Printer, MessageCircle, FolderOpen, Copy, CopyPlus,
   Trash2, RotateCcw, ChevronDown, CheckCircle, AlertCircle,
-  FileText, Users, Tag, Sparkles, Check, Package, LogOut, User, BarChart2, Mailbox, Download, Activity
+  FileText, Users, Tag, Sparkles, Check, Package, LogOut, User, BarChart2, Mailbox, Download, Activity, Link as LinkIcon, ExternalLink
 } from 'lucide-react';
 import { supabase } from './supabase.ts';
 import { Orcamento, Cliente, EMPRESA, PRODUTOS, emptyOrcamento, SolicitacaoOrcamento } from './types';
@@ -16,6 +16,7 @@ import { SolicitacoesModal } from './components/SolicitacoesModal';
 import { ExportModal } from './components/ExportModal';
 import { ProdutosModal } from './components/ProdutosModal';
 import { TorreControleModal } from './components/TorreControleModal';
+import { AssistenteNFeModal } from './components/AssistenteNFeModal';
 
 type Toast = { type: 'success' | 'error'; message: string };
 
@@ -145,6 +146,7 @@ function App() {
   const [showTorreControle, setShowTorreControle] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showProdutos, setShowProdutos] = useState(false);
+  const [showAssistenteNFe, setShowAssistenteNFe] = useState(false);
 
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoOrcamento[]>([]);
   const [showSolicitacoes, setShowSolicitacoes] = useState(false);
@@ -257,10 +259,15 @@ function App() {
         .from('solicitacoes_orcamento')
         .select('*')
         .order('created_at', { ascending: false });
-      if (error) throw error;
-      setSolicitacoes(data || []);
+      
+      if (error) {
+        console.error("Erro do Supabase ao carregar solicitações:", error);
+      }
+      if (data) {
+        setSolicitacoes(data as SolicitacaoOrcamento[]);
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Erro inesperado ao carregar solicitações:", err);
     } finally {
       setLoadingSolicitacoes(false);
     }
@@ -315,18 +322,71 @@ function App() {
         updated.valor_unitario = produto.preco;
       }
     }
+    
+    // Regras de automação do Acompanhamento Público
+    if (name === 'status_acompanhamento') {
+      updated.status_atualizado_em = new Date().toISOString();
+    }
+    
+    if (name === 'nf_emitida' && finalValue === true) {
+      if (!updated.status_acompanhamento) {
+        updated.status_acompanhamento = 'Nota fiscal emitida';
+        updated.status_atualizado_em = new Date().toISOString();
+      }
+    }
 
     setForm(calcularValores(updated));
   };
 
+  const gerarLinkAcompanhamento = async () => {
+    if (!currentId) {
+      showToast('error', 'Por favor, salve o orçamento primeiro para gerar o link público.');
+      return;
+    }
+
+    let token = form.token_publico;
+    if (!token) {
+      token = `fp_${crypto.randomUUID()}`;
+      const payload = { ...form, token_publico: token };
+      setForm(calcularValores(payload));
+      
+      // Atualiza direto no banco
+      await supabase
+        .from('orcamentos')
+        .update({ token_publico: token })
+        .eq('id', currentId);
+    }
+    
+    if (token) {
+      const link = `${window.location.origin}/acompanhar-pedido/${token}`;
+      try {
+        await navigator.clipboard.writeText(link);
+        showToast('success', 'Link copiado. A página pública será ativada na próxima fase.');
+      } catch (err) {
+        showToast('success', 'Token gerado! Não foi possível copiar para a área de transferência automaticamente.');
+      }
+    }
+  };
+
   const carregarHistorico = useCallback(async () => {
     setLoadingHistorico(true);
-    const { data, error } = await supabase
-      .from('orcamentos')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (!error && data) setHistorico(data as Orcamento[]);
-    setLoadingHistorico(false);
+    try {
+      const { data, error } = await supabase
+        .from('orcamentos')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error("Erro do Supabase ao carregar histórico:", error);
+      }
+      if (data) {
+        setHistorico(data as Orcamento[]);
+      }
+    } catch (err) {
+      console.error("Erro inesperado ao carregar histórico:", err);
+    } finally {
+      setLoadingHistorico(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -363,7 +423,16 @@ function App() {
     }
     setSaving(true);
     try {
-      const payload = { ...form };
+      const payload: any = { ...form };
+      
+      // Normalizar campos de data vazios para null
+      const dateFields = ['nf_emitida_em', 'status_atualizado_em', 'data_retorno'];
+      dateFields.forEach(field => {
+        if (payload[field] === "" || payload[field] === undefined) {
+          payload[field] = null;
+        }
+      });
+
       if (currentId) {
         const { data: updatedData, error: updateError } = await supabase
           .from('orcamentos')
@@ -1138,6 +1207,106 @@ function App() {
                   </div>
                 </div>
               </div>
+
+              {/* Public Tracking / Status Público */}
+              <div className="bg-[#0f172a] rounded-xl shadow-xl border border-slate-800 border-l-4 border-l-emerald-500 p-6 relative overflow-hidden mt-5">
+                <h2 className="font-black text-slate-100 mb-2 flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 text-white text-xs font-bold flex items-center justify-center">5</span>
+                  Status do Pedido para o Cliente
+                </h2>
+                <p className="text-xs text-emerald-400 font-semibold mb-5 bg-emerald-950/30 p-2 rounded border border-emerald-900/50">
+                  Visível para o cliente no link de acompanhamento público.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-4">
+                  <div className="sm:col-span-2">
+                    <label className="form-label">Status de Acompanhamento Público</label>
+                    <div className="relative">
+                      <select name="status_acompanhamento" value={form.status_acompanhamento || ''} onChange={handleChange}
+                        className="form-input appearance-none pr-10 font-bold text-emerald-400">
+                        <option value="">Nenhum (Inativo)</option>
+                        <option value="Solicitação recebida">Solicitação recebida</option>
+                        <option value="Orçamento enviado">Orçamento enviado</option>
+                        <option value="Aguardando confirmação do cliente">Aguardando confirmação do cliente</option>
+                        <option value="Aguardando pagamento ou autorização">Aguardando pagamento ou autorização</option>
+                        <option value="Pagamento/autorização aprovado">Pagamento/autorização aprovado</option>
+                        <option value="Pedido em produção">Pedido em produção</option>
+                        <option value="Nota fiscal emitida">Nota fiscal emitida</option>
+                        <option value="Pedido em fase de entrega">Pedido em fase de entrega</option>
+                        <option value="Pedido entregue">Pedido entregue</option>
+                        <option value="Cancelado">Cancelado</option>
+                      </select>
+                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    </div>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="form-label">Observação Pública</label>
+                    <textarea name="observacao_publica_status" value={form.observacao_publica_status || ''} onChange={handleChange}
+                      rows={2} className="form-input resize-none"
+                      placeholder="Mensagem opcional que o cliente verá nesta etapa..." />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="form-label">Última Atualização</label>
+                    <input name="status_atualizado_em" value={form.status_atualizado_em ? new Date(form.status_atualizado_em).toLocaleString('pt-BR') : 'Sem atualização'} readOnly
+                      className="form-input bg-slate-900/50 text-slate-400 border-slate-800" />
+                  </div>
+                  
+                  <div className="sm:col-span-2 mt-2 pt-4 border-t border-slate-800 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                    <h3 className="font-bold text-emerald-500 text-sm">Dados da Nota Fiscal (Opcional)</h3>
+                    <button
+                      type="button"
+                      title="Abrir Assistente NF-e"
+                      onClick={() => setShowAssistenteNFe(true)}
+                      className="flex items-center justify-center gap-2 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg text-xs font-bold transition-all border border-blue-500/30"
+                    >
+                      <ExternalLink size={14} />
+                      Preparar NF-e no Sebrae
+                    </button>
+                  </div>
+                  
+                  <div className="sm:col-span-2 flex items-center gap-2 mb-2">
+                    <input 
+                      type="checkbox" 
+                      name="nf_emitida" 
+                      id="nf_emitida"
+                      checked={form.nf_emitida || false} 
+                      onChange={handleChange}
+                      className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                    />
+                    <label htmlFor="nf_emitida" className="text-sm font-bold text-slate-300">Nota Fiscal Emitida</label>
+                  </div>
+                  <div>
+                    <label className="form-label">Número da NF</label>
+                    <input name="nf_numero" value={form.nf_numero || ''} onChange={handleChange}
+                      className="form-input" placeholder="Ex: 1234" />
+                  </div>
+                  <div>
+                    <label className="form-label">Data de Emissão (NF)</label>
+                    <input name="nf_emitida_em" type="date" value={form.nf_emitida_em || ''} onChange={handleChange}
+                      className="form-input" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="form-label">Link do PDF da NF</label>
+                    <input name="nf_pdf_url" type="url" value={form.nf_pdf_url || ''} onChange={handleChange}
+                      className="form-input" placeholder="Ex: https://drive.google.com/..." />
+                  </div>
+                  
+                  <div className="sm:col-span-2 mt-4">
+                    <button
+                      type="button"
+                      onClick={gerarLinkAcompanhamento}
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-900/20"
+                    >
+                      <LinkIcon size={18} />
+                      Gerar / Copiar Link de Acompanhamento
+                    </button>
+                    {form.token_publico && (
+                      <p className="text-xs text-center text-emerald-400 mt-2 font-medium">
+                        Token gerado: {form.token_publico}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Right column */}
@@ -1455,6 +1624,14 @@ function App() {
           onRefresh={carregarSolicitacoes}
           onConverter={converterSolicitacao}
           loading={loadingSolicitacoes}
+        />
+      )}
+
+      {/* Assistente NF-e */}
+      {showAssistenteNFe && (
+        <AssistenteNFeModal
+          orcamento={form}
+          onClose={() => setShowAssistenteNFe(false)}
         />
       )}
     </>

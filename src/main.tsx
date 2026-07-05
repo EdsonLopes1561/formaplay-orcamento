@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from './App.tsx';
 import { AuthWrapper } from './AuthWrapper';
 import { SolicitacaoPublica } from './pages/SolicitacaoPublica';
+import { AcompanhamentoPublico } from './pages/AcompanhamentoPublico';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
@@ -11,7 +12,8 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <Routes>
         <Route path="/solicitar-orcamento" element={<SolicitacaoPublica />} />
-        <Route path="/*" element={
+        <Route path="/acompanhar-pedido/:token" element={<AcompanhamentoPublico />} />
+        <Route path="*" element={
           <AuthWrapper>
             <App />
           </AuthWrapper>

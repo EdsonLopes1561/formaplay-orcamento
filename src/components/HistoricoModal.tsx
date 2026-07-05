@@ -110,11 +110,11 @@ export function HistoricoModal({
   const labelClassName = "block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-blue-950/80 backdrop-blur-md animate-fade-in transition-opacity">
-      <div className="bg-blue-950 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-blue-800/50 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden text-slate-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#020617]/80 backdrop-blur-md animate-fade-in transition-opacity">
+      <div className="bg-[#0f172a] rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-slate-800 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden text-slate-200">
         
         {/* Modal header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 border-b border-blue-900 bg-blue-950 shadow-sm relative z-10 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 border-b border-slate-800 bg-[#0f172a] shadow-sm relative z-10 gap-4">
           <div className="flex items-center gap-4">
             <div className="p-3.5 bg-gradient-to-br from-emerald-600 to-emerald-400 text-slate-950 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hidden sm:block">
               <FolderOpen size={28} strokeWidth={2.5} />
@@ -126,14 +126,14 @@ export function HistoricoModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2.5 rounded-xl bg-blue-900 hover:bg-slate-700 hover:text-white transition-all border border-blue-800 text-slate-400 self-end sm:self-auto"
+            className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-700 hover:text-white transition-all border border-slate-800 text-slate-400 self-end sm:self-auto"
           >
             <X size={20} strokeWidth={2.5} />
           </button>
         </div>
 
         {/* Search & Filters */}
-        <div className="p-5 bg-blue-950/80 border-b border-blue-900 space-y-4 relative z-10">
+        <div className="p-5 bg-slate-900/80 border-b border-slate-800 space-y-4 relative z-10">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
@@ -142,7 +142,7 @@ export function HistoricoModal({
                 placeholder="Buscar por número, cliente, documento, telefone, cidade..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 bg-blue-900/50 border border-blue-800 rounded-xl text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 focus:outline-none transition-all placeholder-slate-500 shadow-inner"
+                className="w-full pl-11 pr-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 focus:outline-none transition-all placeholder-slate-500 shadow-inner"
               />
             </div>
             {(searchTerm || filtroStatus !== 'Todos' || filtroProduto || dataInicial || dataFinal) && (
@@ -161,10 +161,10 @@ export function HistoricoModal({
               <select
                 value={filtroStatus}
                 onChange={(e) => setFiltroStatus(e.target.value)}
-                className={`${inputClassName} cursor-pointer`}
+                className={`${inputClassName} cursor-pointer !bg-slate-900 !border-slate-800`}
               >
                 {Object.entries(counts).map(([key, count]) => (
-                  <option key={key} value={key} className="bg-blue-900">{key} ({count})</option>
+                  <option key={key} value={key} className="bg-slate-900">{key} ({count})</option>
                 ))}
               </select>
             </div>
@@ -173,11 +173,11 @@ export function HistoricoModal({
               <select
                 value={filtroProduto}
                 onChange={(e) => setFiltroProduto(e.target.value)}
-                className={`${inputClassName} cursor-pointer`}
+                className={`${inputClassName} cursor-pointer !bg-slate-900 !border-slate-800`}
               >
-                <option value="" className="bg-blue-900">Todos os produtos</option>
+                <option value="" className="bg-slate-900">Todos os produtos</option>
                 {produtosUnicos.map(p => (
-                  <option key={p} value={p} className="bg-blue-900">{p}</option>
+                  <option key={p} value={p} className="bg-slate-900">{p}</option>
                 ))}
               </select>
             </div>
@@ -187,7 +187,7 @@ export function HistoricoModal({
                 type="date"
                 value={dataInicial}
                 onChange={(e) => setDataInicial(e.target.value)}
-                className={inputClassName}
+                className={`${inputClassName} !bg-slate-900 !border-slate-800`}
               />
             </div>
             <div>
@@ -196,22 +196,22 @@ export function HistoricoModal({
                 type="date"
                 value={dataFinal}
                 onChange={(e) => setDataFinal(e.target.value)}
-                className={inputClassName}
+                className={`${inputClassName} !bg-slate-900 !border-slate-800`}
               />
             </div>
           </div>
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-blue-950/30">
+        <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-[#0f172a]">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-10 h-10 border-4 border-blue-900 border-t-emerald-500 rounded-full animate-spin shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+              <div className="w-10 h-10 border-4 border-slate-800 border-t-emerald-500 rounded-full animate-spin shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
               <p className="mt-4 text-slate-400 font-bold uppercase tracking-widest text-sm">Carregando...</p>
             </div>
           ) : orcamentosFiltrados.length === 0 ? (
-            <div className="text-center py-20 text-slate-500 flex flex-col items-center bg-blue-900/20 rounded-3xl border border-dashed border-blue-800">
-              <div className="p-4 bg-blue-900/50 rounded-full mb-4 border border-blue-800">
+            <div className="text-center py-20 text-slate-500 flex flex-col items-center bg-slate-900/40 rounded-3xl border border-dashed border-slate-800">
+              <div className="p-4 bg-slate-900/80 rounded-full mb-4 border border-slate-800">
                 <FileText size={48} className="opacity-50 text-slate-400" />
               </div>
               <p className="text-xl font-black text-white">Nenhum orçamento encontrado</p>
@@ -222,7 +222,7 @@ export function HistoricoModal({
               {orcamentosFiltrados.map((orc) => (
                 <div
                   key={orc.id}
-                  className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-2xl bg-blue-900/40 border border-blue-800 shadow-lg hover:border-emerald-500/50 hover:bg-blue-900/60 hover:-translate-y-1 transition-all group relative overflow-hidden"
+                  className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-2xl bg-[#0f172a] border border-slate-800 shadow-lg hover:border-emerald-500/50 hover:bg-slate-900/80 hover:-translate-y-1 transition-all group relative overflow-hidden"
                 >
                   <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
                   
@@ -236,7 +236,7 @@ export function HistoricoModal({
                         <span className="font-black text-white text-lg group-hover:text-emerald-400 transition-colors">{orc.numero}</span>
                         {getStatusBadge(orc.status)}
                         {getPrioridadeBadge(orc.prioridade)}
-                        <span className="text-blue-800 font-bold hidden sm:inline">•</span>
+                        <span className="text-slate-700 font-bold hidden sm:inline">•</span>
                         <span className="text-xs font-bold text-slate-400">{orc.data_orcamento}</span>
                       </div>
                       
@@ -256,7 +256,7 @@ export function HistoricoModal({
                     </div>
                   </div>
 
-                  <div className="flex gap-2 flex-shrink-0 mt-3 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-blue-800/50 justify-end">
+                  <div className="flex gap-2 flex-shrink-0 mt-3 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-800/50 justify-end">
                     <button
                       onClick={() => { onCarregar(orc); onClose(); }}
                       className="px-5 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-500 transition-all active:scale-95 shadow-[0_0_10px_rgba(37,99,235,0.3)] border border-blue-500/50"
@@ -265,7 +265,7 @@ export function HistoricoModal({
                     </button>
                     <button
                       onClick={() => orc.id && onExcluir(orc.id)}
-                      className="p-2.5 bg-blue-900/80 text-rose-500 hover:text-rose-400 hover:bg-blue-800 rounded-xl transition-all active:scale-95 border border-blue-800"
+                      className="p-2.5 bg-slate-900 text-rose-500 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition-all active:scale-95 border border-slate-800"
                       title="Excluir"
                     >
                       <Trash2 size={18} strokeWidth={2.5} />
@@ -279,7 +279,7 @@ export function HistoricoModal({
 
         {/* Footer */}
         {orcamentos.length > 0 && (
-          <div className="p-5 border-t border-blue-900 bg-blue-950 flex flex-col sm:flex-row justify-between items-center gap-3 relative z-10">
+          <div className="p-5 border-t border-slate-800 bg-[#0f172a] flex flex-col sm:flex-row justify-between items-center gap-3 relative z-10">
             <button
               onClick={onLimpar}
               className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 text-rose-400 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 hover:text-rose-300 rounded-xl transition-all font-bold text-sm shadow-sm active:scale-95"
@@ -289,7 +289,7 @@ export function HistoricoModal({
             </button>
             <button
               onClick={onClose}
-              className="w-full sm:w-auto px-8 py-3 bg-blue-900 text-slate-300 border border-blue-800 rounded-xl hover:bg-slate-800 hover:text-white transition-all font-bold text-sm shadow-sm active:scale-95"
+              className="w-full sm:w-auto px-8 py-3 bg-slate-900 text-slate-300 border border-slate-800 rounded-xl hover:bg-slate-800 hover:text-white transition-all font-bold text-sm shadow-sm active:scale-95"
             >
               Fechar
             </button>

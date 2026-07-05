@@ -69,6 +69,16 @@ export interface Orcamento {
   prioridade?: string;
   created_at?: string;
   itens?: ItemOrcamentoSnapshot[];
+  
+  // Acompanhamento Público e Nota Fiscal
+  token_publico?: string | null;
+  status_acompanhamento?: string | null;
+  status_atualizado_em?: string | null;
+  observacao_publica_status?: string | null;
+  nf_emitida?: boolean | null;
+  nf_numero?: string | null;
+  nf_emitida_em?: string | null;
+  nf_pdf_url?: string | null;
 }
 
 export interface Produto {
