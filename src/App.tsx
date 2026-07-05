@@ -863,13 +863,22 @@ function App() {
                 </h2>
 
                 {form.cliente_nome && (
-                  <div className="mb-6 p-4 bg-blue-50 border border-slate-700 rounded-lg text-sm text-slate-200 shadow-inner">
-                    <p className="font-bold text-blue-400 mb-2 border-b border-blue-800/50 pb-1">Resumo do Cliente Vinculado (Snapshot)</p>
-                    <p><strong>Razão Social/Nome:</strong> {form.cliente_razao_social || form.cliente_nome}</p>
-                    {form.cliente_nome_fantasia && <p><strong>Fantasia:</strong> {form.cliente_nome_fantasia}</p>}
-                    {form.cliente_documento && <p><strong>Documento:</strong> {form.cliente_documento}</p>}
-                    {form.cliente_contato_responsavel && <p><strong>Contato:</strong> {form.cliente_contato_responsavel}</p>}
-                    {form.cliente_endereco_completo && <p className="mt-1"><strong>Endereço:</strong> {form.cliente_endereco_completo}</p>}
+                  <div className="mb-6 p-4 bg-slate-900/50 border border-emerald-500/20 rounded-xl text-sm text-slate-300 shadow-inner">
+                    <div className="mb-3 border-b border-emerald-500/20 pb-2">
+                      <p className="font-bold text-emerald-400 flex items-center gap-2">
+                        Cliente Vinculado ao Orçamento
+                      </p>
+                      <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                        Dados carregados do cadastro do cliente.
+                      </p>
+                    </div>
+                    <div className="space-y-1.5 mt-2">
+                      <p><strong className="text-slate-400">Razão Social/Nome:</strong> {form.cliente_razao_social || form.cliente_nome}</p>
+                      {form.cliente_nome_fantasia && <p><strong className="text-slate-400">Fantasia:</strong> {form.cliente_nome_fantasia}</p>}
+                      {form.cliente_documento && <p><strong className="text-slate-400">Documento:</strong> {form.cliente_documento}</p>}
+                      {form.cliente_contato_responsavel && <p><strong className="text-slate-400">Contato:</strong> {form.cliente_contato_responsavel}</p>}
+                      {form.cliente_endereco_completo && <p><strong className="text-slate-400">Endereço:</strong> {form.cliente_endereco_completo}</p>}
+                    </div>
                   </div>
                 )}
 

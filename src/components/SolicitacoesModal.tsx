@@ -228,15 +228,8 @@ export function SolicitacoesModal({
     }
   };
 
-  const enviarWhatsApp = (solicitacao: SolicitacaoOrcamento) => {
-    const texto = `Olá, tudo bem? Aqui é o Edson da FormaPlay. Recebemos sua solicitação de orçamento ${solicitacao.codigo} referente ao ${solicitacao.jogo_escolhido}. Vou analisar os dados e já retorno com a proposta.`;
-    const num = solicitacao.telefone.replace(/\D/g, '');
-    const url = `https://wa.me/55${num}?text=${encodeURIComponent(texto)}`;
-    window.open(url, '_blank');
-  };
-
-  const copiarMensagemResponderLead = async (sol: SolicitacaoOrcamento) => {
-    const nome = sol.nome_razao.split(' ')[0];
+  const gerarMensagemCompleta = (sol: SolicitacaoOrcamento) => {
+    const nome = sol.nome_razao ? sol.nome_razao.split(' ')[0] : 'Cliente';
 
     let itensTexto = '';
     if (sol.itens && Array.isArray(sol.itens) && sol.itens.length > 0) {
@@ -281,9 +274,9 @@ export function SolicitacoesModal({
       ? `R$ ${valFmtTotal}` 
       : `R$ ${valFmtTotal} + frete`;
 
-    const mensagem = `Olá, ${nome}! Tudo bem?
+    return `Olá, ${nome}! Tudo bem?
 
-Recebemos sua solicitação pelo site da FormaPlay.
+Aqui é o Edson da FormaPlay. Recebemos sua solicitação pelo site referente ao orçamento ${sol.codigo}.
 
 Itens solicitados:
 ${itensTexto}
@@ -297,6 +290,21 @@ Qualquer dúvida, fico à disposição.
 
 Edson Lopes
 FormaPlay — Jogos Educacionais`;
+  };
+
+  const enviarWhatsApp = (solicitacao: SolicitacaoOrcamento) => {
+    const num = solicitacao.telefone ? solicitacao.telefone.replace(/\D/g, '') : '';
+    if (!num || num.length < 10) {
+      alert('Não é possível abrir o WhatsApp porque o telefone não foi informado ou está inválido.');
+      return;
+    }
+    const texto = gerarMensagemCompleta(solicitacao);
+    const url = `https://wa.me/55${num}?text=${encodeURIComponent(texto)}`;
+    window.open(url, '_blank');
+  };
+
+  const copiarMensagemResponderLead = async (sol: SolicitacaoOrcamento) => {
+    const mensagem = gerarMensagemCompleta(sol);
 
     try {
       if (navigator.clipboard) {
@@ -500,18 +508,20 @@ FormaPlay — Jogos Educacionais`;
                       <button
                         onClick={() => enviarWhatsApp(sol)}
                         className="flex items-center gap-1.5 px-4 py-2 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/30 text-xs font-bold rounded-xl hover:bg-[#25D366] hover:text-white transition-all shadow-sm active:scale-95 cursor-pointer"
+                        title="Abrir WhatsApp com mensagem preenchida"
                       >
                         <MessageCircle size={16} strokeWidth={2.5} /> WhatsApp
                       </button>
                       <button
                         onClick={() => copiarMensagemResponderLead(sol)}
-                        className={`flex items-center gap-1.5 px-4 py-2 border text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer ${
+                        className={`flex items-center justify-center p-2 border text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer ${
                           copiedId === sol.id
                             ? 'bg-blue-600/20 text-blue-400 border-blue-500/30'
-                            : 'bg-indigo-600/10 text-indigo-400 border-indigo-500/30 hover:bg-indigo-600 hover:text-white'
+                            : 'bg-slate-700/50 text-slate-300 border-slate-600 hover:bg-slate-600 hover:text-white'
                         }`}
+                        title={copiedId === sol.id ? 'Mensagem copiada!' : 'Copiar mensagem'}
                       >
-                        <Copy size={16} strokeWidth={2.5} /> {copiedId === sol.id ? 'Copiado!' : 'Responder Lead'}
+                        {copiedId === sol.id ? <Check size={16} strokeWidth={2.5} /> : <Copy size={16} strokeWidth={2.5} />}
                       </button>
                       {sol.status === 'Pendente' && (
                         <button
