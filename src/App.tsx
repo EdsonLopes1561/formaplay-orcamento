@@ -147,6 +147,8 @@ function App() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showProdutos, setShowProdutos] = useState(false);
   const [showAssistenteNFe, setShowAssistenteNFe] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('Principal');
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoOrcamento[]>([]);
   const [showSolicitacoes, setShowSolicitacoes] = useState(false);
@@ -780,145 +782,129 @@ function App() {
               </div>
             </div>
           )}
-          {/* Action Bar */}
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={novoOrcamento}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-900 to-blue-800 text-white rounded-lg hover:from-blue-800 hover:to-blue-700 active:scale-95 transition-all font-bold text-sm shadow-md"
-            >
-              <Plus size={18} /> Novo Orçamento
-            </button>
-            <button
-              onClick={salvarOrcamento}
-              disabled={saving}
-              className={`flex items-center gap-2 px-5 py-2.5 text-white rounded-lg active:scale-95 transition-all font-bold text-sm shadow-md disabled:opacity-60 ${
-                currentId
-                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700'
-                  : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
-              }`}
-            >
-              {saving ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Save size={18} />
-              )}
-              {currentId ? 'Atualizar Orçamento' : 'Salvar'}
-            </button>
-            <button
-              onClick={imprimirOrcamento}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-700 to-blue-800 text-white rounded-lg hover:from-blue-800 hover:to-blue-900 active:scale-95 transition-all font-bold text-sm shadow-md"
-            >
-              <Printer size={18} /> PDF
-            </button>
-            <button
-              onClick={imprimirConfirmacaoCompra}
-              disabled={form.status !== 'Aprovado'}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg active:scale-95 transition-all font-bold text-sm shadow-md ${form.status === 'Aprovado' ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white hover:from-emerald-700 hover:to-emerald-800' : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'}`}
-              title={form.status !== 'Aprovado' ? 'Disponível após aprovação' : 'Gerar Confirmação de Compra'}
-            >
-              <FileText size={18} /> {form.status !== 'Aprovado' ? 'Disponível após aprovação' : 'Confirmação de Compra'}
-            </button>
-            {form.status === 'Aprovado' && (
-              <button
-                onClick={copiarMensagemConfirmacao}
-                className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border border-slate-700 text-emerald-400 hover:text-white hover:bg-emerald-700 rounded-lg active:scale-95 transition-all font-bold text-sm shadow-sm"
+          {/* Menu de Ações Unificado (Desktop Tabs / Mobile Dropdown) */}
+          <div className="relative z-40">
+            {/* Botão Mobile */}
+            <div className="sm:hidden mb-4">
+              <button 
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="w-full flex items-center justify-between px-5 py-4 bg-gradient-to-r from-blue-900 to-slate-900 rounded-xl shadow-lg border border-slate-700 text-white font-bold"
               >
-                <Copy size={18} /> Copiar mensagem confirmação
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">☰</span> 
+                  Ações do Pedido
+                </div>
+                <ChevronDown className={`transition-transform duration-300 ${showMobileMenu ? 'rotate-180' : ''}`} />
               </button>
-            )}
-            <button
-              onClick={enviarWhatsApp}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#25D366] text-white rounded-lg hover:bg-[#1ebe5d] active:scale-95 transition-all font-bold text-sm shadow-md"
-            >
-              <MessageCircle size={18} /> Enviar WhatsApp
-            </button>
-            <button
-              onClick={copiarMensagem}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg hover:bg-slate-200 active:scale-95 transition-all font-bold text-sm shadow-sm"
-            >
-              <Copy size={18} /> Copiar mensagem
-            </button>
-            <button
-              onClick={duplicarOrcamento}
-              disabled={!currentId}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg active:scale-95 transition-all font-bold text-sm shadow-sm border ${!currentId ? 'bg-slate-800 text-gray-400 border-slate-700 cursor-not-allowed' : 'bg-purple-900/30 text-purple-300 border-purple-500/50 hover:bg-purple-900/50'}`}
-              title="Duplicar este orçamento"
-            >
-              <CopyPlus size={18} /> Duplicar orçamento
-            </button>
-            <button
-              onClick={() => { setShowHistorico(true); carregarHistorico(); }}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/10 rounded-lg hover:bg-blue-50 active:scale-95 transition-all font-bold text-sm shadow-md"
-            >
-              <FolderOpen size={18} />
-              Histórico
-              {historico.length > 0 && (
-                <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-1">
-                  {historico.length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => { setShowDashboard(true); carregarHistorico(); }}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/10 rounded-lg hover:bg-blue-50 active:scale-95 transition-all font-bold text-sm shadow-md"
-            >
-              <BarChart2 size={18} />
-              Painel Comercial
-            </button>
-            <button
-              onClick={() => setShowTorreControle(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-800 text-white rounded-lg hover:bg-slate-700 hover:border-slate-700 active:scale-95 transition-all font-bold text-sm shadow-md"
-            >
-              <Activity size={18} className="text-orange-400" />
-              Torre de Controle
-            </button>
-            <button
-              onClick={() => setShowProdutos(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-indigo-400 hover:border-indigo-500/50 hover:bg-indigo-500/10 rounded-lg hover:bg-indigo-50 active:scale-95 transition-all font-bold text-sm shadow-md"
-            >
-              <Package size={18} />
-              Produtos
-            </button>
-            <button
-              onClick={() => setShowClientes(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/10 rounded-lg hover:bg-blue-50 active:scale-95 transition-all font-bold text-sm shadow-md"
-            >
-              <User size={18} />
-              Clientes
-            </button>
-            <button
-              onClick={() => { setShowSolicitacoes(true); carregarSolicitacoes(); }}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-indigo-400 hover:border-indigo-500/50 hover:bg-indigo-500/10 rounded-lg hover:bg-indigo-50 active:scale-95 transition-all font-bold text-sm shadow-md"
-            >
-              <Mailbox size={18} />
-              Solicitações
-              {solicitacoes.filter(s => s.status === 'Pendente').length > 0 && (
-                <span className="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-1 animate-pulse">
-                  {solicitacoes.filter(s => s.status === 'Pendente').length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setShowExportModal(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#217346] border-2 border-[#217346] text-white rounded-lg hover:bg-[#1e6b41] hover:border-[#1e6b41] active:scale-95 transition-all font-bold text-sm shadow-md whitespace-nowrap"
-            >
-              <Download size={18} />
-              Exportar Dados
-            </button>
-            {currentId && (
-              <button
-                onClick={() => excluirOrcamento(currentId)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-bold text-sm shadow-md"
+            </div>
+
+            {/* Container das Abas (Desktop: normal, Mobile: dropdown se showMobileMenu = true) */}
+            <div className={`${showMobileMenu ? 'block absolute top-full left-0 right-0 mt-2' : 'hidden'} sm:relative sm:block sm:mt-0 bg-[#0f172a] rounded-xl sm:rounded-2xl shadow-2xl sm:shadow-xl border border-slate-700 sm:border-slate-800 p-4 sm:p-5 overflow-hidden z-50`}>
+              {/* Cabeçalho das Abas */}
+              <div className="flex gap-2 border-b border-slate-800 pb-4 overflow-x-auto scrollbar-hide">
+                {['Principal', 'Comunicação', 'Gestão', 'Controle', 'Dados'].map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 rounded-lg font-bold text-sm transition-all whitespace-nowrap ${
+                      activeTab === tab
+                        ? 'bg-blue-900/40 text-blue-400 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.2)]'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+
+              {/* Conteúdo da Aba Ativa */}
+              <div 
+                className="pt-4 flex flex-col sm:flex-row flex-wrap gap-3 [&>button]:w-full sm:[&>button]:w-auto [&>button]:justify-center sm:[&>button]:justify-start"
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest('button')) {
+                    setShowMobileMenu(false);
+                  }
+                }}
               >
-                <Trash2 size={18} /> Excluir
-              </button>
-            )}
-            <button
-              onClick={limparHistorico}
-              className="flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-bold text-sm shadow-md"
-            >
-              <RotateCcw size={18} /> Limpar Histórico
-            </button>
+                {activeTab === 'Principal' && (
+                  <>
+                    <button onClick={novoOrcamento} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-900 to-blue-800 text-white rounded-lg hover:from-blue-800 hover:to-blue-700 active:scale-95 transition-all font-bold text-sm shadow-md">
+                      <Plus size={18} /> Novo Orçamento
+                    </button>
+                    <button onClick={salvarOrcamento} disabled={saving} className={`flex items-center gap-2 px-5 py-2.5 text-white rounded-lg active:scale-95 transition-all font-bold text-sm shadow-md disabled:opacity-60 ${currentId ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'}`}>
+                      {saving ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save size={18} />}
+                      {currentId ? 'Atualizar Orçamento' : 'Salvar'}
+                    </button>
+                    <button onClick={imprimirOrcamento} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-700 to-blue-800 text-white rounded-lg hover:from-blue-800 hover:to-blue-900 active:scale-95 transition-all font-bold text-sm shadow-md">
+                      <Printer size={18} /> PDF
+                    </button>
+                    <button onClick={imprimirConfirmacaoCompra} disabled={form.status !== 'Aprovado'} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg active:scale-95 transition-all font-bold text-sm shadow-md ${form.status === 'Aprovado' ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white hover:from-emerald-700 hover:to-emerald-800' : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'}`} title={form.status !== 'Aprovado' ? 'Disponível após aprovação' : 'Gerar Confirmação de Compra'}>
+                      <FileText size={18} /> {form.status !== 'Aprovado' ? 'Disponível após aprovação' : 'Confirmação de Compra'}
+                    </button>
+                    <button onClick={enviarWhatsApp} className="flex items-center gap-2 px-5 py-2.5 bg-[#25D366] text-white rounded-lg hover:bg-[#1ebe5d] active:scale-95 transition-all font-bold text-sm shadow-md">
+                      <MessageCircle size={18} /> Enviar WhatsApp
+                    </button>
+                    <button onClick={duplicarOrcamento} disabled={!currentId} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg active:scale-95 transition-all font-bold text-sm shadow-sm border ${!currentId ? 'bg-slate-800 text-gray-400 border-slate-700 cursor-not-allowed' : 'bg-purple-900/30 text-purple-300 border-purple-500/50 hover:bg-purple-900/50'}`} title="Duplicar este orçamento">
+                      <CopyPlus size={18} /> Duplicar orçamento
+                    </button>
+                  </>
+                )}
+
+                {activeTab === 'Comunicação' && (
+                  <>
+                    <button onClick={copiarMensagem} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg hover:bg-slate-200 active:scale-95 transition-all font-bold text-sm shadow-sm">
+                      <Copy size={18} /> Copiar mensagem
+                    </button>
+                    {form.status === 'Aprovado' && (
+                      <button onClick={copiarMensagemConfirmacao} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border border-slate-700 text-emerald-400 hover:text-white hover:bg-emerald-700 rounded-lg active:scale-95 transition-all font-bold text-sm shadow-sm">
+                        <Copy size={18} /> Copiar mensagem confirmação
+                      </button>
+                    )}
+                  </>
+                )}
+
+                {activeTab === 'Gestão' && (
+                  <>
+                    <button onClick={() => { setShowHistorico(true); carregarHistorico(); }} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/10 rounded-lg hover:bg-blue-50 active:scale-95 transition-all font-bold text-sm shadow-md">
+                      <FolderOpen size={18} /> Histórico
+                      {historico.length > 0 && <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-1">{historico.length}</span>}
+                    </button>
+                    <button onClick={() => { setShowSolicitacoes(true); carregarSolicitacoes(); }} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-indigo-400 hover:border-indigo-500/50 hover:bg-indigo-500/10 rounded-lg hover:bg-indigo-50 active:scale-95 transition-all font-bold text-sm shadow-md">
+                      <Mailbox size={18} /> Solicitações
+                      {solicitacoes.filter(s => s.status === 'Pendente').length > 0 && <span className="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-1 animate-pulse">{solicitacoes.filter(s => s.status === 'Pendente').length}</span>}
+                    </button>
+                    <button onClick={() => setShowClientes(true)} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/10 rounded-lg hover:bg-blue-50 active:scale-95 transition-all font-bold text-sm shadow-md">
+                      <User size={18} /> Clientes
+                    </button>
+                    <button onClick={() => setShowProdutos(true)} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-indigo-400 hover:border-indigo-500/50 hover:bg-indigo-500/10 rounded-lg hover:bg-indigo-50 active:scale-95 transition-all font-bold text-sm shadow-md">
+                      <Package size={18} /> Produtos
+                    </button>
+                  </>
+                )}
+
+                {activeTab === 'Controle' && (
+                  <>
+                    <button onClick={() => { setShowDashboard(true); carregarHistorico(); }} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/10 rounded-lg hover:bg-blue-50 active:scale-95 transition-all font-bold text-sm shadow-md">
+                      <BarChart2 size={18} /> Painel Comercial
+                    </button>
+                    <button onClick={() => setShowTorreControle(true)} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-800 text-white rounded-lg hover:bg-slate-700 hover:border-slate-700 active:scale-95 transition-all font-bold text-sm shadow-md">
+                      <Activity size={18} className="text-orange-400" /> Torre de Controle
+                    </button>
+                  </>
+                )}
+
+                {activeTab === 'Dados' && (
+                  <>
+                    <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 px-5 py-2.5 bg-[#217346] border-2 border-[#217346] text-white rounded-lg hover:bg-[#1e6b41] hover:border-[#1e6b41] active:scale-95 transition-all font-bold text-sm shadow-md whitespace-nowrap">
+                      <Download size={18} /> Exportar Dados
+                    </button>
+                    <button onClick={limparHistorico} className="flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-bold text-sm shadow-md">
+                      <RotateCcw size={18} /> Limpar Histórico
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
