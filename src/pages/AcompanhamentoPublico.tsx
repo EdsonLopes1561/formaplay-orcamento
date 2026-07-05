@@ -40,6 +40,13 @@ interface DadosAcompanhamento {
     data_status: string;
     observacao_publica?: string | null;
   }[];
+  transportadora?: string | null;
+  codigo_rastreio?: string | null;
+  link_rastreio?: string | null;
+  data_envio?: string | null;
+  previsao_entrega?: string | null;
+  data_entrega?: string | null;
+  observacao_entrega_publica?: string | null;
 }
 
 const ETAPAS_TIMELINE = [
@@ -291,36 +298,76 @@ export function AcompanhamentoPublico() {
           </div>
         )}
 
-        {/* Placeholder futuro para Rastreamento Logístico (caso os campos sejam adicionados no DB depois) */}
-        {((dados as any).transportadora || (dados as any).rastreio_codigo) && (
-          <div className="bg-emerald-950/20 border border-emerald-900/50 rounded-3xl p-6 sm:p-8 shadow-xl">
+        {/* Entrega e Rastreamento */}
+        {(dados.transportadora || dados.codigo_rastreio || dados.link_rastreio || dados.data_envio || dados.previsao_entrega || dados.data_entrega || dados.observacao_entrega_publica) && (
+          <div className="bg-indigo-950/20 border border-indigo-900/50 rounded-3xl p-6 sm:p-8 shadow-xl">
             <h2 className="text-xl font-black text-white flex items-center gap-2 mb-6">
-              <Truck className="text-emerald-400" />
-              Detalhes de Envio
+              <Truck className="text-indigo-400" />
+              Entrega e Rastreamento
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {(dados as any).transportadora && (
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {dados.transportadora && (
                 <div>
                   <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Transportadora</p>
-                  <p className="font-semibold text-slate-200">{(dados as any).transportadora}</p>
+                  <p className="font-semibold text-slate-200">{dados.transportadora}</p>
                 </div>
               )}
-              {(dados as any).rastreio_codigo && (
+              
+              {dados.codigo_rastreio && (
                 <div>
                   <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Código de Rastreio</p>
-                  <p className="font-bold text-white tracking-wide">{(dados as any).rastreio_codigo}</p>
+                  <p className="font-bold text-white tracking-wide">{dados.codigo_rastreio}</p>
                 </div>
               )}
-              {(dados as any).rastreio_url && (
-                <div className="sm:text-right flex flex-col justify-center">
-                  <a 
-                    href={(dados as any).rastreio_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow-lg transition-all active:scale-95 sm:ml-auto w-fit"
-                  >
-                    Rastrear Pedido <ExternalLink size={16} />
-                  </a>
+              
+              {dados.link_rastreio && (
+                <div className="sm:text-right md:col-start-3 flex flex-col justify-center">
+                  {(dados.link_rastreio.startsWith('http://') || dados.link_rastreio.startsWith('https://')) ? (
+                    <a 
+                      href={dados.link_rastreio}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg transition-all active:scale-95 sm:ml-auto w-fit"
+                    >
+                      Acompanhar entrega <ExternalLink size={16} />
+                    </a>
+                  ) : (
+                    <button 
+                      disabled
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 text-slate-500 font-semibold rounded-xl border border-slate-700/50 cursor-not-allowed sm:ml-auto w-fit"
+                      title="Link indisponível"
+                    >
+                      Acompanhar entrega <ExternalLink size={16} />
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {dados.data_envio && (
+                <div>
+                  <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Data de Envio</p>
+                  <p className="font-semibold text-slate-300">
+                    {new Date(dados.data_envio + 'T12:00:00Z').toLocaleDateString('pt-BR')}
+                  </p>
+                </div>
+              )}
+
+              {dados.previsao_entrega && (
+                <div>
+                  <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Previsão de Entrega</p>
+                  <p className="font-semibold text-amber-400">
+                    {new Date(dados.previsao_entrega + 'T12:00:00Z').toLocaleDateString('pt-BR')}
+                  </p>
+                </div>
+              )}
+
+              {dados.observacao_entrega_publica && (
+                <div className="sm:col-span-2 md:col-span-3 mt-2 bg-indigo-950/40 p-4 rounded-xl border border-indigo-900/30">
+                  <p className="text-xs text-indigo-400 font-bold uppercase tracking-wider mb-1 flex items-center gap-2">
+                    <MessageCircle size={14} /> Observação
+                  </p>
+                  <p className="text-sm text-indigo-100/90 font-medium">{dados.observacao_entrega_publica}</p>
                 </div>
               )}
             </div>
@@ -358,6 +405,11 @@ export function AcompanhamentoPublico() {
                 // Busca data real no histórico ou aplica fallbacks de segurança para pedidos antigos
                 const hist = dados.historico_status?.find(h => h.status === etapa);
                 let dataEtapa: string | undefined = hist?.data_status;
+                
+                // Aplicar regra de prioridade de rastreamento (Fase 4)
+                if (etapa === "Pedido em fase de entrega" && dados.data_envio) {
+                  dataEtapa = dados.data_envio + 'T12:00:00Z';
+                }
                 
                 if (!dataEtapa) {
                   if (isActive && !isCancelado) {

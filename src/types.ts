@@ -79,6 +79,15 @@ export interface Orcamento {
   nf_numero?: string | null;
   nf_emitida_em?: string | null;
   nf_pdf_url?: string | null;
+  
+  // Entrega e Rastreamento
+  transportadora?: string | null;
+  codigo_rastreio?: string | null;
+  link_rastreio?: string | null;
+  data_envio?: string | null;
+  previsao_entrega?: string | null;
+  data_entrega?: string | null;
+  observacao_entrega_publica?: string | null;
 }
 
 export interface Produto {

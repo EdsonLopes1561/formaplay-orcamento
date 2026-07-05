@@ -1293,6 +1293,50 @@ function App() {
                   </div>
                 </div>
               </div>
+              
+              {/* Entrega e Rastreamento */}
+              <div className="bg-[#0f172a] rounded-xl shadow-xl border border-slate-800 border-l-4 border-l-indigo-500 p-6 relative overflow-hidden mt-5">
+                <h2 className="font-black text-slate-100 mb-2 flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 text-white text-xs font-bold flex items-center justify-center">6</span>
+                  Entrega e Rastreamento
+                </h2>
+                <p className="text-xs text-indigo-400 font-semibold mb-5 bg-indigo-950/30 p-2 rounded border border-indigo-900/50">
+                  Estes dados também ficarão visíveis para o cliente no acompanhamento.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="form-label">Transportadora</label>
+                    <input name="transportadora" value={form.transportadora || ''} onChange={handleChange}
+                      className="form-input" placeholder="Ex: Correios, Jadlog..." />
+                  </div>
+                  <div>
+                    <label className="form-label">Código de Rastreio</label>
+                    <input name="codigo_rastreio" value={form.codigo_rastreio || ''} onChange={handleChange}
+                      className="form-input" placeholder="Ex: BR123456789" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="form-label">Link de Rastreamento</label>
+                    <input name="link_rastreio" type="url" value={form.link_rastreio || ''} onChange={handleChange}
+                      className="form-input" placeholder="Ex: https://..." />
+                  </div>
+                  <div>
+                    <label className="form-label">Data de Envio</label>
+                    <input name="data_envio" type="date" value={form.data_envio || ''} onChange={handleChange}
+                      className="form-input" />
+                  </div>
+                  <div>
+                    <label className="form-label">Previsão de Entrega</label>
+                    <input name="previsao_entrega" type="date" value={form.previsao_entrega || ''} onChange={handleChange}
+                      className="form-input" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="form-label">Observação da Entrega</label>
+                    <textarea name="observacao_entrega_publica" value={form.observacao_entrega_publica || ''} onChange={handleChange}
+                      rows={2} className="form-input resize-none"
+                      placeholder="Informações adicionais para o cliente sobre o envio..." />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Right column */}
