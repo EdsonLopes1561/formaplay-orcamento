@@ -656,6 +656,47 @@ function App() {
     }
   };
 
+  const copiarAcompanhamento = async () => {
+    if (!currentId) {
+      showToast('error', 'Salve o orçamento antes de gerar o link de acompanhamento.');
+      return;
+    }
+
+    let token = form.token_publico;
+    if (!token) {
+      token = `fp_${crypto.randomUUID()}`;
+      const payload = { ...form, token_publico: token };
+      setForm(calcularValores(payload));
+      
+      // Atualiza direto no banco
+      await supabase
+        .from('orcamentos')
+        .update({ token_publico: token })
+        .eq('id', currentId);
+    }
+    
+    if (token) {
+      const baseUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'https://formaplay-orcamento.vercel.app'
+        : window.location.origin;
+      const link = `${baseUrl}/acompanhar-pedido/${token}`;
+      
+      const tituloPedido = form.numero ? `Pedido ${form.numero}` : 'Pedido FormaPlay';
+      const mensagem = `${tituloPedido} — acompanhamento:\n${link}`;
+      
+      try {
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(mensagem);
+          showToast('success', 'Mensagem de acompanhamento copiada com sucesso.');
+        } else {
+          throw new Error('Clipboard API not available');
+        }
+      } catch (error) {
+        showToast('error', 'Não foi possível copiar a mensagem. Copie manualmente.');
+      }
+    }
+  };
+
   const duplicarOrcamento = async () => {
     if (!currentId) return; // Only makes sense to duplicate an existing saved one (or we can duplicate unsaved, doesn't matter, but user says "duplicar um orcamento existente")
     
@@ -860,6 +901,9 @@ function App() {
                         <Copy size={18} /> Copiar mensagem confirmação
                       </button>
                     )}
+                    <button onClick={copiarAcompanhamento} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border border-slate-700 text-indigo-400 hover:text-white hover:bg-indigo-700 rounded-lg active:scale-95 transition-all font-bold text-sm shadow-sm">
+                      <LinkIcon size={18} /> Copiar acompanhamento
+                    </button>
                   </>
                 )}
 
