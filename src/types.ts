@@ -88,6 +88,12 @@ export interface Orcamento {
   previsao_entrega?: string | null;
   data_entrega?: string | null;
   observacao_entrega_publica?: string | null;
+  
+  // Ordem de Produção
+  status_producao?: string | null;
+  producao_checklist?: string[] | null;
+  observacao_producao?: string | null;
+  producao_atualizado_em?: string | null;
 }
 
 export interface Produto {

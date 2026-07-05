@@ -17,6 +17,7 @@ import { ExportModal } from './components/ExportModal';
 import { ProdutosModal } from './components/ProdutosModal';
 import { TorreControleModal } from './components/TorreControleModal';
 import { AssistenteNFeModal } from './components/AssistenteNFeModal';
+import { ProducaoModal } from './components/ProducaoModal';
 
 type Toast = { type: 'success' | 'error'; message: string };
 
@@ -147,6 +148,7 @@ function App() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showProdutos, setShowProdutos] = useState(false);
   const [showAssistenteNFe, setShowAssistenteNFe] = useState(false);
+  const [showProducao, setShowProducao] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('Principal');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
@@ -934,6 +936,15 @@ function App() {
                     <button onClick={() => setShowTorreControle(true)} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-800 text-white rounded-lg hover:bg-slate-700 hover:border-slate-700 active:scale-95 transition-all font-bold text-sm shadow-md">
                       <Activity size={18} className="text-orange-400" /> Torre de Controle
                     </button>
+                    <button onClick={() => {
+                      if (!currentId) {
+                        showToast('error', 'Salve o orçamento antes de abrir a ordem de produção.');
+                      } else {
+                        setShowProducao(true);
+                      }
+                    }} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-500/10 rounded-lg hover:bg-emerald-50 active:scale-95 transition-all font-bold text-sm shadow-md">
+                      <Package size={18} /> Ordem de Produção
+                    </button>
                   </>
                 )}
 
@@ -1708,6 +1719,18 @@ function App() {
           onClose={() => setShowAssistenteNFe(false)}
         />
       )}
+
+      {/* Ordem de Produção */}
+      <ProducaoModal
+        isOpen={showProducao}
+        onClose={() => setShowProducao(false)}
+        orcamento={form as Orcamento}
+        orcamentoId={currentId}
+        onSaved={(updated) => {
+          setForm(prev => ({ ...prev, ...updated }));
+          showToast('success', 'Andamento da produção salvo com sucesso.');
+        }}
+      />
     </>
   );
 }
