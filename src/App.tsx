@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Save, Printer, MessageCircle, FolderOpen, Copy, CopyPlus,
   Trash2, RotateCcw, ChevronDown, CheckCircle, AlertCircle,
-  FileText, Users, Tag, Sparkles, Check, Package, LogOut, User, BarChart2, Mailbox, Download, Activity, Link as LinkIcon, ExternalLink
+  FileText, Users, Tag, Sparkles, Check, Package, LogOut, User, BarChart2, Mailbox, Download, Activity, Link as LinkIcon, ExternalLink, Layers
 } from 'lucide-react';
 import { supabase } from './supabase.ts';
 import { Orcamento, Cliente, EMPRESA, PRODUTOS, emptyOrcamento, SolicitacaoOrcamento } from './types';
@@ -18,6 +18,7 @@ import { ProdutosModal } from './components/ProdutosModal';
 import { TorreControleModal } from './components/TorreControleModal';
 import { AssistenteNFeModal } from './components/AssistenteNFeModal';
 import { ProducaoModal } from './components/ProducaoModal';
+import { PainelProducaoModal } from './components/PainelProducaoModal';
 
 type Toast = { type: 'success' | 'error'; message: string };
 
@@ -149,6 +150,7 @@ function App() {
   const [showProdutos, setShowProdutos] = useState(false);
   const [showAssistenteNFe, setShowAssistenteNFe] = useState(false);
   const [showProducao, setShowProducao] = useState(false);
+  const [showPainelProducao, setShowPainelProducao] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('Principal');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
@@ -944,6 +946,9 @@ function App() {
                       }
                     }} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-500/10 rounded-lg hover:bg-emerald-50 active:scale-95 transition-all font-bold text-sm shadow-md">
                       <Package size={18} /> Ordem de Produção
+                    </button>
+                    <button onClick={() => setShowPainelProducao(true)} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-500/10 rounded-lg hover:bg-emerald-50 active:scale-95 transition-all font-bold text-sm shadow-md">
+                      <Layers size={18} /> Painel de Produção
                     </button>
                   </>
                 )}
@@ -1777,6 +1782,17 @@ function App() {
         onSaved={(updated) => {
           setForm(prev => ({ ...prev, ...updated }));
           showToast('success', 'Andamento da produção salvo com sucesso.');
+        }}
+      />
+
+      {/* Painel de Produção (Fila) */}
+      <PainelProducaoModal
+        isOpen={showPainelProducao}
+        onClose={() => setShowPainelProducao(false)}
+        onAbrirOrdem={(orc) => {
+          carregarOrcamento(orc);
+          setShowPainelProducao(false);
+          setShowProducao(true);
         }}
       />
     </>
