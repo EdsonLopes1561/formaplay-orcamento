@@ -46,8 +46,7 @@ const ETAPAS_TIMELINE = [
   "Pedido em produção",
   "Nota fiscal emitida",
   "Pedido em fase de entrega",
-  "Pedido entregue",
-  "Cancelado"
+  "Pedido entregue"
 ];
 
 export function AcompanhamentoPublico() {
@@ -114,8 +113,9 @@ export function AcompanhamentoPublico() {
   }
 
   const isCancelado = dados.status_acompanhamento === 'Cancelado';
-  let currentIndex = ETAPAS_TIMELINE.indexOf(dados.status_acompanhamento || "Solicitação recebida");
-  const nfIndex = ETAPAS_TIMELINE.indexOf("Nota fiscal emitida");
+  const etapasAtuais = isCancelado ? [...ETAPAS_TIMELINE, "Cancelado"] : ETAPAS_TIMELINE;
+  let currentIndex = etapasAtuais.indexOf(dados.status_acompanhamento || "Solicitação recebida");
+  const nfIndex = etapasAtuais.indexOf("Nota fiscal emitida");
 
   const getStatusColor = (index: number) => {
     if (isCancelado) {
@@ -185,6 +185,19 @@ export function AcompanhamentoPublico() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+
+        {isCancelado && (
+          <div className="bg-rose-950/20 border border-rose-900/50 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+            <h2 className="text-xl font-black text-rose-500 mb-2 flex items-center gap-2">
+              <XCircle size={24} />
+              Pedido Cancelado
+            </h2>
+            <p className="text-rose-200/80 font-medium">
+              Este pedido foi cancelado e não terá novas atualizações de entrega ou produção.
+            </p>
+          </div>
+        )}
         
         <div className="bg-blue-950/40 rounded-3xl border border-blue-900/50 p-6 shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
@@ -320,7 +333,7 @@ export function AcompanhamentoPublico() {
 
           <div className="relative px-2 sm:px-6">
             <div className="space-y-0 relative">
-              {ETAPAS_TIMELINE.map((etapa, idx) => {
+              {etapasAtuais.map((etapa, idx) => {
                 if (isCancelado && idx > currentIndex) return null;
 
                 const styling = getStatusColor(idx);
@@ -328,7 +341,7 @@ export function AcompanhamentoPublico() {
                 const isPast = (idx < currentIndex && !isCancelado) || (idx === nfIndex && dados.nf_emitida && !isCancelado);
                 const isNextActive = (idx + 1 === currentIndex && !isCancelado) || (isPast && idx + 1 <= currentIndex);
                 
-                const isLastVisible = isCancelado ? idx === currentIndex : idx === ETAPAS_TIMELINE.length - 1;
+                const isLastVisible = isCancelado ? idx === currentIndex : idx === etapasAtuais.length - 1;
 
                 return (
                   <div key={idx} className={`flex items-start gap-4 sm:gap-8 group transition-all duration-500 relative pb-8 sm:pb-12 ${isPast ? 'opacity-100' : 'opacity-80'}`}>
