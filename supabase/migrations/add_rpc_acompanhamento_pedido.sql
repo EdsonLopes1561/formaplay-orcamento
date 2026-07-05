@@ -1,6 +1,8 @@
 -- Migration: Adicionar função segura para consultar acompanhamento público
 -- Arquivo: supabase/migrations/add_rpc_acompanhamento_pedido.sql
 
+DROP FUNCTION IF EXISTS public.buscar_acompanhamento_pedido(text);
+
 CREATE OR REPLACE FUNCTION buscar_acompanhamento_pedido(p_token text)
 RETURNS TABLE (
   numero text,
@@ -13,7 +15,8 @@ RETURNS TABLE (
   nf_emitida boolean,
   nf_numero text,
   nf_emitida_em date,
-  nf_pdf_url text
+  nf_pdf_url text,
+  historico_status jsonb
 ) 
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -40,7 +43,21 @@ BEGIN
     COALESCE(o.nf_emitida, false)::boolean,
     o.nf_numero::text,
     o.nf_emitida_em::date,
-    o.nf_pdf_url::text
+    o.nf_pdf_url::text,
+    COALESCE(
+      (
+        SELECT jsonb_agg(
+          jsonb_build_object(
+            'status', h.status,
+            'data_status', h.data_status,
+            'observacao_publica', h.observacao_publica
+          ) ORDER BY h.data_status ASC
+        )
+        FROM public.orcamento_status_historico h
+        WHERE h.orcamento_id = o.id
+      ),
+      '[]'::jsonb
+    ) AS historico_status
   FROM orcamentos o
   WHERE o.token_publico = p_token
   LIMIT 1;

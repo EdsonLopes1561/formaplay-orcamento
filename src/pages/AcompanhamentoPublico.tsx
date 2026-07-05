@@ -35,6 +35,11 @@ interface DadosAcompanhamento {
   nf_numero: string;
   nf_emitida_em: string;
   nf_pdf_url: string;
+  historico_status?: {
+    status: string;
+    data_status: string;
+    observacao_publica?: string | null;
+  }[];
 }
 
 const ETAPAS_TIMELINE = [
@@ -343,6 +348,27 @@ export function AcompanhamentoPublico() {
                 
                 const isLastVisible = isCancelado ? idx === currentIndex : idx === etapasAtuais.length - 1;
 
+                // Busca data real no histórico ou aplica fallbacks de segurança para pedidos antigos
+                const hist = dados.historico_status?.find(h => h.status === etapa);
+                let dataEtapa: string | undefined = hist?.data_status;
+                
+                if (!dataEtapa) {
+                  if (isActive && !isCancelado) {
+                    dataEtapa = dados.status_atualizado_em;
+                  } else if (etapa === "Nota fiscal emitida" && dados.nf_emitida && dados.nf_emitida_em) {
+                    dataEtapa = dados.nf_emitida_em + 'T12:00:00Z'; // Fallback para data
+                  }
+                }
+
+                let dataFormatada = null;
+                if (dataEtapa) {
+                  const d = new Date(dataEtapa);
+                  dataFormatada = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                  if (dataEtapa.includes('T') && !dataEtapa.endsWith('T12:00:00Z')) {
+                    dataFormatada += ` às ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+                  }
+                }
+
                 return (
                   <div key={idx} className={`flex items-start gap-4 sm:gap-8 group transition-all duration-500 relative pb-8 sm:pb-12 ${isPast ? 'opacity-100' : 'opacity-80'}`}>
                     
@@ -367,6 +393,22 @@ export function AcompanhamentoPublico() {
                       }`}>
                         {etapa}
                       </h4>
+                      
+                      {/* Exibição da Data da Etapa */}
+                      {dataFormatada ? (
+                        <p className={`text-[11px] sm:text-xs font-semibold mt-0.5 sm:mt-1 ${
+                          isActive && !isCancelado ? 'text-blue-200/90' : (isPast ? 'text-emerald-400/80' : 'text-slate-400')
+                        }`}>
+                          {dataFormatada}
+                        </p>
+                      ) : (
+                        (!isPast && !isActive && !isCancelado) && (
+                          <p className="text-[11px] sm:text-xs font-medium mt-0.5 sm:mt-1 text-slate-600/60">
+                            Aguardando
+                          </p>
+                        )
+                      )}
+
                       {isActive && !isCancelado && (
                         <p className="text-xs sm:text-sm text-blue-200/90 mt-1 sm:mt-1.5 font-medium leading-relaxed max-w-md">
                           Este é o status atual do seu pedido.<br className="hidden sm:block" /> Acompanhe as próximas atualizações por aqui.
