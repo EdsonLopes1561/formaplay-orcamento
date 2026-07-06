@@ -1,12 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { X, TrendingUp, BarChart2, DollarSign, Target, Activity, Users, MapPin, AlertTriangle, Calendar, Layers, CheckCircle, Package, FileText, MessageCircle, ArrowLeft, Flame, Sun, Snowflake, Filter } from 'lucide-react';
 import { supabase } from '../supabase';
+import { FormaPlayBrand } from './FormaPlayBrand';
 
 interface TorreControleModalProps {
   onClose: () => void;
+  onOpenDashboard?: () => void;
 }
 
-export function TorreControleModal({ onClose }: TorreControleModalProps) {
+export function TorreControleModal({ onClose, onOpenDashboard }: TorreControleModalProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
@@ -384,7 +386,10 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
               <Activity size={28} strokeWidth={2.5} />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-white tracking-tight">Torre de Controle <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-200">FormaPlay</span></h2>
+              <h2 className="text-3xl font-black text-white tracking-tight flex flex-col">
+                <span>Torre de Controle</span>
+                <span className="text-4xl -mt-1"><FormaPlayBrand /></span>
+              </h2>
               <p className="text-sm text-slate-400 font-medium mt-0.5">Inteligência comercial e monitoramento estratégico.</p>
             </div>
           </div>
@@ -424,6 +429,12 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                   </select>
                 </div>
               </div>
+            )}
+            {onOpenDashboard && (
+              <button onClick={onOpenDashboard} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 transition-all border border-slate-800 text-blue-400 font-bold text-sm shadow-sm hover:border-blue-500/50">
+                <BarChart2 size={18} strokeWidth={2.5} />
+                <span className="hidden sm:inline">Dashboard Comercial</span>
+              </button>
             )}
 
             <button onClick={onClose} className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-700 hover:text-white transition-all border border-slate-800 text-slate-400">

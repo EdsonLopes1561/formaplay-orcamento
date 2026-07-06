@@ -1736,12 +1736,16 @@ function App() {
           orcamentos={historico}
           onClose={() => setShowDashboard(false)}
           onOpenExport={() => setShowExportModal(true)}
+          onOpenTorreControle={() => { setShowDashboard(false); setShowTorreControle(true); }}
         />
       )}
 
       {/* Torre de Controle Modal */}
       {showTorreControle && (
-        <TorreControleModal onClose={() => setShowTorreControle(false)} />
+        <TorreControleModal 
+          onClose={() => setShowTorreControle(false)} 
+          onOpenDashboard={() => { setShowTorreControle(false); setShowDashboard(true); carregarHistorico(); }}
+        />
       )}
 
       {/* Export Modal */}

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { 
   X, BarChart2, DollarSign, CheckCircle, 
   Clock, Send, XCircle, TrendingUp, AlertTriangle, Download,
-  Calendar, Filter, CheckSquare, MessageCircle, Layers
+  Calendar, Filter, CheckSquare, MessageCircle, Layers, Activity
 } from 'lucide-react';
 import { Orcamento } from '../types';
 
@@ -11,7 +11,7 @@ interface DashboardModalProps {
   onClose: () => void;
 }
 
-export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardModalProps & { onOpenExport?: () => void }) {
+export function DashboardModal({ orcamentos, onClose, onOpenExport, onOpenTorreControle }: DashboardModalProps & { onOpenExport?: () => void; onOpenTorreControle?: () => void }) {
   const [filtroAgenda, setFiltroAgenda] = useState('Todos');
   const [filtroPeriodo, setFiltroPeriodo] = useState('Todos');
   const [dataInicial, setDataInicial] = useState('');
@@ -203,6 +203,15 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
             </div>
           </div>
           <div className="flex items-center gap-3 self-end sm:self-auto">
+            {onOpenTorreControle && (
+              <button
+                onClick={onOpenTorreControle}
+                className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-blue-400 rounded-xl hover:bg-slate-800 transition-all font-bold text-sm shadow-sm border border-slate-800 hover:border-slate-700 active:scale-95"
+              >
+                <Activity size={18} strokeWidth={2.5} />
+                <span className="hidden sm:inline">Torre de Controle</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 onClose();
@@ -211,7 +220,7 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
               className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-500 active:scale-95 transition-all font-bold text-sm shadow-[0_0_15px_rgba(16,185,129,0.3)] border border-emerald-500"
             >
               <Download size={18} strokeWidth={2.5} />
-              Central de Exportação
+              <span className="hidden sm:inline">Central de Exportação</span>
             </button>
             <button
               onClick={onClose}
