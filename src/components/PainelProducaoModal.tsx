@@ -12,7 +12,7 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
   const [loading, setLoading] = useState(false);
   const [fetchingCompleto, setFetchingCompleto] = useState<string | null>(null);
   const [pedidos, setPedidos] = useState<any[]>([]);
-  const [filtroStatus, setFiltroStatus] = useState<string>('Todos');
+  const [filtroStatus, setFiltroStatus] = useState<string>('Produção ativa');
 
   const carregarPedidos = async () => {
     setLoading(true);
@@ -43,7 +43,18 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
   const pedidosOrdenados = useMemo(() => {
     let filtrados = pedidos;
     if (filtroStatus !== 'Todos') {
-      if (filtroStatus === 'Não iniciada') {
+      if (filtroStatus === 'Produção ativa') {
+        filtrados = pedidos.filter(p => {
+          const checklist = Array.isArray(p.producao_checklist) ? p.producao_checklist : [];
+          return (
+            p.status === 'Aprovado' ||
+            p.status_producao === 'Em produção' ||
+            p.status_producao === 'Em conferência' ||
+            p.status_producao === 'Pronto para envio' ||
+            checklist.length > 0
+          );
+        });
+      } else if (filtroStatus === 'Não iniciada') {
         filtrados = pedidos.filter(p => !p.status_producao || p.status_producao === 'Não iniciada');
       } else {
         filtrados = pedidos.filter(p => p.status_producao === filtroStatus);
@@ -121,7 +132,7 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
 
         {/* Filters */}
         <div className="px-6 py-4 bg-slate-900/30 border-b border-slate-800 flex flex-wrap gap-2">
-          {['Todos', 'Não iniciada', 'Em produção', 'Em conferência', 'Pronto para envio'].map((status) => (
+          {['Produção ativa', 'Não iniciada', 'Em produção', 'Em conferência', 'Pronto para envio', 'Todos'].map((status) => (
             <button
               key={status}
               onClick={() => setFiltroStatus(status)}
