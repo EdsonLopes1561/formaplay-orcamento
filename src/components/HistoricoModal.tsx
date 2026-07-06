@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { X, FileText, Trash2, AlertTriangle, Search, FolderOpen } from 'lucide-react';
+import { X, FileText, Trash2, AlertTriangle, Search, FolderOpen, Clock } from 'lucide-react';
 import { Orcamento } from '../types';
+import { EditorLinhaTempoModal } from './EditorLinhaTempoModal';
 
 interface HistoricoModalProps {
   orcamentos: Orcamento[];
@@ -24,6 +25,7 @@ export function HistoricoModal({
 
   const [filtroStatus, setFiltroStatus] = useState<string>('Todos');
   const [searchTerm, setSearchTerm] = useState('');
+  const [orcamentoEdicaoLinhaTempo, setOrcamentoEdicaoLinhaTempo] = useState<Orcamento | null>(null);
   const [filtroProduto, setFiltroProduto] = useState<string>('');
   const [dataInicial, setDataInicial] = useState<string>('');
   const [dataFinal, setDataFinal] = useState<string>('');
@@ -258,6 +260,13 @@ export function HistoricoModal({
 
                   <div className="flex gap-2 flex-shrink-0 mt-3 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-800/50 justify-end">
                     <button
+                      onClick={() => setOrcamentoEdicaoLinhaTempo(orc)}
+                      className="px-4 py-2.5 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-700 transition-all active:scale-95 border border-slate-700 flex items-center gap-1.5"
+                      title="Editar Linha do Tempo"
+                    >
+                      <Clock size={16} /> <span className="hidden sm:inline">Linha do Tempo</span>
+                    </button>
+                    <button
                       onClick={() => { onCarregar(orc); onClose(); }}
                       className="px-5 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-500 transition-all active:scale-95 shadow-[0_0_10px_rgba(37,99,235,0.3)] border border-blue-500/50"
                     >
@@ -296,6 +305,12 @@ export function HistoricoModal({
           </div>
         )}
       </div>
+
+      <EditorLinhaTempoModal 
+        isOpen={!!orcamentoEdicaoLinhaTempo} 
+        onClose={() => setOrcamentoEdicaoLinhaTempo(null)} 
+        orcamento={orcamentoEdicaoLinhaTempo} 
+      />
     </div>
   );
 }
