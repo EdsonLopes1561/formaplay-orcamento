@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { FormaPlayBrand } from '../components/FormaPlayBrand';
 import { 
@@ -19,7 +19,6 @@ import {
   BadgeCheck,
   Receipt,
   PackageCheck,
-  MapPin,
   ExternalLink
 } from 'lucide-react';
 

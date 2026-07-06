@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { X, RefreshCw, Package, ExternalLink, Calendar, User, AlignLeft, Layers } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { X, RefreshCw, Package, ExternalLink, User, Layers } from 'lucide-react';
 import { supabase } from '../supabase.ts';
 
 interface PainelProducaoModalProps {
