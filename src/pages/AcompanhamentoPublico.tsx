@@ -258,7 +258,7 @@ export function AcompanhamentoPublico() {
 
             {dados.nf_emitida && dados.nf_numero && (
               <div className="bg-blue-950/40 border border-blue-900/50 rounded-2xl p-5 shadow-lg flex flex-col justify-center">
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
                     <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-1 flex items-center gap-2">
                       <FileText size={14} />
@@ -269,26 +269,20 @@ export function AcompanhamentoPublico() {
                       <p className="text-xs text-slate-400 mt-0.5">Emitida em {new Date(dados.nf_emitida_em + 'T12:00:00Z').toLocaleDateString('pt-BR')}</p>
                     )}
                   </div>
-                  {dados.nf_pdf_url && (
-                    dados.nf_pdf_url.startsWith('http') ? (
-                      <a 
-                        href={dados.nf_pdf_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg transition-all active:scale-95"
-                        title="Baixar Nota Fiscal"
-                      >
-                        <Download size={20} />
-                      </a>
-                    ) : (
-                      <button 
-                        disabled
-                        className="p-3 bg-slate-800 text-slate-500 rounded-xl cursor-not-allowed border border-slate-700/50"
-                        title="Link da Nota Fiscal indisponível no momento"
-                      >
-                        <Download size={20} />
-                      </button>
-                    )
+                  {dados.nf_pdf_url && dados.nf_pdf_url.startsWith('http') ? (
+                    <a 
+                      href={dados.nf_pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg transition-all active:scale-95 sm:ml-auto w-fit"
+                      title="Baixar DANFE / Nota Fiscal"
+                    >
+                      <Download size={20} /> Baixar DANFE
+                    </a>
+                  ) : (
+                    <div className="text-sm text-slate-400 font-medium sm:text-right bg-slate-800/50 px-3 py-2 rounded-lg border border-slate-700/30">
+                      Nota fiscal emitida. Link de download ainda não disponível.
+                    </div>
                   )}
                 </div>
               </div>
@@ -320,9 +314,9 @@ export function AcompanhamentoPublico() {
                 </div>
               )}
               
-              {dados.link_rastreio && (
+              {(dados.codigo_rastreio || dados.link_rastreio) && (
                 <div className="sm:text-right md:col-start-3 flex flex-col justify-center">
-                  {(dados.link_rastreio.startsWith('http://') || dados.link_rastreio.startsWith('https://')) ? (
+                  {(dados.link_rastreio && (dados.link_rastreio.startsWith('http://') || dados.link_rastreio.startsWith('https://'))) ? (
                     <a 
                       href={dados.link_rastreio}
                       target="_blank"
@@ -332,13 +326,9 @@ export function AcompanhamentoPublico() {
                       Acompanhar entrega <ExternalLink size={16} />
                     </a>
                   ) : (
-                    <button 
-                      disabled
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 text-slate-500 font-semibold rounded-xl border border-slate-700/50 cursor-not-allowed sm:ml-auto w-fit"
-                      title="Link indisponível"
-                    >
-                      Acompanhar entrega <ExternalLink size={16} />
-                    </button>
+                    <div className="text-sm text-slate-400 font-medium bg-slate-800/50 px-3 py-2 rounded-lg border border-slate-700/30 sm:ml-auto w-fit mt-2 sm:mt-0">
+                      Link de rastreio indisponível.
+                    </div>
                   )}
                 </div>
               )}

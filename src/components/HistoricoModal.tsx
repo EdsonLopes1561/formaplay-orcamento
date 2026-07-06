@@ -155,7 +155,7 @@ export function HistoricoModal({
             )}
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <div>
               <label className={labelClassName}>Status</label>
               <select
@@ -203,7 +203,7 @@ export function HistoricoModal({
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-[#0f172a]">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-3 bg-[#0f172a]">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="w-10 h-10 border-4 border-slate-800 border-t-emerald-500 rounded-full animate-spin shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
@@ -222,11 +222,11 @@ export function HistoricoModal({
               {orcamentosFiltrados.map((orc) => (
                 <div
                   key={orc.id}
-                  className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-2xl bg-[#0f172a] border border-slate-800 shadow-lg hover:border-emerald-500/50 hover:bg-slate-900/80 hover:-translate-y-1 transition-all group relative overflow-hidden"
+                  className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl bg-[#0f172a] border border-slate-800 shadow-lg hover:border-emerald-500/50 hover:bg-slate-900/80 hover:-translate-y-1 transition-all group relative overflow-hidden"
                 >
                   <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
                   
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-400 flex items-center justify-center flex-shrink-0 text-slate-950 shadow-[0_0_10px_rgba(16,185,129,0.3)]">
                       <FileText size={22} strokeWidth={2.5} />
                     </div>

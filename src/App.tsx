@@ -828,9 +828,9 @@ function App() {
             </div>
           )}
           {/* Menu de Ações Unificado (Desktop Tabs / Mobile Dropdown) */}
-          <div className="relative z-40">
+          <div className="sticky top-0 z-50 bg-[#0f172a] pt-3 pb-2 -mx-4 px-4 sm:static sm:bg-transparent sm:p-0 sm:m-0 sm:z-40">
             {/* Botão Mobile */}
-            <div className="sm:hidden mb-4">
+            <div className="sm:hidden mb-2">
               <button 
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
                 className="w-full flex items-center justify-between px-5 py-4 bg-gradient-to-r from-blue-900 to-slate-900 rounded-xl shadow-lg border border-slate-700 text-white font-bold"
