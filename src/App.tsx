@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Save, Printer, MessageCircle, FolderOpen, Copy, CopyPlus,
-  Trash2, RotateCcw, ChevronDown, CheckCircle, AlertCircle,
+  RotateCcw, ChevronDown, CheckCircle, AlertCircle,
   FileText, Users, Tag, Sparkles, Check, Package, LogOut, User, BarChart2, Mailbox, Download, Activity, Link as LinkIcon, ExternalLink, Layers
 } from 'lucide-react';
 import { supabase } from './supabase.ts';

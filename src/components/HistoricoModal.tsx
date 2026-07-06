@@ -67,7 +67,7 @@ export function HistoricoModal({
         sanitize(o.telefone).includes(st) ||
         sanitize(o.email).includes(st) ||
         sanitize(o.cidade).includes(st) ||
-        sanitize(o.estado || o.cliente_uf).includes(st) ||
+        sanitize(o.cliente_uf).includes(st) ||
         sanitize(o.produto).includes(st) ||
         sanitize(o.status || 'Aberto').includes(st)
       );

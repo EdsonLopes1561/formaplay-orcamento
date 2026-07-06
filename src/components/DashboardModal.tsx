@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { 
   X, BarChart2, DollarSign, CheckCircle, 
   Clock, Send, XCircle, TrendingUp, AlertTriangle, Download,
-  Calendar, Filter, Phone, CheckSquare, MessageCircle, Layers
+  Calendar, Filter, CheckSquare, MessageCircle, Layers
 } from 'lucide-react';
 import { Orcamento } from '../types';
 

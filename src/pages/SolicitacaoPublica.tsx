@@ -1,4 +1,4 @@
-import { calcularVolumes, calcularVolumesMultiProdutos } from '../config/produtosLogisticos';
+import { calcularVolumesMultiProdutos } from '../config/produtosLogisticos';
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabase';
 import { Produto, ItemOrcamentoSnapshot } from '../types';
@@ -700,15 +700,15 @@ export const SolicitacaoPublica: React.FC = () => {
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-sm font-semibold text-slate-300 mb-1">Bairro *</label>
-                      <input required name="bairro" value={form.bairro} onChange={handleChange} disabled={!isBairroEnabled} className={inputBaseClass} />
+                      <input required name="bairro" value={form.bairro} onChange={handleChange} disabled={!isBairroEnabled} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed placeholder-slate-500" />
                     </div>
                     <div className="md:col-span-1">
                       <label className="block text-sm font-semibold text-slate-300 mb-1">Cidade *</label>
-                      <input required name="cidade" value={form.cidade} onChange={handleChange} disabled={!isCidadeEnabled} className={inputBaseClass} />
+                      <input required name="cidade" value={form.cidade} onChange={handleChange} disabled={!isCidadeEnabled} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed placeholder-slate-500" />
                     </div>
                     <div className="md:col-span-1">
                       <label className="block text-sm font-semibold text-slate-300 mb-1">Estado (UF) *</label>
-                      <input required name="estado" value={form.estado} onChange={handleChange} maxLength={2} disabled={!isEstadoEnabled} className={stateInputClass} placeholder="SP" />
+                      <input required name="estado" value={form.estado} onChange={handleChange} maxLength={2} disabled={!isEstadoEnabled} className="uppercase w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed placeholder-slate-500" placeholder="SP" />
                     </div>
                   </div>
                 );

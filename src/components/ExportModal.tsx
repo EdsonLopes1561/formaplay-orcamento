@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { X, Download, FileSpreadsheet, Users, FileText, CalendarCheck, BarChart, Layers } from 'lucide-react';
 import { supabase } from '../supabase';
 

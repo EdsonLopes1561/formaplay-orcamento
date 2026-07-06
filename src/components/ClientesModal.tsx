@@ -186,7 +186,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
           return;
         }
       } else {
-        const { error, data } = await supabase.from('clientes').insert(formData).select();
+        const { error } = await supabase.from('clientes').insert(formData);
         if (error) {
           console.error('Erro ao salvar cliente:', error);
           alert('Erro ao salvar cliente: ' + error.message);
