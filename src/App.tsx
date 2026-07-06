@@ -847,7 +847,7 @@ function App() {
             <div className={`${showMobileMenu ? 'block absolute top-full left-0 right-0 mt-2' : 'hidden'} sm:relative sm:block sm:mt-0 bg-[#0f172a] rounded-xl sm:rounded-2xl shadow-2xl sm:shadow-xl border border-slate-700 sm:border-slate-800 p-4 sm:p-5 overflow-hidden z-50`}>
               {/* Cabeçalho das Abas */}
               <div className="flex gap-2 border-b border-slate-800 pb-4 overflow-x-auto scrollbar-hide">
-                {['Principal', 'Comunicação', 'Gestão', 'Controle', 'Dados'].map(tab => (
+                {['Principal', 'Gestão', 'Controle', 'Dados', 'Comunicação'].map(tab => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -1273,8 +1273,8 @@ function App() {
                         <option value="Solicitação recebida">Solicitação recebida</option>
                         <option value="Orçamento enviado">Orçamento enviado</option>
                         <option value="Aguardando confirmação do cliente">Aguardando confirmação do cliente</option>
-                        <option value="Aguardando pagamento ou autorização">Aguardando pagamento ou autorização</option>
-                        <option value="Pagamento/autorização aprovado">Pagamento/autorização aprovado</option>
+                        <option value="Aguardando pagamento ou autorização">Aguardando pagamento/autorização de compra</option>
+                        <option value="Pagamento/autorização aprovado">Pedido autorizado para produção</option>
                         <option value="Pedido em produção">Pedido em produção</option>
                         <option value="Nota fiscal emitida">Nota fiscal emitida</option>
                         <option value="Pedido em fase de entrega">Pedido em fase de entrega</option>
@@ -1626,50 +1626,50 @@ function App() {
               })()}
 
               {/* Financial summary */}
-              <div className="bg-gradient-to-br from-blue-900 to-blue-800 rounded-xl shadow-lg border-l-4 border-green-400 p-6 text-white">
-                <h2 className="font-black text-green-300 mb-5 text-lg">Resumo Financeiro</h2>
+              <div className="bg-[#0f172a] rounded-xl shadow-xl border border-slate-800 border-l-4 border-l-green-500 p-6 relative overflow-hidden">
+                <h2 className="font-black text-slate-100 mb-5 text-lg">Resumo Financeiro</h2>
                 <div className="space-y-3">
                   <div>
-                    <label className="form-label !text-blue-100/90">Frete (R$)</label>
+                    <label className="form-label">Frete (R$)</label>
                     <input name="frete" type="number" min="0" step="0.01" value={form.frete} onChange={handleChange}
                       className="form-input" />
                   </div>
                   <div>
-                    <label className="form-label !text-blue-100/90">Desconto (R$)</label>
+                    <label className="form-label">Desconto (R$)</label>
                     <input name="desconto" type="number" min="0" step="0.01" value={form.desconto} onChange={handleChange}
                       className="form-input" />
                   </div>
 
-                  <div className="pt-5 border-t-2 border-blue-300/30 space-y-2.5">
+                  <div className="pt-5 border-t border-slate-800 space-y-2.5">
                     <div className="flex justify-between text-sm">
-                      <span className="text-blue-100 font-semibold">Subtotal</span>
+                      <span className="text-slate-400 font-semibold">Subtotal</span>
                       <span className="text-white font-bold">{fmtCurrency(form.subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-blue-100 font-semibold">Frete</span>
+                      <span className="text-slate-400 font-semibold">Frete</span>
                       <span className="text-white font-bold">+ {fmtCurrency(form.frete)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-blue-100 font-semibold">Desconto</span>
-                      <span className="text-red-200 font-bold">- {fmtCurrency(form.desconto)}</span>
+                      <span className="text-slate-400 font-semibold">Desconto</span>
+                      <span className="text-emerald-400 font-bold">- {fmtCurrency(form.desconto)}</span>
                     </div>
-                    <div className="mt-4 pt-4 border-t-2 border-blue-300/40" />
-                    <div className="flex justify-between items-center bg-gradient-to-r from-green-600 to-green-500 rounded-xl px-5 py-4 shadow-lg transform">
-                      <span className="font-black text-white text-lg uppercase tracking-wide">Total Final</span>
-                      <span className="text-3xl font-black text-white drop-shadow-lg">{fmtCurrency(form.total)}</span>
+                    <div className="mt-4 pt-4 border-t border-slate-800" />
+                    <div className="flex justify-between items-center bg-slate-900/50 rounded-xl px-5 py-4 border border-emerald-500/20 shadow-inner">
+                      <span className="font-black text-emerald-400 text-lg uppercase tracking-wide">Total Final</span>
+                      <span className="text-3xl font-black text-white">{fmtCurrency(form.total)}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Company card */}
-              <div className="bg-gradient-to-br from-blue-700 to-blue-900 rounded-2xl p-5 text-white shadow-sm">
-                <img src="/logocircular.png" alt="FormaPlay" className="h-12 w-12 object-contain mb-3 rounded-full border-2 border-green-400 bg-white" />
-                <p className="font-black text-base leading-tight tracking-tight">
+              <div className="bg-[#0f172a] rounded-2xl p-5 text-slate-200 border border-slate-800 shadow-sm">
+                <img src="/logocircular.png" alt="FormaPlay" className="h-12 w-12 object-contain mb-3 rounded-full border-2 border-emerald-500/50 bg-white" />
+                <p className="font-black text-base leading-tight tracking-tight text-white">
                   <FormaPlayBrand />
-                  <span className="block text-xs font-bold text-blue-100 tracking-wide uppercase mt-0.5">Jogos Educacionais</span>
+                  <span className="block text-xs font-bold text-slate-400 tracking-wide uppercase mt-0.5">Jogos Educacionais</span>
                 </p>
-                <div className="mt-2 space-y-1 text-blue-100 text-xs">
+                <div className="mt-2 space-y-1 text-slate-400 text-xs font-medium">
                   <p>CNPJ: {EMPRESA.cnpj}</p>
                   <p>WhatsApp: {EMPRESA.whatsapp}</p>
                   <p>{EMPRESA.email}</p>

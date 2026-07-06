@@ -264,15 +264,15 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
   };
 
   // Classes para inputs escuros
-  const inputClassName = "w-full px-4 py-2.5 bg-blue-900/50 border border-blue-800 rounded-xl text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 focus:outline-none transition-all placeholder-slate-600 disabled:opacity-40 disabled:bg-blue-950/40 disabled:cursor-not-allowed disabled:border-blue-900/50";
+  const inputClassName = "w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 rounded-xl text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 focus:outline-none transition-all placeholder-slate-600 disabled:opacity-40 disabled:bg-[#0f172a]/40 disabled:cursor-not-allowed disabled:border-slate-800/50";
   const labelClassName = "block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1";
 
   if (showForm) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-blue-950/80 backdrop-blur-md animate-fade-in transition-opacity">
-        <div className="bg-blue-950 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-blue-800/50 overflow-hidden text-slate-200">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in transition-opacity">
+        <div className="bg-[#0f172a] rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-slate-800/50 overflow-hidden text-slate-200">
           
-          <div className="flex items-center justify-between p-6 border-b border-blue-900 bg-blue-950 shadow-sm relative z-10">
+          <div className="flex items-center justify-between p-6 border-b border-slate-800 bg-[#0f172a] shadow-sm relative z-10">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-gradient-to-br from-emerald-600 to-emerald-400 text-slate-950 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.3)]">
                 {editingCliente ? <Edit size={24} strokeWidth={2.5} /> : <Plus size={24} strokeWidth={2.5} />}
@@ -293,13 +293,13 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                 setCepError(null);
                 setHasCepFailed(false);
               }}
-              className="p-2.5 rounded-xl bg-blue-900 hover:bg-slate-700 hover:text-white transition-all border border-blue-800 text-slate-400"
+              className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-700 hover:text-white transition-all border border-slate-800 text-slate-400"
             >
               <X size={20} strokeWidth={2.5} />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-blue-950/30">
+          <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-950/30">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="md:col-span-2">
                 <label className={labelClassName}>Nome *</label>
@@ -397,14 +397,14 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                   disabled={!isNonAddressEnabled}
                   className={`${inputClassName} cursor-pointer`}
                 >
-                  <option value="" className="bg-blue-900">Selecione...</option>
-                  <option value="PF" className="bg-blue-900">Pessoa Física</option>
-                  <option value="PJ" className="bg-blue-900">Pessoa Jurídica</option>
+                  <option value="" className="bg-slate-900">Selecione...</option>
+                  <option value="PF" className="bg-slate-900">Pessoa Física</option>
+                  <option value="PJ" className="bg-slate-900">Pessoa Jurídica</option>
                 </select>
               </div>
 
               <div className="md:col-span-2 mt-4">
-                <h3 className="text-sm font-black text-emerald-400 uppercase tracking-widest mb-4 border-b border-blue-900 pb-2">Endereço</h3>
+                <h3 className="text-sm font-black text-emerald-400 uppercase tracking-widest mb-4 border-b border-slate-800 pb-2">Endereço</h3>
               </div>
 
               <div>
@@ -515,7 +515,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
             </div>
           </div>
 
-          <div className="p-6 border-t border-blue-900 bg-blue-950 flex justify-end gap-3 z-10">
+          <div className="p-6 border-t border-slate-800 bg-[#0f172a] flex justify-end gap-3 z-10">
              <button
                onClick={() => {
                  setShowForm(false);
@@ -528,7 +528,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                  setCepError(null);
                  setHasCepFailed(false);
                }}
-               className="px-6 py-2.5 bg-blue-900 text-slate-300 border border-blue-800 rounded-xl hover:bg-slate-800 hover:text-white transition-all font-bold text-sm shadow-sm active:scale-95"
+               className="px-6 py-2.5 bg-slate-900 text-slate-300 border border-slate-800 rounded-xl hover:bg-slate-800 hover:text-white transition-all font-bold text-sm shadow-sm active:scale-95"
              >
                Cancelar
              </button>
@@ -551,10 +551,10 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-blue-950/80 backdrop-blur-md animate-fade-in transition-opacity">
-      <div className="bg-blue-950 rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-blue-800/50 overflow-hidden text-slate-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in transition-opacity">
+      <div className="bg-[#0f172a] rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-slate-800/50 overflow-hidden text-slate-200">
         
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 border-b border-blue-900 bg-blue-950 shadow-sm relative z-10 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 border-b border-slate-800 bg-[#0f172a] shadow-sm relative z-10 gap-4">
           <div className="flex items-center gap-4">
             <div className="p-3.5 bg-gradient-to-br from-emerald-600 to-emerald-400 text-slate-950 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hidden sm:block">
               <Users size={28} strokeWidth={2.5} />
@@ -566,13 +566,13 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
           </div>
           <button
             onClick={onClose}
-            className="p-2.5 rounded-xl bg-blue-900 hover:bg-slate-700 hover:text-white transition-all border border-blue-800 text-slate-400 self-end sm:self-auto"
+            className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-700 hover:text-white transition-all border border-slate-800 text-slate-400 self-end sm:self-auto"
           >
             <X size={20} strokeWidth={2.5} />
           </button>
         </div>
 
-        <div className="p-5 border-b border-blue-900 bg-blue-950/80">
+        <div className="p-5 border-b border-slate-800 bg-slate-950/80">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
@@ -581,7 +581,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                 placeholder="Buscar por nome, documento, cidade ou telefone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 bg-blue-900/50 border border-blue-800 rounded-xl text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 focus:outline-none transition-all placeholder-slate-500 shadow-inner"
+                className="w-full pl-11 pr-4 py-3 bg-slate-900/50 border border-slate-800 rounded-xl text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 focus:outline-none transition-all placeholder-slate-500 shadow-inner"
               />
             </div>
             <button
@@ -594,15 +594,15 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5 md:p-6 bg-blue-950/30">
+        <div className="flex-1 overflow-y-auto p-5 md:p-6 bg-slate-950/30">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-10 h-10 border-4 border-blue-900 border-t-emerald-500 rounded-full animate-spin shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+              <div className="w-10 h-10 border-4 border-slate-800 border-t-emerald-500 rounded-full animate-spin shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
               <p className="mt-4 text-slate-400 font-bold uppercase tracking-widest text-sm">Carregando...</p>
             </div>
           ) : filteredClientes.length === 0 ? (
-            <div className="text-center py-20 text-slate-500 flex flex-col items-center bg-blue-900/20 rounded-3xl border border-dashed border-blue-800">
-              <div className="p-4 bg-blue-900/50 rounded-full mb-4 border border-blue-800">
+            <div className="text-center py-20 text-slate-500 flex flex-col items-center bg-slate-900/20 rounded-3xl border border-dashed border-slate-800">
+              <div className="p-4 bg-slate-900/50 rounded-full mb-4 border border-slate-800">
                 <Users size={48} className="opacity-50 text-slate-400" />
               </div>
               <p className="text-xl font-black text-white">Nenhum cliente encontrado</p>
@@ -613,7 +613,7 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
               {filteredClientes.map((cliente) => (
                 <div
                   key={cliente.id}
-                  className="p-5 rounded-2xl bg-blue-900/40 border border-blue-800 shadow-lg hover:border-emerald-500/50 hover:bg-blue-900/60 hover:-translate-y-1 transition-all group relative overflow-hidden"
+                  className="p-5 rounded-2xl bg-slate-900/40 border border-slate-800 shadow-lg hover:border-emerald-500/50 hover:bg-slate-900/60 hover:-translate-y-1 transition-all group relative overflow-hidden"
                 >
                   <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
                   <div className="flex items-start gap-4">
@@ -665,14 +665,14 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEdit(cliente)}
-                          className="p-2 bg-blue-900/80 text-amber-400 hover:text-amber-300 hover:bg-blue-800 rounded-xl transition-all active:scale-95 border border-blue-800"
+                          className="p-2 bg-slate-900/80 text-amber-400 hover:text-amber-300 hover:bg-slate-800 rounded-xl transition-all active:scale-95 border border-slate-800"
                           title="Editar"
                         >
                           <Edit size={16} strokeWidth={2.5} />
                         </button>
                         <button
                           onClick={() => cliente.id && handleDelete(cliente.id)}
-                          className="p-2 bg-blue-900/80 text-rose-500 hover:text-rose-400 hover:bg-blue-800 rounded-xl transition-all active:scale-95 border border-blue-800"
+                          className="p-2 bg-slate-900/80 text-rose-500 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition-all active:scale-95 border border-slate-800"
                           title="Excluir"
                         >
                           <Trash2 size={16} strokeWidth={2.5} />
@@ -686,10 +686,10 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
           )}
         </div>
 
-        <div className="p-5 border-t border-blue-900 bg-blue-950 flex justify-end">
+        <div className="p-5 border-t border-slate-800 bg-[#0f172a] flex justify-end">
           <button
             onClick={onClose}
-            className="px-8 py-3 bg-blue-900 text-slate-300 border border-blue-800 rounded-xl hover:bg-slate-800 hover:text-white transition-all font-bold text-sm shadow-sm active:scale-95"
+            className="px-8 py-3 bg-slate-900 text-slate-300 border border-slate-800 rounded-xl hover:bg-slate-800 hover:text-white transition-all font-bold text-sm shadow-sm active:scale-95"
           >
             Fechar
           </button>
@@ -698,4 +698,5 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
     </div>
   );
 }
+
 

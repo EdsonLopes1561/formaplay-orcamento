@@ -340,7 +340,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
           <span className="truncate pr-2">{String(label)}</span>
           <span className="whitespace-nowrap font-bold text-white">{formatCurrency(safeValue)} {subValue && <span className="text-slate-500 font-medium ml-1">({subValue})</span>}</span>
         </div>
-        <div className="w-full bg-blue-900 rounded-full h-2.5 overflow-hidden border border-blue-800/50">
+        <div className="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-800/50">
           <div className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full rounded-full shadow-[0_0_10px_rgba(16,185,129,0.4)]" style={{ width: `${Math.min(percent, 100)}%` }}></div>
         </div>
       </div>
@@ -374,11 +374,11 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-blue-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 transition-opacity">
-      <div className="bg-blue-950 rounded-3xl w-full max-w-[1400px] max-h-[95vh] flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-blue-800/50 overflow-hidden animate-fade-in text-slate-200">
+    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 transition-opacity">
+      <div className="bg-[#0f172a] rounded-3xl w-full max-w-[1400px] max-h-[95vh] flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-slate-800/50 overflow-hidden animate-fade-in text-slate-200">
         
         {/* Cabeçalho Premium Dark */}
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between p-6 bg-blue-950 border-b border-blue-900 shadow-sm relative z-10 gap-6">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between p-6 bg-[#0f172a] border-b border-slate-800 shadow-sm relative z-10 gap-6">
           <div className="flex items-center gap-5">
             <div className="p-3.5 bg-gradient-to-br from-emerald-600 to-emerald-400 text-slate-950 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)]">
               <Activity size={28} strokeWidth={2.5} />
@@ -392,53 +392,53 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
           <div className="flex items-center gap-3">
             {!detalheVisivel && (
               <div className="flex flex-wrap gap-2 justify-end mr-2">
-                <div className="flex items-center bg-blue-900/80 hover:bg-blue-900 transition-colors rounded-xl p-1.5 border border-blue-800 shadow-inner">
+                <div className="flex items-center bg-slate-900/80 hover:bg-slate-900 transition-colors rounded-xl p-1.5 border border-slate-800 shadow-inner">
                   <Calendar size={16} className="text-emerald-400 ml-2" />
                   <select value={periodo} onChange={(e) => setPeriodo(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-200 py-1 pl-2 pr-6 focus:ring-0 cursor-pointer outline-none">
-                    {['Todos', 'Hoje', 'Esta semana', 'Este mês', 'Este ano'].map(opt => <option key={opt} value={opt} className="bg-blue-900">{opt}</option>)}
+                    {['Todos', 'Hoje', 'Esta semana', 'Este mês', 'Este ano'].map(opt => <option key={opt} value={opt} className="bg-slate-900">{opt}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center bg-blue-900/80 hover:bg-blue-900 transition-colors rounded-xl p-1.5 border border-blue-800 shadow-inner">
+                <div className="flex items-center bg-slate-900/80 hover:bg-slate-900 transition-colors rounded-xl p-1.5 border border-slate-800 shadow-inner">
                   <Filter size={14} className="text-slate-500 ml-2" />
                   <select value={fStatus} onChange={(e) => setFStatus(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-200 py-1 pl-2 pr-6 focus:ring-0 cursor-pointer outline-none">
-                    <option value="Todos" className="bg-blue-900">Status (Todos)</option>
-                    {['Aberto', 'Enviado', 'Aprovado', 'Recusado', 'Cancelado'].map(opt => <option key={opt} value={opt} className="bg-blue-900">{opt}</option>)}
+                    <option value="Todos" className="bg-slate-900">Status (Todos)</option>
+                    {['Aberto', 'Enviado', 'Aprovado', 'Recusado', 'Cancelado'].map(opt => <option key={opt} value={opt} className="bg-slate-900">{opt}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center bg-blue-900/80 hover:bg-blue-900 transition-colors rounded-xl p-1.5 border border-blue-800 shadow-inner hidden sm:flex">
+                <div className="flex items-center bg-slate-900/80 hover:bg-slate-900 transition-colors rounded-xl p-1.5 border border-slate-800 shadow-inner hidden sm:flex">
                   <select value={fPrioridade} onChange={(e) => setFPrioridade(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-200 py-1 px-3 focus:ring-0 cursor-pointer outline-none">
-                    <option value="Todas" className="bg-blue-900">Prioridade (Todas)</option>
-                    {['Baixa', 'Média', 'Alta'].map(opt => <option key={opt} value={opt} className="bg-blue-900">{opt}</option>)}
+                    <option value="Todas" className="bg-slate-900">Prioridade (Todas)</option>
+                    {['Baixa', 'Média', 'Alta'].map(opt => <option key={opt} value={opt} className="bg-slate-900">{opt}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center bg-blue-900/80 hover:bg-blue-900 transition-colors rounded-xl p-1.5 border border-blue-800 shadow-inner hidden md:flex">
+                <div className="flex items-center bg-slate-900/80 hover:bg-slate-900 transition-colors rounded-xl p-1.5 border border-slate-800 shadow-inner hidden md:flex">
                   <select value={fProduto} onChange={(e) => setFProduto(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-200 py-1 px-3 focus:ring-0 cursor-pointer max-w-[140px] outline-none">
-                    <option value="Todos" className="bg-blue-900">Produto (Todos)</option>
-                    {uniqueProdutos.map(opt => <option key={opt} value={opt} className="bg-blue-900">{opt}</option>)}
+                    <option value="Todos" className="bg-slate-900">Produto (Todos)</option>
+                    {uniqueProdutos.map(opt => <option key={opt} value={opt} className="bg-slate-900">{opt}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center bg-blue-900/80 hover:bg-blue-900 transition-colors rounded-xl p-1.5 border border-blue-800 shadow-inner hidden lg:flex">
+                <div className="flex items-center bg-slate-900/80 hover:bg-slate-900 transition-colors rounded-xl p-1.5 border border-slate-800 shadow-inner hidden lg:flex">
                   <select value={fCidade} onChange={(e) => setFCidade(e.target.value)} className="bg-transparent border-none text-xs font-bold text-slate-200 py-1 px-3 focus:ring-0 cursor-pointer max-w-[140px] outline-none">
-                    <option value="Todas" className="bg-blue-900">Região (Todas)</option>
-                    {uniqueCidades.map(opt => <option key={opt} value={opt} className="bg-blue-900">{opt}</option>)}
+                    <option value="Todas" className="bg-slate-900">Região (Todas)</option>
+                    {uniqueCidades.map(opt => <option key={opt} value={opt} className="bg-slate-900">{opt}</option>)}
                   </select>
                 </div>
               </div>
             )}
 
-            <button onClick={onClose} className="p-2.5 rounded-xl bg-blue-900 hover:bg-slate-700 hover:text-white transition-all border border-blue-800 text-slate-400">
+            <button onClick={onClose} className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-700 hover:text-white transition-all border border-slate-800 text-slate-400">
               <X size={22} strokeWidth={2.5} />
             </button>
           </div>
         </div>
 
         {loading ? (
-          <div className="flex-1 flex flex-col items-center justify-center min-h-[500px] bg-blue-950/50">
-            <div className="w-12 h-12 border-4 border-blue-900 border-t-emerald-500 rounded-full animate-spin mb-5 shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[500px] bg-slate-900/50">
+            <div className="w-12 h-12 border-4 border-slate-800 border-t-emerald-500 rounded-full animate-spin mb-5 shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
             <p className="text-slate-400 font-bold text-sm tracking-wide uppercase">Carregando painel...</p>
           </div>
         ) : error ? (
-          <div className="flex-1 flex flex-col items-center justify-center min-h-[500px] text-center p-8 bg-blue-950/50">
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[500px] text-center p-8 bg-slate-900/50">
             <AlertTriangle size={56} className="text-rose-500 mb-5 drop-shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
             <h3 className="text-2xl font-black text-white">Falha ao processar os dados.</h3>
             <p className="text-slate-400 mt-2 font-medium">Não foi possível carregar as informações no momento.</p>
@@ -446,10 +446,10 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
         ) : detalheVisivel ? (
           
           /* VISÃO DETALHADA (DRILL-DOWN) */
-          <div className="flex-1 overflow-y-auto p-8 bg-blue-950/50 flex flex-col animate-fade-in">
+          <div className="flex-1 overflow-y-auto p-8 bg-slate-900/50 flex flex-col animate-fade-in">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
-                <button onClick={() => setDetalheVisivel(null)} className="flex items-center justify-center p-2.5 bg-blue-900 border border-blue-800 shadow-sm rounded-xl hover:bg-slate-700 hover:border-slate-500 hover:text-white transition-all text-slate-400 group">
+                <button onClick={() => setDetalheVisivel(null)} className="flex items-center justify-center p-2.5 bg-slate-900 border border-slate-800 shadow-sm rounded-xl hover:bg-slate-700 hover:border-slate-500 hover:text-white transition-all text-slate-400 group">
                   <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                 </button>
                 <div>
@@ -460,11 +460,11 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
             </div>
 
             {detalheVisivel.length > 0 ? (
-              <div className="bg-blue-950 rounded-2xl border border-blue-900 shadow-xl overflow-hidden flex-1">
+              <div className="bg-[#0f172a] rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex-1">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-blue-950/80 border-b border-blue-900">
+                      <tr className="bg-slate-950/80 border-b border-slate-800">
                         <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Orçamento</th>
                         <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Cliente</th>
                         <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
@@ -474,7 +474,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                     </thead>
                     <tbody className="divide-y divide-slate-800">
                       {detalheVisivel.map((orc, idx) => (
-                        <tr key={idx} className="hover:bg-blue-900/60 transition-colors">
+                        <tr key={idx} className="hover:bg-slate-900/60 transition-colors">
                           <td className="py-4 px-6 text-sm font-black text-slate-300">#{orc?.numero_sequencial || orc?.id?.slice(0,6)}</td>
                           <td className="py-4 px-6 text-sm font-bold text-slate-100">{orc?.cliente || 'Não informado'}</td>
                           <td className="py-4 px-6 text-xs font-bold">
@@ -482,7 +482,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                               orc?.status === 'Aprovado' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
                               orc?.status === 'Enviado' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
                               orc?.status === 'Recusado' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                              'bg-blue-900 text-slate-400 border-blue-800'
+                              'bg-slate-900 text-slate-400 border-slate-800'
                             }`}>
                               {orc?.status || 'Aberto'}
                             </span>
@@ -500,7 +500,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-slate-500 bg-blue-950 rounded-2xl border border-dashed border-blue-900">
+              <div className="flex-1 flex flex-col items-center justify-center text-slate-500 bg-[#0f172a] rounded-2xl border border-dashed border-slate-800">
                 <AlertTriangle size={48} className="mb-4 opacity-50" />
                 <p className="font-medium">Nenhum registro corresponde ao filtro atual.</p>
               </div>
@@ -510,12 +510,12 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
         ) : (
           
           /* VISÃO GERAL (CARDS & GRAFICOS) */
-          <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 bg-blue-950/30">
+          <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 bg-slate-950/30">
             
             {/* Linha 1: Cards Principais */}
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-5">
               
-              <div onClick={() => openDetalhe('Total Orçado', orcamentosFiltrados)} className="group cursor-pointer bg-blue-900/80 p-5 rounded-2xl border border-blue-800 shadow-lg hover:shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:border-indigo-500/50 hover:-translate-y-1 transition-all flex flex-col justify-between relative overflow-hidden">
+              <div onClick={() => openDetalhe('Total Orçado', orcamentosFiltrados)} className="group cursor-pointer bg-slate-900/80 p-5 rounded-2xl border border-slate-800 shadow-lg hover:shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:border-indigo-500/50 hover:-translate-y-1 transition-all flex flex-col justify-between relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-600 to-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="flex items-center justify-between text-slate-400 mb-3">
                   <span className="text-xs font-bold uppercase tracking-wider">Total Orçado</span>
@@ -524,7 +524,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                 <div className="text-2xl font-black text-white truncate" title={formatCurrency(cardsData.totalOrcado)}>{formatCurrency(cardsData.totalOrcado)}</div>
               </div>
               
-              <div onClick={() => openDetalhe('Orçamentos Aprovados', cardsData.aprovadosArr)} className="group cursor-pointer bg-blue-900/80 p-5 rounded-2xl border border-blue-800 shadow-lg hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:border-emerald-500/50 hover:-translate-y-1 transition-all flex flex-col justify-between relative overflow-hidden">
+              <div onClick={() => openDetalhe('Orçamentos Aprovados', cardsData.aprovadosArr)} className="group cursor-pointer bg-slate-900/80 p-5 rounded-2xl border border-slate-800 shadow-lg hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:border-emerald-500/50 hover:-translate-y-1 transition-all flex flex-col justify-between relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-600 to-emerald-400"></div>
                 <div className="flex items-center justify-between text-slate-400 mb-3">
                   <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Aprovado</span>
@@ -533,7 +533,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                 <div className="text-2xl font-black text-emerald-400 truncate drop-shadow-[0_0_5px_rgba(16,185,129,0.3)]" title={formatCurrency(cardsData.totalAprovado)}>{formatCurrency(cardsData.totalAprovado)}</div>
               </div>
               
-              <div onClick={() => openDetalhe('Orçamentos em Negociação', cardsData.negociacaoArr)} className="group cursor-pointer bg-blue-900/80 p-5 rounded-2xl border border-blue-800 shadow-lg hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:border-amber-500/50 hover:-translate-y-1 transition-all flex flex-col justify-between relative overflow-hidden">
+              <div onClick={() => openDetalhe('Orçamentos em Negociação', cardsData.negociacaoArr)} className="group cursor-pointer bg-slate-900/80 p-5 rounded-2xl border border-slate-800 shadow-lg hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:border-amber-500/50 hover:-translate-y-1 transition-all flex flex-col justify-between relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-amber-300"></div>
                 <div className="flex items-center justify-between text-slate-400 mb-3">
                   <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Negociação</span>
@@ -542,7 +542,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                 <div className="text-2xl font-black text-amber-400 truncate" title={formatCurrency(cardsData.totalNegociacao)}>{formatCurrency(cardsData.totalNegociacao)}</div>
               </div>
               
-              <div className="bg-blue-900/80 p-5 rounded-2xl border border-blue-800 shadow-lg flex flex-col justify-between relative overflow-hidden">
+              <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 shadow-lg flex flex-col justify-between relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-blue-400 opacity-50"></div>
                 <div className="flex items-center justify-between text-slate-400 mb-3">
                   <span className="text-xs font-bold uppercase tracking-wider">Ticket Médio</span>
@@ -551,7 +551,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                 <div className="text-2xl font-black text-white truncate" title={formatCurrency(cardsData.ticketMedio)}>{formatCurrency(cardsData.ticketMedio)}</div>
               </div>
               
-              <div className="bg-blue-900/80 p-5 rounded-2xl border border-blue-800 shadow-lg flex flex-col justify-between relative overflow-hidden">
+              <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 shadow-lg flex flex-col justify-between relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-600 to-purple-400 opacity-50"></div>
                 <div className="flex items-center justify-between text-slate-400 mb-3">
                   <span className="text-xs font-bold uppercase tracking-wider">Aprovação</span>
@@ -576,29 +576,29 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
             {/* Linha 2: Funil e Saúde do Follow-up */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               
-              <div className="bg-blue-950 p-6 rounded-2xl border border-blue-900 shadow-xl col-span-1 xl:col-span-2 flex flex-col">
+              <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-xl col-span-1 xl:col-span-2 flex flex-col">
                 <h3 className="text-sm font-black text-white mb-6 flex items-center gap-2 uppercase tracking-widest"><BarChart2 size={20} className="text-emerald-500"/> Funil Comercial</h3>
                 <div className="px-2 flex-1 flex flex-col justify-center">
                   <FunnelGraphic data={funnel} />
                 </div>
               </div>
 
-              <div className="bg-blue-950 p-6 rounded-2xl border border-blue-900 shadow-xl col-span-1 flex flex-col">
+              <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-xl col-span-1 flex flex-col">
                 <h3 className="text-sm font-black text-white mb-6 flex items-center gap-2 uppercase tracking-widest"><Activity size={20} className="text-rose-500"/> Follow-up Status</h3>
                 <div className="grid grid-cols-2 gap-4 flex-1">
-                  <div onClick={() => openDetalhe('Retornos Atrasados', rankings.followUp.atrasados)} className="group cursor-pointer hover:bg-rose-500/10 bg-blue-900 border border-blue-800 hover:border-rose-500/50 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all shadow-inner">
+                  <div onClick={() => openDetalhe('Retornos Atrasados', rankings.followUp.atrasados)} className="group cursor-pointer hover:bg-rose-500/10 bg-slate-900 border border-slate-800 hover:border-rose-500/50 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all shadow-inner">
                     <span className="text-3xl font-black text-rose-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(244,63,94,0.5)] transition-all">{rankings.followUp.atrasados.length}</span>
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2 group-hover:text-rose-300">Atrasados</span>
                   </div>
-                  <div onClick={() => openDetalhe('Retornos Hoje', rankings.followUp.hoje)} className="group cursor-pointer hover:bg-amber-500/10 bg-blue-900 border border-blue-800 hover:border-amber-500/50 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all shadow-inner">
+                  <div onClick={() => openDetalhe('Retornos Hoje', rankings.followUp.hoje)} className="group cursor-pointer hover:bg-amber-500/10 bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all shadow-inner">
                     <span className="text-3xl font-black text-amber-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] transition-all">{rankings.followUp.hoje.length}</span>
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2 group-hover:text-amber-300">Hoje</span>
                   </div>
-                  <div onClick={() => openDetalhe('Retornos nos Próximos 7 Dias', rankings.followUp.proximos)} className="group cursor-pointer hover:bg-blue-500/10 bg-blue-900 border border-blue-800 hover:border-blue-500/50 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all shadow-inner">
+                  <div onClick={() => openDetalhe('Retornos nos Próximos 7 Dias', rankings.followUp.proximos)} className="group cursor-pointer hover:bg-blue-500/10 bg-slate-900 border border-slate-800 hover:border-blue-500/50 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all shadow-inner">
                     <span className="text-3xl font-black text-blue-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.5)] transition-all">{rankings.followUp.proximos.length}</span>
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2 group-hover:text-blue-300">Próximos 7d</span>
                   </div>
-                  <div onClick={() => openDetalhe('Oportunidades de Alta Prioridade', rankings.followUp.altaPrioArr)} className="group cursor-pointer hover:bg-orange-500/10 bg-blue-900 border border-blue-800 hover:border-orange-500/50 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all shadow-inner">
+                  <div onClick={() => openDetalhe('Oportunidades de Alta Prioridade', rankings.followUp.altaPrioArr)} className="group cursor-pointer hover:bg-orange-500/10 bg-slate-900 border border-slate-800 hover:border-orange-500/50 p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all shadow-inner">
                     <span className="text-3xl font-black text-orange-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.5)] transition-all">{rankings.followUp.altaPrioArr.length}</span>
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2 group-hover:text-orange-300">Alta Priori.</span>
                   </div>
@@ -609,7 +609,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
             {/* Linha 3: Rankings (Produtos, Clientes, Regiões) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
-              <div className="bg-blue-950 p-6 rounded-2xl border border-blue-900 shadow-xl">
+              <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-xl">
                 <h3 className="text-sm font-black text-white mb-6 flex items-center gap-2 uppercase tracking-widest"><Package size={20} className="text-emerald-500"/> Top Produtos</h3>
                 {rankings.topProdutos && rankings.topProdutos.length > 0 ? (
                   <div className="space-y-2">
@@ -618,13 +618,13 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                     ))}
                   </div>
                 ) : (
-                  <div className="h-40 flex items-center justify-center border-2 border-dashed border-blue-900 rounded-xl bg-blue-950/50">
+                  <div className="h-40 flex items-center justify-center border-2 border-dashed border-slate-800 rounded-xl bg-slate-900/50">
                     <p className="text-xs text-slate-500 font-medium italic">Sem dados neste período</p>
                   </div>
                 )}
               </div>
 
-              <div className="bg-blue-950 p-6 rounded-2xl border border-blue-900 shadow-xl">
+              <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-xl">
                 <h3 className="text-sm font-black text-white mb-6 flex items-center gap-2 uppercase tracking-widest"><Users size={20} className="text-emerald-500"/> Top Clientes</h3>
                 {rankings.topClientes && rankings.topClientes.length > 0 ? (
                   <div className="space-y-2">
@@ -633,13 +633,13 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                     ))}
                   </div>
                 ) : (
-                  <div className="h-40 flex items-center justify-center border-2 border-dashed border-blue-900 rounded-xl bg-blue-950/50">
+                  <div className="h-40 flex items-center justify-center border-2 border-dashed border-slate-800 rounded-xl bg-slate-900/50">
                     <p className="text-xs text-slate-500 font-medium italic">Sem dados neste período</p>
                   </div>
                 )}
               </div>
 
-              <div className="bg-blue-950 p-6 rounded-2xl border border-blue-900 shadow-xl">
+              <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-xl">
                 <h3 className="text-sm font-black text-white mb-6 flex items-center gap-2 uppercase tracking-widest"><MapPin size={20} className="text-emerald-500"/> Top Regiões</h3>
                 {rankings.topRegioes && rankings.topRegioes.length > 0 ? (
                   <div className="space-y-2">
@@ -648,7 +648,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                     ))}
                   </div>
                 ) : (
-                  <div className="h-40 flex items-center justify-center border-2 border-dashed border-blue-900 rounded-xl bg-blue-950/50">
+                  <div className="h-40 flex items-center justify-center border-2 border-dashed border-slate-800 rounded-xl bg-slate-900/50">
                     <p className="text-xs text-slate-500 font-medium italic">Sem dados neste período</p>
                   </div>
                 )}
@@ -657,14 +657,14 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
             </div>
 
             {/* Linha 4: Oportunidades para agir agora */}
-            <div className="bg-blue-950 p-6 rounded-2xl border border-blue-900 shadow-xl">
+            <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-xl">
               <h3 className="text-sm font-black text-white mb-6 flex items-center gap-2 uppercase tracking-widest"><AlertTriangle size={20} className="text-orange-500"/> Oportunidades para agir agora</h3>
               
               {agirAgora && agirAgora.length > 0 ? (
-                <div className="overflow-x-auto rounded-xl border border-blue-900 shadow-inner">
+                <div className="overflow-x-auto rounded-xl border border-slate-800 shadow-inner">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-blue-950/80 border-b border-blue-900">
+                      <tr className="bg-slate-950/80 border-b border-slate-800">
                         <th className="py-3 px-4 text-[11px] font-black text-slate-500 uppercase tracking-widest rounded-tl-xl">Temp.</th>
                         <th className="py-3 px-4 text-[11px] font-black text-slate-500 uppercase tracking-widest">Orçamento</th>
                         <th className="py-3 px-4 text-[11px] font-black text-slate-500 uppercase tracking-widest">Cliente</th>
@@ -675,7 +675,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                     </thead>
                     <tbody className="divide-y divide-slate-800">
                       {agirAgora.map((orc, i) => (
-                        <tr key={i} className="hover:bg-blue-900/80 group transition-colors">
+                        <tr key={i} className="hover:bg-slate-900/80 group transition-colors">
                           <td className="py-3 px-4">
                             <div className={`p-2 rounded-xl inline-flex items-center justify-center shadow-sm border ${
                               orc.temp === 'quente' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30 shadow-[0_0_10px_rgba(244,63,94,0.2)]' :
@@ -694,7 +694,7 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                             <span className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border shadow-sm ${
                               orc.temp === 'quente' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 
                               orc.temp === 'morna' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
-                              'bg-blue-900 text-slate-300 border-blue-800'
+                              'bg-slate-900 text-slate-300 border-slate-800'
                             }`}>
                               {orc?.data_retorno ? String(orc.data_retorno).split('-').reverse().join('/') : 'Sem data'}
                             </span>
@@ -713,8 +713,8 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
                   </table>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 bg-blue-950 rounded-2xl border-2 border-dashed border-blue-900">
-                  <div className="p-4 bg-blue-900 rounded-full shadow-sm mb-4 border border-blue-800">
+                <div className="flex flex-col items-center justify-center py-12 bg-[#0f172a] rounded-2xl border-2 border-dashed border-slate-800">
+                  <div className="p-4 bg-slate-900 rounded-full shadow-sm mb-4 border border-slate-800">
                     <CheckCircle size={32} className="text-emerald-500" />
                   </div>
                   <h4 className="text-lg font-black text-white mb-1">Tudo em dia!</h4>
@@ -729,3 +729,4 @@ export function TorreControleModal({ onClose }: TorreControleModalProps) {
     </div>
   );
 }
+

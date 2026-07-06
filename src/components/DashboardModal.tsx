@@ -188,11 +188,11 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
   };
 
   return (
-    <div className="fixed inset-0 bg-blue-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in transition-opacity">
-      <div className="bg-blue-950 rounded-3xl w-full max-w-6xl max-h-[90vh] flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-blue-800/50 overflow-hidden text-slate-200">
+    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in transition-opacity">
+      <div className="bg-slate-950 rounded-3xl w-full max-w-6xl max-h-[90vh] flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-slate-800 overflow-hidden text-slate-200">
         
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 border-b border-blue-900 bg-blue-950 shadow-sm relative z-10 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 border-b border-slate-800 bg-slate-950 shadow-sm relative z-10 gap-4">
           <div className="flex items-center gap-4">
             <div className="p-3.5 bg-gradient-to-br from-blue-600 to-blue-400 text-white rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.3)] hidden sm:block">
               <BarChart2 size={28} strokeWidth={2.5} />
@@ -215,14 +215,14 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
             </button>
             <button
               onClick={onClose}
-              className="p-2.5 rounded-xl bg-blue-900 hover:bg-slate-700 hover:text-white transition-all border border-blue-800 text-slate-400 shadow-sm active:scale-95"
+              className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 hover:text-white transition-all border border-slate-800 text-slate-400 shadow-sm active:scale-95"
             >
               <X size={20} strokeWidth={2.5} />
             </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-blue-950/30">
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-950/30">
 
           {/* Filtros de Período */}
           <div className="mb-8">
@@ -239,7 +239,7 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
                   className={`px-5 py-2 rounded-xl text-xs font-bold transition-all border active:scale-95 ${
                     filtroPeriodo === f
                       ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] border-blue-500'
-                      : 'bg-blue-900/40 border-blue-800/50 text-slate-400 hover:bg-blue-800 hover:text-white'
+                      : 'bg-[#0f172a] border-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
                   }`}
                 >
                   {f}
@@ -248,14 +248,14 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
             </div>
             
             {filtroPeriodo === 'Personalizado' && (
-              <div className="flex flex-col sm:flex-row items-center gap-4 mt-4 bg-blue-900/50 p-5 rounded-2xl border border-blue-800/50 shadow-sm w-max animate-fade-in">
+              <div className="flex flex-col sm:flex-row items-center gap-4 mt-4 bg-slate-900/50 p-5 rounded-2xl border border-slate-800 shadow-sm w-max animate-fade-in">
                 <div>
                   <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Data Inicial</label>
                   <input 
                     type="date" 
                     value={dataInicial} 
                     onChange={e => setDataInicial(e.target.value)}
-                    className="bg-blue-950 border border-blue-800 rounded-xl px-4 py-2 text-sm font-medium outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 custom-date-input"
+                    className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm font-medium outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 custom-date-input"
                   />
                 </div>
                 <div>
@@ -264,7 +264,7 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
                     type="date" 
                     value={dataFinal} 
                     onChange={e => setDataFinal(e.target.value)}
-                    className="bg-blue-950 border border-blue-800 rounded-xl px-4 py-2 text-sm font-medium outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 custom-date-input"
+                    className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm font-medium outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 custom-date-input"
                   />
                 </div>
               </div>
@@ -273,7 +273,7 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
 
           {/* Revenue Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-blue-900/40 p-6 rounded-2xl border border-blue-800 shadow-lg flex items-center gap-5 hover:border-blue-700 transition-colors group">
+            <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-lg flex items-center gap-5 hover:border-slate-700 transition-colors group">
               <div className="p-4 bg-blue-600/20 text-blue-400 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-inner">
                 <DollarSign size={28} strokeWidth={2.5} />
               </div>
@@ -283,7 +283,7 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
               </div>
             </div>
             
-            <div className="bg-blue-900/40 p-6 rounded-2xl border border-blue-800 shadow-lg flex items-center gap-5 hover:border-emerald-500/50 transition-colors group relative overflow-hidden">
+            <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-lg flex items-center gap-5 hover:border-emerald-500/50 transition-colors group relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
               <div className="p-4 bg-emerald-600/20 text-emerald-400 rounded-2xl group-hover:bg-emerald-600 group-hover:text-white transition-colors shadow-inner relative z-10">
                 <TrendingUp size={28} strokeWidth={2.5} />
@@ -294,7 +294,7 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
               </div>
             </div>
 
-            <div className="bg-blue-900/40 p-6 rounded-2xl border border-blue-800 shadow-lg flex items-center gap-5 hover:border-amber-500/50 transition-colors group relative overflow-hidden">
+            <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-lg flex items-center gap-5 hover:border-amber-500/50 transition-colors group relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
               <div className="p-4 bg-amber-600/20 text-amber-400 rounded-2xl group-hover:bg-amber-600 group-hover:text-white transition-colors shadow-inner relative z-10">
                 <Clock size={28} strokeWidth={2.5} />
@@ -312,41 +312,41 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
             Volume de Orçamentos
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-            <div className="bg-blue-900/40 p-5 rounded-2xl border border-blue-800 shadow-lg text-center relative overflow-hidden group hover:border-blue-600 transition-colors">
+            <div className="bg-[#0f172a] p-5 rounded-2xl border border-slate-800 shadow-lg text-center relative overflow-hidden group hover:border-blue-600 transition-colors">
               <div className="absolute top-0 left-0 w-full h-1 bg-blue-500 opacity-50 group-hover:opacity-100 transition-opacity"></div>
               <p className="text-3xl font-black text-white mb-1">{metrics.totalOrçamentos}</p>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total</p>
             </div>
             
-            <div className="bg-blue-900/40 p-5 rounded-2xl border border-blue-800 shadow-lg text-center relative overflow-hidden group hover:border-amber-500/50 transition-colors">
+            <div className="bg-[#0f172a] p-5 rounded-2xl border border-slate-800 shadow-lg text-center relative overflow-hidden group hover:border-amber-500/50 transition-colors">
               <div className="absolute top-0 left-0 w-full h-1 bg-amber-500 opacity-50 group-hover:opacity-100 transition-opacity"></div>
               <div className="flex justify-center mb-2 text-amber-500/80 group-hover:scale-110 transition-transform"><Clock size={20} strokeWidth={2.5} /></div>
               <p className="text-2xl font-black text-amber-400 mb-1">{metrics.abertos}</p>
               <p className="text-[10px] font-black text-amber-500/70 uppercase tracking-widest">Abertos</p>
             </div>
 
-            <div className="bg-blue-900/40 p-5 rounded-2xl border border-blue-800 shadow-lg text-center relative overflow-hidden group hover:border-blue-500/50 transition-colors">
+            <div className="bg-[#0f172a] p-5 rounded-2xl border border-slate-800 shadow-lg text-center relative overflow-hidden group hover:border-blue-500/50 transition-colors">
               <div className="absolute top-0 left-0 w-full h-1 bg-blue-500 opacity-50 group-hover:opacity-100 transition-opacity"></div>
               <div className="flex justify-center mb-2 text-blue-500/80 group-hover:scale-110 transition-transform"><Send size={20} strokeWidth={2.5} /></div>
               <p className="text-2xl font-black text-blue-400 mb-1">{metrics.enviados}</p>
               <p className="text-[10px] font-black text-blue-500/70 uppercase tracking-widest">Enviados</p>
             </div>
 
-            <div className="bg-blue-900/40 p-5 rounded-2xl border border-blue-800 shadow-lg text-center relative overflow-hidden group hover:border-emerald-500/50 transition-colors">
+            <div className="bg-[#0f172a] p-5 rounded-2xl border border-slate-800 shadow-lg text-center relative overflow-hidden group hover:border-emerald-500/50 transition-colors">
               <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500 opacity-50 group-hover:opacity-100 transition-opacity"></div>
               <div className="flex justify-center mb-2 text-emerald-500/80 group-hover:scale-110 transition-transform"><CheckCircle size={20} strokeWidth={2.5} /></div>
               <p className="text-2xl font-black text-emerald-400 mb-1">{metrics.aprovados}</p>
               <p className="text-[10px] font-black text-emerald-500/70 uppercase tracking-widest">Aprovados</p>
             </div>
 
-            <div className="bg-blue-900/40 p-5 rounded-2xl border border-blue-800 shadow-lg text-center relative overflow-hidden group hover:border-rose-500/50 transition-colors">
+            <div className="bg-[#0f172a] p-5 rounded-2xl border border-slate-800 shadow-lg text-center relative overflow-hidden group hover:border-rose-500/50 transition-colors">
               <div className="absolute top-0 left-0 w-full h-1 bg-rose-500 opacity-50 group-hover:opacity-100 transition-opacity"></div>
               <div className="flex justify-center mb-2 text-rose-500/80 group-hover:scale-110 transition-transform"><XCircle size={20} strokeWidth={2.5} /></div>
               <p className="text-2xl font-black text-rose-400 mb-1">{metrics.recusados}</p>
               <p className="text-[10px] font-black text-rose-500/70 uppercase tracking-widest">Recusados</p>
             </div>
 
-            <div className="bg-blue-900/40 p-5 rounded-2xl border border-blue-800 shadow-lg text-center relative overflow-hidden group hover:border-slate-500/50 transition-colors">
+            <div className="bg-[#0f172a] p-5 rounded-2xl border border-slate-800 shadow-lg text-center relative overflow-hidden group hover:border-slate-500/50 transition-colors">
               <div className="absolute top-0 left-0 w-full h-1 bg-slate-500 opacity-50 group-hover:opacity-100 transition-opacity"></div>
               <div className="flex justify-center mb-2 text-slate-500/80 group-hover:scale-110 transition-transform"><AlertTriangle size={20} strokeWidth={2.5} /></div>
               <p className="text-2xl font-black text-slate-400 mb-1">{metrics.cancelados}</p>
@@ -355,7 +355,7 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
           </div>
 
           {/* Performance Rate */}
-          <div className="bg-blue-900/40 p-6 rounded-2xl border border-blue-800 shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
+          <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
             <div className="absolute right-0 top-0 w-64 h-full bg-gradient-to-l from-emerald-500/5 to-transparent pointer-events-none"></div>
             <div>
               <h3 className="text-xl font-black text-white flex items-center gap-2">
@@ -365,7 +365,7 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
               <p className="text-sm text-slate-400 font-medium mt-1">Porcentagem de orçamentos que foram convertidos em vendas</p>
             </div>
             <div className="flex items-center gap-4 w-full md:w-1/2 justify-end relative z-10">
-              <div className="flex-1 max-w-xs h-4 bg-blue-950 border border-blue-900 rounded-full overflow-hidden shadow-inner">
+              <div className="flex-1 max-w-xs h-4 bg-slate-950 border border-slate-800 rounded-full overflow-hidden shadow-inner">
                 <div 
                   className={`h-full transition-all duration-1000 ease-out ${metrics.taxaAprovacao >= 50 ? 'bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-gradient-to-r from-amber-600 to-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.5)]'}`}
                   style={{ width: `${metrics.taxaAprovacao}%` }}
@@ -399,7 +399,7 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border active:scale-95 ${
                     filtroAgenda === f
                       ? 'bg-amber-600 text-white shadow-[0_0_15px_rgba(245,158,11,0.3)] border-amber-500'
-                      : 'bg-blue-900/40 border-blue-800/50 text-slate-400 hover:bg-blue-800 hover:text-white'
+                      : 'bg-[#0f172a] border-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
                   }`}
                 >
                   {f === 'Atrasados' && '🚨 '}
@@ -414,8 +414,8 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
             {/* Lista da Agenda */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {agenda.length === 0 ? (
-                <div className="col-span-full py-16 bg-blue-900/20 rounded-3xl border border-dashed border-blue-800 text-center flex flex-col items-center">
-                  <div className="p-4 bg-blue-900/50 rounded-full mb-4 border border-blue-800">
+                <div className="col-span-full py-16 bg-slate-900/20 rounded-3xl border border-dashed border-slate-800 text-center flex flex-col items-center">
+                  <div className="p-4 bg-slate-900/50 rounded-full mb-4 border border-slate-800">
                     <CheckSquare size={48} className="text-blue-500/50" />
                   </div>
                   <p className="text-xl font-black text-white">Tudo limpo por aqui!</p>
@@ -430,7 +430,7 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
                   const isAtrasado = orc.data_retorno && orc.data_retorno < new Date().toISOString().split('T')[0];
                   
                   return (
-                    <div key={orc.id || orc.numero} className="bg-blue-900/40 p-5 rounded-2xl border border-blue-800 shadow-lg flex flex-col hover:border-blue-700 hover:bg-blue-900/60 transition-all group relative overflow-hidden">
+                    <div key={orc.id || orc.numero} className="bg-[#0f172a] p-5 rounded-2xl border border-slate-800 shadow-lg flex flex-col hover:border-slate-700 hover:bg-slate-800/60 transition-all group relative overflow-hidden">
                       <div className={`absolute top-0 left-0 w-1 h-full opacity-50 group-hover:opacity-100 transition-opacity ${
                         isAtrasado ? 'bg-rose-500' : 'bg-blue-500'
                       }`}></div>
@@ -457,7 +457,7 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
                         )}
                         
                         {orc.proxima_acao && (
-                          <div className="flex items-start gap-2.5 text-sm bg-blue-950/50 p-3 rounded-xl border border-blue-800/50 shadow-inner">
+                          <div className="flex items-start gap-2.5 text-sm bg-slate-900/50 p-3 rounded-xl border border-slate-800 shadow-inner">
                             <CheckSquare size={16} strokeWidth={2.5} className="text-amber-500 mt-0.5 flex-shrink-0" />
                             <span className="text-amber-400 font-medium leading-relaxed">{orc.proxima_acao}</span>
                           </div>
@@ -485,3 +485,4 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport }: DashboardM
     </div>
   );
 }
+

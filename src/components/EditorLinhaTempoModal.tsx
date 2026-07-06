@@ -19,6 +19,13 @@ interface HistoricoItem {
 }
 
 export function EditorLinhaTempoModal({ isOpen, onClose, orcamento }: EditorLinhaTempoModalProps) {
+  const normalizeStatus = (status: string) => {
+    if (!status) return status;
+    if (status === 'Aguardando pagamento ou autorização') return 'Aguardando pagamento/autorização de compra';
+    if (status === 'Pagamento/autorização aprovado') return 'Pedido autorizado para produção';
+    return status;
+  };
+
   const [historico, setHistorico] = useState<HistoricoItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -198,7 +205,7 @@ export function EditorLinhaTempoModal({ isOpen, onClose, orcamento }: EditorLinh
                   <div className="md:w-1/3 flex flex-col justify-start border-b md:border-b-0 md:border-r border-slate-800/80 pb-4 md:pb-0 md:pr-4">
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Status (Não editável)</span>
                     <span className="inline-block px-3 py-1.5 bg-slate-800 text-slate-200 border border-slate-700 rounded-lg text-sm font-bold w-fit">
-                      {item.status}
+                      {normalizeStatus(item.status)}
                     </span>
                     <span className="text-xs text-slate-500 mt-3">Criado em: {new Date(item.criado_em).toLocaleString('pt-BR')}</span>
                   </div>

@@ -52,8 +52,8 @@ const ETAPAS_TIMELINE = [
   "Solicitação recebida",
   "Orçamento enviado",
   "Aguardando confirmação do cliente",
-  "Aguardando pagamento ou autorização",
-  "Pagamento/autorização aprovado",
+  "Aguardando pagamento/autorização de compra",
+  "Pedido autorizado para produção",
   "Pedido em produção",
   "Nota fiscal emitida",
   "Pedido em fase de entrega",
@@ -84,7 +84,24 @@ export function AcompanhamentoPublico() {
         if (!data || data.length === 0) {
           setError('Pedido não encontrado ou link inválido.');
         } else {
-          setDados(data[0] as DadosAcompanhamento);
+          const rawDados = data[0] as DadosAcompanhamento;
+          const normalizeStatus = (status: string) => {
+            if (!status) return status;
+            if (status === 'Aguardando pagamento ou autorização') return 'Aguardando pagamento/autorização de compra';
+            if (status === 'Pagamento/autorização aprovado') return 'Pedido autorizado para produção';
+            return status;
+          };
+          
+          const normalizados: DadosAcompanhamento = {
+            ...rawDados,
+            status_acompanhamento: normalizeStatus(rawDados.status_acompanhamento),
+            historico_status: rawDados.historico_status?.map(h => ({
+              ...h,
+              status: normalizeStatus(h.status)
+            }))
+          };
+          
+          setDados(normalizados);
         }
       } catch (err: any) {
         console.error('Erro ao buscar pedido:', err);
@@ -157,8 +174,8 @@ export function AcompanhamentoPublico() {
     if (etapaNome === "Solicitação recebida") IconComp = FileDown;
     else if (etapaNome === "Orçamento enviado") IconComp = Send;
     else if (etapaNome === "Aguardando confirmação do cliente") IconComp = Clock;
-    else if (etapaNome === "Aguardando pagamento ou autorização") IconComp = CreditCard;
-    else if (etapaNome === "Pagamento/autorização aprovado") IconComp = BadgeCheck;
+    else if (etapaNome === "Aguardando pagamento/autorização de compra") IconComp = CreditCard;
+    else if (etapaNome === "Pedido autorizado para produção") IconComp = BadgeCheck;
     else if (etapaNome === "Pedido em produção") IconComp = Package;
     else if (etapaNome === "Nota fiscal emitida") IconComp = Receipt;
     else if (etapaNome === "Pedido em fase de entrega") IconComp = Truck;

@@ -321,11 +321,11 @@ FormaPlay — Jogos Educacionais`;
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-blue-950/80 backdrop-blur-md animate-fade-in transition-opacity">
-      <div className="bg-blue-950 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] w-full max-w-4xl max-h-[90vh] flex flex-col border border-blue-800/50 overflow-hidden text-slate-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in transition-opacity">
+      <div className="bg-[#0f172a] rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] w-full max-w-4xl max-h-[90vh] flex flex-col border border-slate-800/50 overflow-hidden text-slate-200">
         
         {/* Modal header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 border-b border-blue-900 bg-blue-950 shadow-sm relative z-10 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 border-b border-slate-800 bg-[#0f172a] shadow-sm relative z-10 gap-4">
           <div className="flex items-center gap-4">
             <div className="p-3.5 bg-gradient-to-br from-emerald-600 to-emerald-400 text-slate-950 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hidden sm:block">
               <Mailbox size={28} strokeWidth={2.5} />
@@ -339,14 +339,14 @@ FormaPlay — Jogos Educacionais`;
             <button
               onClick={onRefresh}
               disabled={loading}
-              className="p-2.5 rounded-xl bg-blue-900/80 text-emerald-400 hover:text-emerald-300 hover:bg-blue-800 transition-all border border-blue-800 shadow-sm disabled:opacity-50 active:scale-95"
+              className="p-2.5 rounded-xl bg-slate-900/80 text-emerald-400 hover:text-emerald-300 hover:bg-slate-800 transition-all border border-slate-800 shadow-sm disabled:opacity-50 active:scale-95"
               title="Atualizar"
             >
               <RefreshCw size={20} strokeWidth={2.5} className={loading ? 'animate-spin' : ''} />
             </button>
             <button
               onClick={onClose}
-              className="p-2.5 rounded-xl bg-blue-900 hover:bg-slate-700 hover:text-white transition-all border border-blue-800 text-slate-400 shadow-sm active:scale-95"
+              className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-700 hover:text-white transition-all border border-slate-800 text-slate-400 shadow-sm active:scale-95"
             >
               <X size={20} strokeWidth={2.5} />
             </button>
@@ -354,7 +354,7 @@ FormaPlay — Jogos Educacionais`;
         </div>
 
         {/* Push Notification Panel - Fase 2 */}
-        <div className="px-6 py-5 bg-blue-900/20 border-b border-blue-900/60 flex flex-col gap-4">
+        <div className="px-6 py-5 bg-slate-900/20 border-b border-slate-800/60 flex flex-col gap-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
               <div className={`p-2 rounded-xl mt-0.5 ${permission === 'granted' && isSubscribed ? 'bg-emerald-500/10 text-emerald-400' : permission === 'denied' ? 'bg-rose-500/10 text-rose-400' : 'bg-slate-500/10 text-slate-400'}`}>
@@ -396,7 +396,7 @@ FormaPlay — Jogos Educacionais`;
 
           {/* Configuration Fields */}
           {isSupported && permission !== 'denied' && (!isSubscribed || permission === 'default') && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-blue-950/40 p-4 rounded-2xl border border-blue-900/50 max-w-2xl animate-fade-in">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#0f172a]/40 p-4 rounded-2xl border border-slate-800/50 max-w-2xl animate-fade-in">
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Identificação do Aparelho</label>
                 <input
@@ -404,7 +404,7 @@ FormaPlay — Jogos Educacionais`;
                   placeholder="Ex: Samsung Edson"
                   value={deviceLabel}
                   onChange={(e) => setDeviceLabel(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-blue-900/40 border border-blue-850 text-white rounded-xl text-xs font-semibold focus:outline-none focus:border-green-500 transition-all placeholder-slate-500"
+                  className="w-full px-3.5 py-2 bg-slate-900/40 border border-blue-850 text-white rounded-xl text-xs font-semibold focus:outline-none focus:border-green-500 transition-all placeholder-slate-500"
                 />
                 <span className="block text-[9px] text-slate-500 mt-1 font-medium">Use nomes distintos para cada aparelho (ex: Samsung Edson, PC Edson).</span>
               </div>
@@ -415,7 +415,7 @@ FormaPlay — Jogos Educacionais`;
                   placeholder="Informe o token secreto"
                   value={adminToken}
                   onChange={(e) => setAdminToken(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-blue-900/40 border border-blue-850 text-white rounded-xl text-xs font-semibold focus:outline-none focus:border-green-500 transition-all placeholder-slate-500"
+                  className="w-full px-3.5 py-2 bg-slate-900/40 border border-blue-850 text-white rounded-xl text-xs font-semibold focus:outline-none focus:border-green-500 transition-all placeholder-slate-500"
                 />
               </div>
               <div className="flex items-end">
@@ -432,7 +432,7 @@ FormaPlay — Jogos Educacionais`;
         </div>
 
         {/* Filters */}
-        <div className="px-6 py-4 bg-blue-950/80 border-b border-blue-900 flex gap-2 overflow-x-auto hide-scrollbar relative z-10">
+        <div className="px-6 py-4 bg-slate-950/80 border-b border-slate-800 flex gap-2 overflow-x-auto hide-scrollbar relative z-10">
           {Object.entries(counts).map(([key, count]) => (
             <button
               key={key}
@@ -440,12 +440,12 @@ FormaPlay — Jogos Educacionais`;
               className={`px-5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 border active:scale-95 ${
                 filtro === key 
                   ? 'bg-emerald-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] border-emerald-500/50' 
-                  : 'bg-blue-900/50 text-slate-400 hover:bg-blue-800 hover:text-white border-blue-800'
+                  : 'bg-slate-900/50 text-slate-400 hover:bg-slate-800 hover:text-white border-slate-800'
               }`}
             >
               {key}
               <span className={`px-2 py-0.5 rounded-lg text-[10px] ${
-                filtro === key ? 'bg-white/20 text-white' : 'bg-blue-950 text-slate-400 border border-blue-800'
+                filtro === key ? 'bg-white/20 text-white' : 'bg-[#0f172a] text-slate-400 border border-slate-800'
               }`}>
                 {count}
               </span>
@@ -454,15 +454,15 @@ FormaPlay — Jogos Educacionais`;
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-blue-950/30">
+        <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-950/30">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-10 h-10 border-4 border-blue-900 border-t-emerald-500 rounded-full animate-spin shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+              <div className="w-10 h-10 border-4 border-slate-800 border-t-emerald-500 rounded-full animate-spin shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
               <p className="mt-4 text-slate-400 font-bold uppercase tracking-widest text-sm">Atualizando...</p>
             </div>
           ) : solicitacoesFiltradas.length === 0 ? (
-            <div className="text-center py-20 text-slate-500 flex flex-col items-center bg-blue-900/20 rounded-3xl border border-dashed border-blue-800">
-              <div className="p-4 bg-blue-900/50 rounded-full mb-4 border border-blue-800">
+            <div className="text-center py-20 text-slate-500 flex flex-col items-center bg-slate-900/20 rounded-3xl border border-dashed border-slate-800">
+              <div className="p-4 bg-slate-900/50 rounded-full mb-4 border border-slate-800">
                 <Mailbox size={48} className="opacity-50 text-slate-400" />
               </div>
               <p className="text-xl font-black text-white">Nenhuma solicitação encontrada</p>
@@ -475,7 +475,7 @@ FormaPlay — Jogos Educacionais`;
               {solicitacoesFiltradas.map((sol) => (
                 <div
                   key={sol.id}
-                  className={`flex flex-col gap-4 p-5 rounded-2xl bg-blue-900/40 shadow-lg transition-all group relative overflow-hidden border border-blue-800 hover:bg-blue-900/60 hover:-translate-y-1 ${
+                  className={`flex flex-col gap-4 p-5 rounded-2xl bg-slate-900/40 shadow-lg transition-all group relative overflow-hidden border border-slate-800 hover:bg-slate-900/60 hover:-translate-y-1 ${
                     sol.status === 'Convertida' ? 'opacity-80' : sol.status === 'Spam' || sol.status === 'Arquivada' ? 'opacity-60 grayscale-[0.2]' : ''
                   }`}
                 >
@@ -547,7 +547,7 @@ FormaPlay — Jogos Educacionais`;
                   </div>
 
                   {/* Detalhes da Solicitacao */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 bg-blue-900/30 p-4 rounded-xl border border-blue-800/50 ml-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 bg-slate-900/30 p-4 rounded-xl border border-slate-800/50 ml-2">
                     {sol.itens && Array.isArray(sol.itens) && sol.itens.length > 0 ? (
                       <>
                         <div>
@@ -628,7 +628,7 @@ FormaPlay — Jogos Educacionais`;
                   </div>
 
                   {/* Controles de Status Secundarios */}
-                  <div className="flex flex-wrap justify-end gap-3 mt-3 pt-3 border-t border-blue-800/50 ml-2">
+                  <div className="flex flex-wrap justify-end gap-3 mt-3 pt-3 border-t border-slate-800/50 ml-2">
                     {sol.status !== 'Pendente' && (
                       <button
                         onClick={() => atualizarStatus(sol.id, 'Pendente')}
@@ -657,4 +657,5 @@ FormaPlay — Jogos Educacionais`;
     </div>
   );
 }
+
 
