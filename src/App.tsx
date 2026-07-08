@@ -1720,7 +1720,7 @@ function App() {
                 <h2 className="font-black text-slate-100 mb-5 text-lg">Resumo Financeiro</h2>
                 <div className="space-y-3">
                   <div>
-                    <label className="form-label">Frete (R$)</label>
+                    <label className="form-label">Frete selecionado/salvo (R$)</label>
                     <input name="frete" type="number" min="0" step="0.01" value={form.frete} onChange={handleChange}
                       className="form-input mb-3" />
                     
@@ -1748,29 +1748,40 @@ function App() {
                         )}
 
                         {opcoesFrete && opcoesFrete.length > 0 && (
-                          <div className="space-y-2 mt-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-                            {opcoesFrete.map((opcao: any) => (
-                              <label key={opcao.name} className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all ${freteSelecionado?.name === opcao.name ? 'border-green-500 bg-green-900/20' : 'border-slate-700 bg-[#0A0F1C] hover:border-slate-500'}`}>
-                                <div className="flex items-center gap-2">
-                                  <input 
-                                    type="radio" 
-                                    name="frete_app" 
-                                    checked={freteSelecionado?.name === opcao?.name} 
-                                    onChange={() => handleSelecionarFrete(opcao)}
-                                    className="w-3 h-3 text-green-600 bg-slate-800 border-slate-600 focus:ring-green-500 cursor-pointer"
-                                  />
-                                  <div>
-                                    <p className="font-bold text-white text-xs leading-tight">{opcao?.company} - {opcao?.name}</p>
-                                    <p className="text-[10px] text-slate-400">{opcao?.delivery_time} dias úteis</p>
+                          <div className="space-y-2 mt-2">
+                            {form.frete > 0 && !opcoesFrete.some(o => o.price === form.frete) && (
+                              <p className="text-[10px] text-amber-400 font-medium mb-1 border border-amber-500/20 bg-amber-900/20 p-2 rounded">
+                                ℹ️ O valor de frete salvo ({fmtCurrency(form.frete)}) difere do cálculo. Pode ser de uma cotação anterior ou preenchimento manual.
+                              </p>
+                            )}
+                            <p className="text-xs text-blue-300 font-medium mb-2">Escolha uma opção de frete para atualizar o valor do orçamento automaticamente.</p>
+                            <div className="max-h-48 overflow-y-auto pr-1 custom-scrollbar space-y-2">
+                              {opcoesFrete.map((opcao: any, idx: number) => (
+                                <label key={opcao.name} className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all ${freteSelecionado?.name === opcao.name ? 'border-green-500 bg-green-900/20 shadow-sm' : 'border-slate-700 bg-[#0A0F1C] hover:border-slate-500'}`}>
+                                  <div className="flex items-center gap-2">
+                                    <input 
+                                      type="radio" 
+                                      name="frete_app" 
+                                      checked={freteSelecionado?.name === opcao?.name} 
+                                      onChange={() => handleSelecionarFrete(opcao)}
+                                      className="w-3 h-3 text-green-600 bg-slate-800 border-slate-600 focus:ring-green-500 cursor-pointer"
+                                    />
+                                    <div>
+                                      <p className="font-bold text-white text-xs leading-tight flex items-center gap-2">
+                                        {opcao?.company} - {opcao?.name}
+                                        {idx === 0 && <span className="bg-green-600 text-white text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-wider">Menor Preço</span>}
+                                      </p>
+                                      <p className="text-[10px] text-slate-400 mt-0.5">{opcao?.delivery_time} dias úteis</p>
+                                    </div>
                                   </div>
-                                </div>
-                                <div className="text-right">
-                                  <p className="font-bold text-green-400 text-xs">
-                                    {(opcao?.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                  </p>
-                                </div>
-                              </label>
-                            ))}
+                                  <div className="text-right flex items-center">
+                                    <p className="font-bold text-green-400 text-xs">
+                                      {fmtCurrency(opcao?.price || 0)}
+                                    </p>
+                                  </div>
+                                </label>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>

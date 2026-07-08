@@ -32,7 +32,6 @@ export default async function handler(req: Request) {
       const payload = {
         from: { postal_code: originCep },
         to: { postal_code: cepDestino.replace(/\D/g, '') },
-        services: "1,2,3",
         options: {
           own_hand: false,
           receipt: false,
@@ -46,6 +45,8 @@ export default async function handler(req: Request) {
           weight: vol.peso
         }
       };
+
+      console.log(`[API Frete] Payload SuperFrete Vol ${index + 1}:`, JSON.stringify(payload));
 
       const resp = await fetch(`${baseUrl}/api/v0/calculator`, {
         method: 'POST',
