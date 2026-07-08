@@ -32,6 +32,7 @@ export default async function handler(req: Request) {
       const payload = {
         from: { postal_code: originCep },
         to: { postal_code: cepDestino.replace(/\D/g, '') },
+        services: "1,2,4,17",
         options: {
           own_hand: false,
           receipt: false,
@@ -64,6 +65,8 @@ export default async function handler(req: Request) {
       if (!resp.ok) {
         throw new Error(`Erro na SuperFrete: ${resp.status} - ${JSON.stringify(responseData)}`);
       }
+      
+      console.log(`DEBUG SUPERFRETE - serviços retornados vol ${index + 1}:`, JSON.stringify(responseData));
       return responseData;
     });
 

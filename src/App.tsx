@@ -217,6 +217,8 @@ function App() {
       }
 
       const data = await res.json();
+      console.log("DEBUG FRETE - resposta completa da API:", data);
+      
       if (Array.isArray(data) && data.length > 0) {
         data.sort((a, b) => a.price - b.price);
         setOpcoesFrete(data);
