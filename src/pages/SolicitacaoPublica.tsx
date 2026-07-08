@@ -919,9 +919,25 @@ export const SolicitacaoPublica: React.FC = () => {
             </div>
 
             {/* Secao Frete */}
-            {itensCarrinho.length > 0 && form?.cep?.length >= 8 && (
+            {itensCarrinho.length > 0 && (
               <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700 mt-6">
-                {isCalculoFreteDisponivel ? (
+                {(!form?.cep || form?.cep?.length < 8) ? (
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
+                    <div>
+                      <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                        🚚 Opções de Frete
+                      </h3>
+                      <p className="text-sm text-slate-400">Informe o CEP de entrega para calcular o frete.</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled
+                      className="flex items-center gap-2 px-5 py-2.5 bg-slate-600 text-slate-300 rounded-lg cursor-not-allowed font-bold text-sm whitespace-nowrap"
+                    >
+                      Calcular Frete
+                    </button>
+                  </div>
+                ) : isCalculoFreteDisponivel ? (
                   <>
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
                       <div>
@@ -978,7 +994,7 @@ export const SolicitacaoPublica: React.FC = () => {
                       🚚 Opções de Frete
                     </h3>
                     <div className="bg-blue-900/30 border border-blue-500/30 text-blue-200 p-4 rounded-lg text-sm">
-                      ℹ️ <strong>Cálculo automático de frete indisponível:</strong> alguns produtos selecionados não possuem peso ou medidas cadastrados. Prossiga com o envio e confirmaremos o valor exato no WhatsApp.
+                      ℹ️ <strong>Produto sem dimensões/peso cadastrados para cálculo automático.</strong> Prossiga com o envio e confirmaremos o valor exato no atendimento.
                     </div>
                   </div>
                 )}

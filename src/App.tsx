@@ -5,7 +5,8 @@ import {
   FileText, Users, Tag, Sparkles, Check, Package, LogOut, User, BarChart2, Mailbox, Download, Activity, Link as LinkIcon, ExternalLink, Layers
 } from 'lucide-react';
 import { supabase } from './supabase.ts';
-import { Orcamento, Cliente, EMPRESA, PRODUTOS, emptyOrcamento, SolicitacaoOrcamento } from './types';
+import { Orcamento, Cliente, EMPRESA, PRODUTOS, emptyOrcamento, SolicitacaoOrcamento, formatarCampoCliente } from './types';
+import { calcularVolumesMultiProdutos } from './config/produtosLogisticos';
 import { PrintView } from './components/PrintView';
 import { ConfirmacaoCompraView } from './components/ConfirmacaoCompraView';
 import { HistoricoModal } from './components/HistoricoModal';
@@ -159,6 +160,89 @@ function App() {
   const [loadingSolicitacoes, setLoadingSolicitacoes] = useState(false);
   const [solicitacaoOrigemId, setSolicitacaoOrigemId] = useState<string | null>(null);
   const [clienteData, setClienteData] = useState<Cliente | null>(null);
+
+  const [loadingFrete, setLoadingFrete] = useState(false);
+  const [erroFrete, setErroFrete] = useState<string | null>(null);
+  const [opcoesFrete, setOpcoesFrete] = useState<any[] | null>(null);
+  const [freteSelecionado, setFreteSelecionado] = useState<any | null>(null);
+
+  const calcularFreteApp = async () => {
+    // Pegar o CEP (priorizar cliente vinculado, senao cliente_cep do form)
+    const cepBruto = clienteData?.cep || form.cliente_cep || form.cep;
+    const cepDestinoNormalizado = cepBruto ? String(cepBruto).replace(/\D/g, '') : '';
+    
+    if (!cepDestinoNormalizado || cepDestinoNormalizado.length < 8) {
+      setErroFrete("CEP do cliente não encontrado.");
+      return;
+    }
+
+    setLoadingFrete(true);
+    setErroFrete(null);
+    setOpcoesFrete(null);
+    setFreteSelecionado(null);
+
+    try {
+      const itensOrcamento = form.itens && form.itens.length > 0 ? form.itens : [{ nome: form.produto, quantidade: form.quantidade }];
+      
+      if (!itensOrcamento || itensOrcamento.length === 0 || !itensOrcamento[0].nome) {
+        setErroFrete("Adicione um produto antes de calcular o frete.");
+        setLoadingFrete(false);
+        return;
+      }
+
+      const volumes = calcularVolumesMultiProdutos(itensOrcamento, []);
+
+      console.log("DEBUG FRETE - cliente vinculado:", clienteData);
+      console.log("DEBUG FRETE - cep destino:", cepDestinoNormalizado);
+      console.log("DEBUG FRETE - produtos orçamento:", itensOrcamento);
+      console.log("DEBUG FRETE - volumes:", volumes);
+
+      if (!volumes || volumes.length === 0) {
+        setErroFrete("Produto sem peso ou medidas cadastradas.");
+        setLoadingFrete(false);
+        return;
+      }
+
+      const res = await fetch('/api/frete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cepDestino: cepDestinoNormalizado, volumes })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        console.error("DEBUG FRETE - Erro API (Status HTTP):", res.status);
+        console.error("DEBUG FRETE - Resposta de erro:", errorData);
+        throw new Error(errorData.error || errorData.details || 'Falha na API de frete');
+      }
+
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        data.sort((a, b) => a.price - b.price);
+        setOpcoesFrete(data);
+      } else {
+        throw new Error('Sem opções de frete retornadas.');
+      }
+    } catch (err: any) {
+      console.error("DEBUG FRETE - Exceção capturada:", err);
+      if (err.message === 'Produto sem peso ou medidas cadastradas.') {
+        setErroFrete("Produto sem peso ou medidas cadastradas.");
+      } else {
+        setErroFrete(err.message || "Não foi possível calcular o frete automaticamente. Confirme manualmente.");
+      }
+    } finally {
+      setLoadingFrete(false);
+    }
+  };
+
+  const handleSelecionarFrete = (opcao: any) => {
+    setFreteSelecionado(opcao);
+    setForm(prev => ({
+      ...prev,
+      frete: opcao.price,
+      observacao_frete: `${opcao.company} - ${opcao.name} (${opcao.delivery_time} dias úteis)`
+    }));
+  };
 
   const converterSolicitacao = async (s: SolicitacaoOrcamento) => {
     // Mapeamento seguro de nomes do formulário público para o orçamento interno
@@ -977,22 +1061,28 @@ function App() {
                   Dados do Cliente
                 </h2>
 
-                {form.cliente_nome && (
+                {(clienteData || form.cliente_nome) && (
                   <div className="mb-6 p-4 bg-slate-900/50 border border-emerald-500/20 rounded-xl text-sm text-slate-300 shadow-inner">
                     <div className="mb-3 border-b border-emerald-500/20 pb-2">
                       <p className="font-bold text-emerald-400 flex items-center gap-2">
                         Cliente Vinculado ao Orçamento
                       </p>
                       <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                        Dados carregados do cadastro do cliente.
+                        {clienteData ? "Dados atuais do cadastro do cliente vinculado." : "Dados carregados do cadastro do cliente."}
                       </p>
                     </div>
                     <div className="space-y-1.5 mt-2">
-                      <p><strong className="text-slate-400">Razão Social/Nome:</strong> {form.cliente_razao_social || form.cliente_nome}</p>
-                      {form.cliente_nome_fantasia && <p><strong className="text-slate-400">Fantasia:</strong> {form.cliente_nome_fantasia}</p>}
-                      {form.cliente_documento && <p><strong className="text-slate-400">Documento:</strong> {form.cliente_documento}</p>}
-                      {form.cliente_contato_responsavel && <p><strong className="text-slate-400">Contato:</strong> {form.cliente_contato_responsavel}</p>}
-                      {form.cliente_endereco_completo && <p><strong className="text-slate-400">Endereço:</strong> {form.cliente_endereco_completo}</p>}
+                      <p><strong className="text-slate-400">Razão Social/Nome:</strong> {formatarCampoCliente(clienteData?.razao_social || clienteData?.nome || form.cliente_razao_social || form.cliente_nome)}</p>
+                      <p><strong className="text-slate-400">Fantasia:</strong> {formatarCampoCliente(clienteData?.nome_fantasia || form.cliente_nome_fantasia)}</p>
+                      <p><strong className="text-slate-400">Documento:</strong> {formatarCampoCliente(clienteData?.documento || form.cliente_documento)}</p>
+                      <p><strong className="text-slate-400">Contato:</strong> {formatarCampoCliente(clienteData?.contato_responsavel || form.cliente_contato_responsavel)}</p>
+                      <p><strong className="text-slate-400">Telefone:</strong> {formatarCampoCliente(clienteData?.telefone || form.cliente_telefone || form.telefone)}</p>
+                      <p><strong className="text-slate-400">E-mail:</strong> {formatarCampoCliente(clienteData?.email || form.cliente_email || form.email)}</p>
+                      <p><strong className="text-slate-400">Endereço:</strong> {
+                        formatarCampoCliente(clienteData 
+                          ? `${clienteData.endereco || ''}, ${clienteData.numero || 'S/N'}${clienteData.complemento ? ' - ' + clienteData.complemento : ''} - ${clienteData.bairro || ''} - ${clienteData.cidade || ''}/${clienteData.estado || ''} - CEP: ${clienteData.cep || ''}`
+                          : form.cliente_endereco_completo)
+                      }</p>
                     </div>
                   </div>
                 )}
@@ -1000,23 +1090,23 @@ function App() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <label className="form-label">Cliente *</label>
-                    <input name="cliente" value={form.cliente} onChange={handleChange}
-                      className="form-input" placeholder="Nome completo ou razão social" />
+                    <input name="cliente" value={clienteData ? formatarCampoCliente(clienteData.nome) : form.cliente} onChange={handleChange}
+                      className={`form-input ${clienteData ? 'cursor-not-allowed opacity-70' : ''}`} readOnly={!!clienteData} placeholder="Nome completo ou razão social" />
                   </div>
                   <div>
                     <label className="form-label">Telefone</label>
-                    <input name="telefone" value={form.telefone} onChange={handleChange}
-                      className="form-input" placeholder="(00) 00000-0000" />
+                    <input name="telefone" value={clienteData ? formatarCampoCliente(clienteData.telefone) : form.telefone} onChange={handleChange}
+                      className={`form-input ${clienteData ? 'cursor-not-allowed opacity-70' : ''}`} readOnly={!!clienteData} placeholder="(00) 00000-0000" />
                   </div>
                   <div>
                     <label className="form-label">Cidade/UF</label>
-                    <input name="cidade" value={form.cidade} onChange={handleChange}
-                      className="form-input" placeholder="Ex: São Paulo/SP" />
+                    <input name="cidade" value={clienteData ? formatarCampoCliente(`${clienteData.cidade || ''}/${clienteData.estado || ''}`) : form.cidade} onChange={handleChange}
+                      className={`form-input ${clienteData ? 'cursor-not-allowed opacity-70' : ''}`} readOnly={!!clienteData} placeholder="Ex: São Paulo/SP" />
                   </div>
                   <div className="sm:col-span-2">
                     <label className="form-label">E-mail</label>
-                    <input name="email" type="email" value={form.email} onChange={handleChange}
-                      className="form-input" placeholder="cliente@email.com" />
+                    <input name="email" type="text" value={clienteData ? formatarCampoCliente(clienteData.email) : formatarCampoCliente(form.email)} onChange={handleChange}
+                      className={`form-input ${clienteData ? 'cursor-not-allowed opacity-70' : ''}`} readOnly={!!clienteData} placeholder="cliente@email.com" />
                   </div>
                 </div>
               </div>
@@ -1632,7 +1722,59 @@ function App() {
                   <div>
                     <label className="form-label">Frete (R$)</label>
                     <input name="frete" type="number" min="0" step="0.01" value={form.frete} onChange={handleChange}
-                      className="form-input" />
+                      className="form-input mb-3" />
+                    
+                    {/* Botão SuperFrete */}
+                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                      <div className="flex flex-col gap-3">
+                        <button
+                          type="button"
+                          onClick={calcularFreteApp}
+                          disabled={loadingFrete || (!clienteData?.cep && !form.cliente_cep && !form.cep)}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 active:scale-95 transition-all font-bold text-sm shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          {loadingFrete ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : null}
+                          {loadingFrete ? 'Calculando...' : 'Calcular Frete pela SuperFrete'}
+                        </button>
+                        
+                        {(!clienteData?.cep && !form.cliente_cep && !form.cep) && (
+                          <p className="text-xs text-orange-400 text-center">Informe o CEP do cliente para calcular.</p>
+                        )}
+
+                        {erroFrete && (
+                          <div className="bg-orange-900/30 border border-orange-500/30 text-orange-200 p-3 rounded-lg text-xs">
+                            {erroFrete}
+                          </div>
+                        )}
+
+                        {opcoesFrete && opcoesFrete.length > 0 && (
+                          <div className="space-y-2 mt-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                            {opcoesFrete.map((opcao: any) => (
+                              <label key={opcao.name} className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all ${freteSelecionado?.name === opcao.name ? 'border-green-500 bg-green-900/20' : 'border-slate-700 bg-[#0A0F1C] hover:border-slate-500'}`}>
+                                <div className="flex items-center gap-2">
+                                  <input 
+                                    type="radio" 
+                                    name="frete_app" 
+                                    checked={freteSelecionado?.name === opcao?.name} 
+                                    onChange={() => handleSelecionarFrete(opcao)}
+                                    className="w-3 h-3 text-green-600 bg-slate-800 border-slate-600 focus:ring-green-500 cursor-pointer"
+                                  />
+                                  <div>
+                                    <p className="font-bold text-white text-xs leading-tight">{opcao?.company} - {opcao?.name}</p>
+                                    <p className="text-[10px] text-slate-400">{opcao?.delivery_time} dias úteis</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-bold text-green-400 text-xs">
+                                    {(opcao?.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                  </p>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <label className="form-label">Desconto (R$)</label>
@@ -1697,6 +1839,14 @@ function App() {
         <ClientesModal
           isOpen={showClientes}
           onClose={() => setShowClientes(false)}
+          onClienteUpdated={(updatedCliente) => {
+            if (form.cliente_id === updatedCliente.id || currentId) {
+              if (form.cliente_id === updatedCliente.id) {
+                setClienteData(updatedCliente);
+              }
+              carregarHistorico();
+            }
+          }}
           onSelectCliente={(cliente) => {
             const enderecoCompleto = cliente.endereco ? `${cliente.endereco}, ${cliente.numero || 'S/N'}${cliente.complemento ? `, ${cliente.complemento}` : ''}, ${cliente.bairro || ''}, ${cliente.cidade || ''}/${cliente.estado || ''}, CEP: ${cliente.cep || ''}` : '';
             setForm({

@@ -121,6 +121,11 @@ export interface Produto {
   atualizado_em: string;
 }
 
+export const formatarCampoCliente = (valor?: string | null): string => {
+  if (!valor || valor.trim() === '') return 'Não informado';
+  return valor;
+};
+
 export interface SolicitacaoOrcamento {
   id: string;
   codigo: string;

@@ -1,4 +1,4 @@
-import { Orcamento, Cliente, EMPRESA } from '../types';
+import { Orcamento, Cliente, EMPRESA, formatarCampoCliente } from '../types';
 import { Building2, MessageCircle, Mail } from 'lucide-react';
 import { FormaPlayBrand } from './FormaPlayBrand';
 
@@ -227,24 +227,22 @@ export function ConfirmacaoCompraView({ orcamento, clienteData }: ConfirmacaoCom
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div className="print-field">
               <span className="print-label">Razão Social:</span>
-              <span className="print-value">{orcamento.cliente_razao_social || orcamento.cliente_nome || clienteData?.razao_social || clienteData?.nome || orcamento.cliente}</span>
+              <span className="print-value">{formatarCampoCliente(clienteData?.razao_social || clienteData?.nome || orcamento.cliente_razao_social || orcamento.cliente_nome || orcamento.cliente)}</span>
             </div>
-            {(orcamento.cliente_documento || clienteData?.documento) && (
-              <div className="print-field">
-                <span className="print-label">CNPJ/CPF:</span>
-                <span className="print-value">{orcamento.cliente_documento || clienteData?.documento}</span>
-              </div>
-            )}
+            <div className="print-field">
+              <span className="print-label">CNPJ/CPF:</span>
+              <span className="print-value">{formatarCampoCliente(clienteData?.documento || orcamento.cliente_documento)}</span>
+            </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div className="print-field">
               <span className="print-label">Telefone:</span>
-              <span className="print-value">{orcamento.cliente_telefone || clienteData?.telefone || orcamento.telefone}</span>
+              <span className="print-value">{formatarCampoCliente(clienteData?.telefone || orcamento.cliente_telefone || orcamento.telefone)}</span>
             </div>
             <div className="print-field">
               <span className="print-label">E-mail:</span>
-              <span className="print-value">{orcamento.cliente_email || clienteData?.email || orcamento.email}</span>
+              <span className="print-value">{formatarCampoCliente(clienteData?.email || orcamento.cliente_email || orcamento.email)}</span>
             </div>
           </div>
           

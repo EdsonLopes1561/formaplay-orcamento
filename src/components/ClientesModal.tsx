@@ -6,10 +6,11 @@ import { supabase } from '../supabase';
 interface ClientesModalProps {
   onClose: () => void;
   onSelectCliente?: (cliente: Cliente) => void;
+  onClienteUpdated?: (cliente: Cliente) => void;
   isOpen?: boolean;
 }
 
-export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModalProps) {
+export function ClientesModal({ onClose, onSelectCliente, onClienteUpdated, isOpen }: ClientesModalProps) {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -174,27 +175,35 @@ export function ClientesModal({ onClose, onSelectCliente, isOpen }: ClientesModa
 
     setLoading(true);
     try {
+      let savedCliente: Cliente | null = null;
       if (editingCliente?.id) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('clientes')
           .update(formData)
-          .eq('id', editingCliente.id);
+          .eq('id', editingCliente.id)
+          .select()
+          .single();
         if (error) {
           console.error('Erro ao atualizar cliente:', error);
           alert('Erro ao atualizar cliente: ' + error.message);
           setLoading(false);
           return;
         }
+        savedCliente = data;
       } else {
-        const { error } = await supabase.from('clientes').insert(formData);
+        const { data, error } = await supabase.from('clientes').insert(formData).select().single();
         if (error) {
           console.error('Erro ao salvar cliente:', error);
           alert('Erro ao salvar cliente: ' + error.message);
           setLoading(false);
           return;
         }
+        savedCliente = data;
       }
       await loadClientes();
+      if (savedCliente && onClienteUpdated) {
+        onClienteUpdated(savedCliente);
+      }
       setShowForm(false);
       setEditingCliente(null);
       setFormData({
