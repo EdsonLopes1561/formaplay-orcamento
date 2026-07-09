@@ -32,6 +32,13 @@ export default async function handler(req: Request) {
       const payload = {
         from: { postal_code: originCep },
         to: { postal_code: cepDestino.replace(/\D/g, '') },
+        // IDs SuperFrete usados no FormaPlay:
+        // 1 = PAC
+        // 2 = SEDEX
+        // 3 = Jadlog Package
+        // 4 = serviço adicional retornado pela SuperFrete quando disponível
+        // 17/31 = Loggi / serviços relacionados, conforme disponibilidade da API
+        // Não remover o ID 3, pois ele é necessário para exibir Jadlog.
         services: "1,2,3,4,17,31",
         options: {
           own_hand: false,
