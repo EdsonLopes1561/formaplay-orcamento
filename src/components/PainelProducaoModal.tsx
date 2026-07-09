@@ -13,6 +13,8 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
   const [fetchingCompleto, setFetchingCompleto] = useState<string | null>(null);
   const [pedidos, setPedidos] = useState<any[]>([]);
   const [filtroStatus, setFiltroStatus] = useState<string>('Produção ativa');
+  const [filtroPrioridade, setFiltroPrioridade] = useState<string>('Todas');
+  const [filtroPrazo, setFiltroPrazo] = useState<string>('Todos');
 
   const carregarPedidos = async () => {
     setLoading(true);
@@ -62,6 +64,29 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
       }
     }
 
+    const dt = new Date();
+    const hojeStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+
+    if (filtroPrioridade !== 'Todas') {
+      filtrados = filtrados.filter(p => {
+        const prio = p.prioridade_producao || 'Normal';
+        return prio === filtroPrioridade;
+      });
+    }
+
+    if (filtroPrazo !== 'Todos') {
+      filtrados = filtrados.filter(p => {
+        const prazo = p.prazo_producao;
+        let pStatus = 'Sem prazo';
+        if (prazo) {
+          if (prazo < hojeStr) pStatus = 'Atrasados';
+          else if (prazo === hojeStr) pStatus = 'Vence hoje';
+          else pStatus = 'No prazo';
+        }
+        return pStatus === filtroPrazo;
+      });
+    }
+
 
     const getPrioridadeScore = (p?: string) => {
       if (p === 'Urgente') return 3;
@@ -91,7 +116,28 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
       const createdB = new Date(b.created_at).getTime();
       return createdB - createdA;
     });
-  }, [pedidos, filtroStatus]);
+  }, [pedidos, filtroStatus, filtroPrioridade, filtroPrazo]);
+
+  const stats = useMemo(() => {
+    const dt = new Date();
+    const hojeStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+
+    return pedidos.reduce((acc, p) => {
+      const prio = p.prioridade_producao || 'Normal';
+      const prazo = p.prazo_producao;
+      
+      if (prio === 'Urgente') acc.urgentes++;
+      
+      if (!prazo) {
+        acc.semPrazo++;
+      } else if (prazo < hojeStr) {
+        acc.atrasados++;
+      } else if (prazo === hojeStr) {
+        acc.venceHoje++;
+      }
+      return acc;
+    }, { urgentes: 0, atrasados: 0, venceHoje: 0, semPrazo: 0 });
+  }, [pedidos]);
 
   const handleAbrirOrdem = async (id: string) => {
     setFetchingCompleto(id);
@@ -148,21 +194,82 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
         </div>
 
         {/* Filters */}
-        <div className="px-6 py-4 bg-slate-900/30 border-b border-slate-800 flex flex-wrap gap-2">
-          {['Produção ativa', 'Não iniciada', 'Em produção', 'Em conferência', 'Pronto para envio', 'Todos'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFiltroStatus(status)}
-              className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
-                filtroStatus === status 
-                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
-                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
-              }`}
-            >
-              {status}
-            </button>
-          ))}
+        <div className="bg-slate-900/30 border-b border-slate-800">
+          <div className="px-6 py-4 flex flex-wrap gap-2 border-b border-slate-800/50">
+            {['Produção ativa', 'Não iniciada', 'Em produção', 'Em conferência', 'Pronto para envio', 'Todos'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setFiltroStatus(status)}
+                className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
+                  filtroStatus === status 
+                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
+                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
+                }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+          
+          <div className="px-6 py-3 flex flex-col sm:flex-row flex-wrap gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mr-1">Prioridade:</span>
+              {['Todas', 'Urgente', 'Alta', 'Normal'].map((prio) => (
+                <button
+                  key={prio}
+                  onClick={() => setFiltroPrioridade(prio)}
+                  className={`px-3 py-1.5 rounded text-[11px] font-bold transition-all border ${
+                    filtroPrioridade === prio 
+                      ? prio === 'Urgente' ? 'bg-rose-900/40 text-rose-400 border-rose-500/30' :
+                        prio === 'Alta' ? 'bg-amber-900/40 text-amber-400 border-amber-500/30' :
+                        'bg-blue-900/40 text-blue-400 border-blue-500/30'
+                      : 'bg-slate-800/50 text-slate-400 border-slate-700/50 hover:bg-slate-700'
+                  }`}
+                >
+                  {prio}
+                </button>
+              ))}
+
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-2 mr-1">Prazo:</span>
+              {['Todos', 'Atrasados', 'Vence hoje', 'No prazo', 'Sem prazo'].map((prz) => (
+                <button
+                  key={prz}
+                  onClick={() => setFiltroPrazo(prz)}
+                  className={`px-3 py-1.5 rounded text-[11px] font-bold transition-all border ${
+                    filtroPrazo === prz 
+                      ? prz === 'Atrasados' ? 'bg-rose-900/40 text-rose-400 border-rose-500/30' :
+                        prz === 'Vence hoje' ? 'bg-amber-900/40 text-amber-400 border-amber-500/30' :
+                        prz === 'No prazo' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-500/30' :
+                        'bg-blue-900/40 text-blue-400 border-blue-500/30'
+                      : 'bg-slate-800/50 text-slate-400 border-slate-700/50 hover:bg-slate-700'
+                  }`}
+                >
+                  {prz}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-3 items-center">
+              <div className="flex gap-1.5 items-center bg-slate-900/50 px-2 py-1 rounded border border-slate-800">
+                <div className="w-2 h-2 rounded-full bg-rose-500"></div>
+                <span className="text-[10px] text-slate-400 font-bold">Urgentes: <span className="text-white">{stats.urgentes}</span></span>
+              </div>
+              <div className="flex gap-1.5 items-center bg-slate-900/50 px-2 py-1 rounded border border-slate-800">
+                <div className="w-2 h-2 rounded-full bg-rose-400"></div>
+                <span className="text-[10px] text-slate-400 font-bold">Atrasados: <span className="text-white">{stats.atrasados}</span></span>
+              </div>
+              <div className="flex gap-1.5 items-center bg-slate-900/50 px-2 py-1 rounded border border-slate-800">
+                <div className="w-2 h-2 rounded-full bg-amber-400"></div>
+                <span className="text-[10px] text-slate-400 font-bold">Vence hoje: <span className="text-white">{stats.venceHoje}</span></span>
+              </div>
+              <div className="flex gap-1.5 items-center bg-slate-900/50 px-2 py-1 rounded border border-slate-800">
+                <div className="w-2 h-2 rounded-full bg-slate-500"></div>
+                <span className="text-[10px] text-slate-400 font-bold">Sem prazo: <span className="text-white">{stats.semPrazo}</span></span>
+              </div>
+            </div>
+          </div>
         </div>
+
 
         {/* List */}
         <div className="flex-1 overflow-y-auto p-6 bg-[#0B1120]">
