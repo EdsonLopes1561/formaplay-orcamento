@@ -94,6 +94,9 @@ export interface Orcamento {
   producao_checklist?: string[] | null;
   observacao_producao?: string | null;
   producao_atualizado_em?: string | null;
+  prioridade_producao?: 'Normal' | 'Alta' | 'Urgente';
+  prazo_producao?: string | null;
+  observacao_prioridade?: string | null;
 }
 
 export interface Produto {
