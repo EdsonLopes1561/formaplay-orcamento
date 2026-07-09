@@ -1562,6 +1562,80 @@ function App() {
                 </div>
               </div>
 
+              {/* Resumo de Prioridade e Prazo */}
+              {(() => {
+                if (!currentId) return null;
+                const prioridade = form.prioridade_producao || 'Normal';
+                const prazo = form.prazo_producao;
+                let prazoStatus = 'Sem prazo definido';
+                
+                const dt = new Date();
+                const hojeStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+                
+                if (prazo) {
+                  if (prazo < hojeStr) prazoStatus = 'Atrasado';
+                  else if (prazo === hojeStr) prazoStatus = 'Vence hoje';
+                  else prazoStatus = 'No prazo';
+                }
+
+                const formatPrazo = (iso: string) => {
+                  const parts = iso.split('-');
+                  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                  return iso;
+                };
+
+                return (
+                  <div className="bg-[#0f172a] rounded-xl shadow-xl border border-slate-800 border-l-4 border-l-amber-500 p-6 relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-5">
+                      <h2 className="font-black text-slate-100 flex items-center gap-2">
+                        <Package size={18} className="text-amber-400" />
+                        Prioridade e Prazo
+                      </h2>
+                      <button onClick={() => setShowProducao(true)} className="text-[10px] uppercase font-bold text-amber-400 bg-amber-950/50 hover:bg-amber-900/50 border border-amber-900/50 px-2 py-1 rounded transition-colors flex items-center gap-1">
+                        <ExternalLink size={12} />
+                        Editar
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800 flex flex-col justify-center">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Prioridade Interna</p>
+                        <div>
+                          <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-full border ${
+                            prioridade === 'Urgente' ? 'bg-rose-900/50 text-rose-400 border-rose-700/50' :
+                            prioridade === 'Alta' ? 'bg-amber-900/50 text-amber-400 border-amber-700/50' :
+                            'bg-slate-800 text-slate-400 border-slate-700'
+                          }`}>
+                            {prioridade}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Prazo Interno</p>
+                        <p className="font-bold text-white text-sm mb-1">{prazo ? formatPrazo(prazo) : 'Sem prazo definido'}</p>
+                        <span className={`text-[10px] font-bold ${
+                          prazoStatus === 'Atrasado' ? 'text-rose-400' :
+                          prazoStatus === 'Vence hoje' ? 'text-amber-400' :
+                          prazoStatus === 'No prazo' ? 'text-emerald-400' :
+                          'text-slate-500'
+                        }`}>
+                          {prazoStatus}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {form.observacao_prioridade && (
+                      <div className="mt-4 bg-slate-950/50 rounded-lg p-3 border border-slate-800">
+                        <p className="text-[11px] text-slate-400 leading-tight">
+                          <span className="font-bold text-slate-500">Obs.:</span> {form.observacao_prioridade}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
               {/* Resumo da Produção */}
               {(() => {
                 if (!currentId) return null;
