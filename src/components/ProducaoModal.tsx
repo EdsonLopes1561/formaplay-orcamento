@@ -41,6 +41,9 @@ const STATUS_OPTIONS = [
 export const ProducaoModal: React.FC<ProducaoModalProps> = ({ isOpen, onClose, orcamento, orcamentoId, onSaved }) => {
   const [status, setStatus] = useState<string>('Não iniciada');
   const [observacao, setObservacao] = useState<string>('');
+  const [prioridade, setPrioridade] = useState<string>('Normal');
+  const [prazo, setPrazo] = useState<string>('');
+  const [observacaoPrioridade, setObservacaoPrioridade] = useState<string>('');
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +52,9 @@ export const ProducaoModal: React.FC<ProducaoModalProps> = ({ isOpen, onClose, o
     if (isOpen) {
       setStatus(orcamento.status_producao || 'Não iniciada');
       setObservacao(orcamento.observacao_producao || '');
+      setPrioridade(orcamento.prioridade_producao || 'Normal');
+      setPrazo(orcamento.prazo_producao || '');
+      setObservacaoPrioridade(orcamento.observacao_prioridade || '');
       const parsedChecklist = Array.isArray(orcamento.producao_checklist) 
         ? orcamento.producao_checklist 
         : [];
@@ -85,7 +91,10 @@ export const ProducaoModal: React.FC<ProducaoModalProps> = ({ isOpen, onClose, o
         status_producao: status,
         producao_checklist: arrayChecklist,
         observacao_producao: observacao,
-        producao_atualizado_em: agora
+        producao_atualizado_em: agora,
+        prioridade_producao: prioridade,
+        prazo_producao: prazo || null,
+        observacao_prioridade: observacaoPrioridade
       };
 
       const { error: sbError } = await supabase
@@ -177,6 +186,45 @@ export const ProducaoModal: React.FC<ProducaoModalProps> = ({ isOpen, onClose, o
                 <div className="mt-4 pt-4 border-t border-slate-800">
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Status Comercial</p>
                   <p className="text-sm font-semibold text-blue-400">{orcamento.status}</p>
+                </div>
+              </div>
+
+              <div className="bg-slate-900/40 border border-slate-800 p-5 rounded-2xl">
+                <h3 className="block text-sm font-bold text-slate-300 mb-4">Prioridade e Prazo Interno</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1">Prioridade de Produção</label>
+                    <select
+                      value={prioridade}
+                      onChange={(e) => setPrioridade(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                    >
+                      <option value="Normal">Normal</option>
+                      <option value="Alta">Alta</option>
+                      <option value="Urgente">Urgente</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1">Prazo Interno</label>
+                    <input
+                      type="date"
+                      value={prazo}
+                      onChange={(e) => setPrazo(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-300 font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all [color-scheme:dark]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1">Observação de Prioridade</label>
+                    <textarea
+                      value={observacaoPrioridade}
+                      onChange={(e) => setObservacaoPrioridade(e.target.value)}
+                      placeholder="Ex: Cliente precisa para treinamento dia 20."
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-300 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all resize-none h-20"
+                    />
+                  </div>
                 </div>
               </div>
 
