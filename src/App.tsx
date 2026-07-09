@@ -237,13 +237,40 @@ function App() {
     }
   };
 
+  const parseMoeda = (val: any): number => {
+    if (typeof val === 'number') return val;
+    if (!val) return 0;
+    const str = String(val).replace(/[^\d.,-]/g, '').replace(',', '.');
+    // Se tiver mais de um ponto (ex: 1.000.50), pega o último como decimal
+    const parts = str.split('.');
+    if (parts.length > 2) {
+      const dec = parts.pop();
+      return parseFloat(parts.join('') + '.' + dec) || 0;
+    }
+    return parseFloat(str) || 0;
+  };
+
   const handleSelecionarFrete = (opcao: any) => {
+    const freteSelecionado = parseMoeda(opcao.price);
+    
     setFreteSelecionado(opcao);
-    setForm(prev => ({
-      ...prev,
-      frete: opcao.price,
-      observacao_frete: `${opcao.company} - ${opcao.name} (${opcao.delivery_time} dias úteis)`
-    }));
+    setForm(prev => {
+      const subtotal = prev.itens && Array.isArray(prev.itens) && prev.itens.length > 0 
+        ? prev.itens.reduce((acc, item) => acc + (parseMoeda(item.subtotal) || 0), 0)
+        : parseMoeda(prev.quantidade || 0) * parseMoeda(prev.valor_unitario || 0);
+        
+      const desconto = parseMoeda(prev.desconto);
+      const novoTotal = subtotal + freteSelecionado - desconto;
+
+      console.log("DEBUG TOTAL FRETE", { subtotal, freteSelecionado, desconto, novoTotal });
+
+      return {
+        ...prev,
+        frete: freteSelecionado,
+        total: novoTotal,
+        observacao_frete: `${opcao.company} - ${opcao.name} (${opcao.delivery_time} dias úteis). Frete calculado com base no CEP ${clienteData?.cep || prev.cliente_cep || prev.cep}. Endereço completo de entrega será confirmado no fechamento do pedido.`
+      };
+    });
   };
 
   const converterSolicitacao = async (s: SolicitacaoOrcamento) => {
@@ -385,9 +412,9 @@ function App() {
   const calcularValores = (f: Omit<Orcamento, 'id' | 'created_at'>) => {
     const temItens = f.itens && Array.isArray(f.itens) && f.itens.length > 0;
     const subtotal = temItens
-      ? f.itens!.reduce((acc, item) => acc + (Number(item.subtotal) || 0), 0)
-      : Number(f.quantidade || 0) * Number(f.valor_unitario || 0);
-    const total = subtotal + Number(f.frete || 0) - Number(f.desconto || 0);
+      ? f.itens!.reduce((acc, item) => acc + parseMoeda(item.subtotal), 0)
+      : parseMoeda(f.quantidade) * parseMoeda(f.valor_unitario);
+    const total = subtotal + parseMoeda(f.frete) - parseMoeda(f.desconto);
     return {
       ...f,
       subtotal: isNaN(subtotal) ? 0 : subtotal,
@@ -405,7 +432,7 @@ function App() {
 
     let updated = {
       ...form,
-      [name]: numeric.includes(name) ? parseFloat(value) || 0 : finalValue,
+      [name]: numeric.includes(name) ? parseMoeda(value) : finalValue,
     };
 
     if (name === 'produto') {
