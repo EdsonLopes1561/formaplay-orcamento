@@ -32,7 +32,7 @@ export default async function handler(req: Request) {
       const payload = {
         from: { postal_code: originCep },
         to: { postal_code: cepDestino.replace(/\D/g, '') },
-        services: "1,2,4,17",
+        services: "1,2,3,4,17,31",
         options: {
           own_hand: false,
           receipt: false,
@@ -66,7 +66,6 @@ export default async function handler(req: Request) {
         throw new Error(`Erro na SuperFrete: ${resp.status} - ${JSON.stringify(responseData)}`);
       }
       
-      console.log(`DEBUG SUPERFRETE - serviços retornados vol ${index + 1}:`, JSON.stringify(responseData));
       return responseData;
     });
 
@@ -82,7 +81,7 @@ export default async function handler(req: Request) {
           servicosAgrupados[servico.name] = {
             id: servico.id,
             name: servico.name,
-            company: servico.company?.name || servico.name,
+            company: (typeof servico.company === 'string' ? servico.company : servico.company?.name) || servico.name,
             price: Number(servico.price) || 0,
             delivery_time: Number(servico.delivery_time) || 0,
             volumes_validos: 1
