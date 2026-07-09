@@ -168,7 +168,7 @@ function App() {
 
   const calcularFreteApp = async () => {
     // Pegar o CEP (priorizar cliente vinculado, senao cliente_cep do form)
-    const cepBruto = clienteData?.cep || form.cliente_cep || form.cep;
+    const cepBruto = clienteData?.cep || form.cliente_cep;
     const cepDestinoNormalizado = cepBruto ? String(cepBruto).replace(/\D/g, '') : '';
     
     if (!cepDestinoNormalizado || cepDestinoNormalizado.length < 8) {
@@ -268,7 +268,7 @@ function App() {
         ...prev,
         frete: freteSelecionado,
         total: novoTotal,
-        observacao_frete: `${opcao.company} - ${opcao.name} (${opcao.delivery_time} dias úteis). Frete calculado com base no CEP ${clienteData?.cep || prev.cliente_cep || prev.cep}. Endereço completo de entrega será confirmado no fechamento do pedido.`
+        observacao_frete: `${opcao.company} - ${opcao.name} (${opcao.delivery_time} dias úteis). Frete calculado com base no CEP ${clienteData?.cep || prev.cliente_cep}. Endereço completo de entrega será confirmado no fechamento do pedido.`
       };
     });
   };
@@ -1759,14 +1759,14 @@ function App() {
                         <button
                           type="button"
                           onClick={calcularFreteApp}
-                          disabled={loadingFrete || (!clienteData?.cep && !form.cliente_cep && !form.cep)}
+                          disabled={loadingFrete || (!clienteData?.cep && !form.cliente_cep)}
                           className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 active:scale-95 transition-all font-bold text-sm shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
                           {loadingFrete ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : null}
                           {loadingFrete ? 'Calculando...' : 'Calcular Frete pela SuperFrete'}
                         </button>
                         
-                        {(!clienteData?.cep && !form.cliente_cep && !form.cep) && (
+                        {(!clienteData?.cep && !form.cliente_cep) && (
                           <p className="text-xs text-orange-400 text-center">Informe o CEP do cliente para calcular.</p>
                         )}
 

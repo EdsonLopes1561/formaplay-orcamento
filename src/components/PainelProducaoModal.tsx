@@ -22,7 +22,8 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
         .from('orcamentos')
         .select(`
           id, numero, cliente, produto, quantidade, status, 
-          status_producao, producao_checklist, producao_atualizado_em, created_at
+          status_producao, producao_checklist, producao_atualizado_em, created_at,
+          prioridade_producao, prazo_producao, observacao_prioridade
         `);
       
       if (error) throw error;
@@ -61,11 +62,27 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
       }
     }
 
-    // Ordenar por atualização da produção (DESC), fallback para data de criação (DESC)
+
+    const getPrioridadeScore = (p?: string) => {
+      if (p === 'Urgente') return 3;
+      if (p === 'Alta') return 2;
+      return 1;
+    };
+
     return filtrados.sort((a, b) => {
+      // 1º Prioridade
+      const prioA = getPrioridadeScore(a.prioridade_producao);
+      const prioB = getPrioridadeScore(b.prioridade_producao);
+      if (prioA !== prioB) return prioB - prioA;
+
+      // 2º Prazo Interno
+      const prazoA = a.prazo_producao ? new Date(a.prazo_producao).getTime() : Number.MAX_SAFE_INTEGER;
+      const prazoB = b.prazo_producao ? new Date(b.prazo_producao).getTime() : Number.MAX_SAFE_INTEGER;
+      if (prazoA !== prazoB) return prazoA - prazoB;
+
+      // 3º Fallback atualizado_em e created_at
       const dateA = a.producao_atualizado_em ? new Date(a.producao_atualizado_em).getTime() : 0;
       const dateB = b.producao_atualizado_em ? new Date(b.producao_atualizado_em).getTime() : 0;
-      
       if (dateA !== dateB) {
         return dateB - dateA;
       }
@@ -171,6 +188,25 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
                 const isEmProducao = statusProducao === 'Em produção';
                 const isLoadingRow = fetchingCompleto === pedido.id;
 
+                const prioridade = pedido.prioridade_producao || 'Normal';
+                const prazo = pedido.prazo_producao;
+                let prazoStatus = 'Sem prazo';
+                
+                const dt = new Date();
+                const hojeStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+                
+                if (prazo) {
+                  if (prazo < hojeStr) prazoStatus = 'Atrasado';
+                  else if (prazo === hojeStr) prazoStatus = 'Vence hoje';
+                  else prazoStatus = 'No prazo';
+                }
+
+                const formatPrazo = (iso: string) => {
+                  const parts = iso.split('-');
+                  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                  return iso;
+                };
+
                 return (
                   <div 
                     key={pedido.id} 
@@ -186,6 +222,13 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
                       <div className="flex items-center gap-2">
                         <span className="font-black text-white bg-black/30 px-2 py-1 rounded text-sm">
                           {pedido.numero || 'S-N'}
+                        </span>
+                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                          prioridade === 'Urgente' ? 'bg-rose-900/50 text-rose-400 border-rose-700/50' :
+                          prioridade === 'Alta' ? 'bg-amber-900/50 text-amber-400 border-amber-700/50' :
+                          'bg-slate-800 text-slate-400 border-slate-700'
+                        }`}>
+                          {prioridade}
                         </span>
                       </div>
                       <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-full ${
@@ -217,6 +260,33 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
                           {pedido.produto}
                         </p>
                       </div>
+
+                      <div className="bg-slate-900/40 p-3 rounded-xl border border-slate-800/50">
+                        <div className="flex justify-between items-center mb-0.5">
+                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                            Prazo Interno
+                          </p>
+                          <span className={`text-[10px] font-bold ${
+                            prazoStatus === 'Atrasado' ? 'text-rose-400' :
+                            prazoStatus === 'Vence hoje' ? 'text-amber-400' :
+                            prazoStatus === 'No prazo' ? 'text-emerald-400' :
+                            'text-slate-500'
+                          }`}>
+                            {prazoStatus}
+                          </span>
+                        </div>
+                        <p className="font-bold text-slate-300 text-sm">
+                          {prazo ? formatPrazo(prazo) : 'Não definido'}
+                        </p>
+                      </div>
+
+                      {pedido.observacao_prioridade && (
+                        <div className="p-2.5 bg-slate-950/50 rounded-lg border border-slate-800/50">
+                          <p className="text-[11px] text-slate-400 leading-tight">
+                            <span className="font-bold text-slate-500">Obs:</span> {pedido.observacao_prioridade}
+                          </p>
+                        </div>
+                      )}
 
                       {/* Progress */}
                       <div className="mt-auto pt-3 border-t border-slate-800">
