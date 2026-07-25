@@ -1,28 +1,107 @@
-import { useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from './supabase';
+import { UsuarioApp } from './types/interesses';
+
+interface AuthContextData {
+  user: any | null;
+  usuarioApp: UsuarioApp | null;
+  isLoading: boolean;
+  logout: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextData>({} as AuthContextData);
+
+export const useAuth = () => useContext(AuthContext);
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<any | null>(null);
+  const [usuarioApp, setUsuarioApp] = useState<UsuarioApp | null>(null);
+  
   const [isLoading, setIsLoading] = useState(true);
+  
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
   useEffect(() => {
-    // 4. Usar getSession() ao carregar o app
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-      setIsLoading(false);
+    let mounted = true;
+
+    async function carregarSessao() {
+      setIsLoading(true);
+      setLoginError('');
+
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
+
+        if (!session) {
+          if (mounted) {
+            setUser(null);
+            setUsuarioApp(null);
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        const authUser = session.user;
+
+        const { data: userData, error: userError } = await supabase
+          .from('usuarios_app')
+          .select('*')
+          .eq('user_id', authUser.id)
+          .maybeSingle();
+
+        if (userError) throw userError;
+
+        if (!userData || !userData.ativo) {
+          await supabase.auth.signOut();
+          if (mounted) {
+            setUser(null);
+            setUsuarioApp(null);
+            setLoginError(userData ? 'Conta inativa. Acesso negado.' : 'Acesso negado: Perfil não encontrado.');
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        if (mounted) {
+          setUser(authUser);
+          setUsuarioApp(userData as UsuarioApp);
+          setIsLoading(false);
+        }
+      } catch (err: any) {
+        console.error("Erro na autenticação:", err);
+        await supabase.auth.signOut();
+        if (mounted) {
+          setUser(null);
+          setUsuarioApp(null);
+          setLoginError('Erro de conexão ao validar perfil.');
+          setIsLoading(false);
+        }
+      }
+    }
+
+    carregarSessao();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!session) {
+        if (mounted) {
+          setUser(null);
+          setUsuarioApp(null);
+          setIsLoading(false);
+        }
+      } else {
+        // Recarregar tudo caso o login acabe de acontecer
+        carregarSessao();
+      }
     });
 
-    // 5. Usar onAuthStateChange() para manter o estado logado/deslogado
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -30,7 +109,6 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     setLoginLoading(true);
     setLoginError('');
 
-    // 3. Usar signInWithPassword({ email, password })
     const { error } = await supabase.auth.signInWithPassword({
       email: loginEmail,
       password: loginPassword,
@@ -38,12 +116,21 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
     if (error) {
       setLoginError(error.message === 'Invalid login credentials' ? 'E-mail ou senha inválidos' : 'Erro ao fazer login. Verifique suas credenciais.');
+      setLoginLoading(false);
     }
-
-    setLoginLoading(false);
+    // Se não der erro, o onAuthStateChange vai capturar o evento de SIGN_IN 
+    // e o `carregarSessao` será disparado, resolvendo o state.
+    // O loading principal voltará para true durante o carregamento.
   };
 
-  // 6. Mensagem enquanto a sessão carrega
+  const logout = async () => {
+    setIsLoading(true);
+    await supabase.auth.signOut();
+    setUser(null);
+    setUsuarioApp(null);
+    setIsLoading(false);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50/30 flex flex-col items-center justify-center">
@@ -53,8 +140,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // 7. Se não estiver logado, tela de login (email e senha)
-  if (!isAuthenticated) {
+  if (!user || !usuarioApp) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50/30 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
@@ -67,7 +153,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
               />
             </div>
             <h1 className="text-2xl font-bold text-blue-900">FormaPlay</h1>
-            <p className="text-green-600 font-semibold">Jogos Educacionais</p>
+            <p className="text-green-600 font-semibold">Painel Administrativo</p>
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
@@ -111,6 +197,9 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // 8. Se estiver logado, libera a aplicação
-  return <>{children}</>;
+  return (
+    <AuthContext.Provider value={{ user, usuarioApp, isLoading, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }

@@ -20,6 +20,8 @@ import { TorreControleModal } from './components/TorreControleModal';
 import { AssistenteNFeModal } from './components/AssistenteNFeModal';
 import { ProducaoModal } from './components/ProducaoModal';
 import { PainelProducaoModal } from './components/PainelProducaoModal';
+import { PainelInteressesModal } from './components/PainelInteressesModal';
+import { useAuth } from './AuthWrapper';
 
 type Toast = { type: 'success' | 'error'; message: string };
 
@@ -152,8 +154,10 @@ function App() {
   const [showAssistenteNFe, setShowAssistenteNFe] = useState(false);
   const [showProducao, setShowProducao] = useState(false);
   const [showPainelProducao, setShowPainelProducao] = useState(false);
+  const [showInteresses, setShowInteresses] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('Principal');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const { usuarioApp } = useAuth();
 
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoOrcamento[]>([]);
   const [showSolicitacoes, setShowSolicitacoes] = useState(false);
@@ -1040,6 +1044,11 @@ function App() {
                     <button onClick={() => setShowProdutos(true)} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-indigo-400 hover:border-indigo-500/50 hover:bg-indigo-500/10 rounded-lg hover:bg-indigo-50 active:scale-95 transition-all font-bold text-sm shadow-md">
                       <Package size={18} /> Produtos
                     </button>
+                    {(usuarioApp?.perfil === 'administrador' || usuarioApp?.perfil === 'comercial') && (
+                      <button onClick={() => setShowInteresses(true)} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-teal-400 hover:border-teal-500/50 hover:bg-teal-500/10 rounded-lg active:scale-95 transition-all font-bold text-sm shadow-md">
+                        <Users size={18} /> Interesses
+                      </button>
+                    )}
                   </>
                 )}
 
@@ -2062,6 +2071,11 @@ function App() {
           setShowPainelProducao(false);
           setShowProducao(true);
         }}
+      />
+      
+      <PainelInteressesModal
+        isOpen={showInteresses}
+        onClose={() => setShowInteresses(false)}
       />
     </>
   );
