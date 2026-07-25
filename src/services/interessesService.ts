@@ -1,12 +1,22 @@
 import { supabase } from '../supabase';
 import { InteresseModelo, InteresseStatus } from '../types/interesses';
 
+export type FiltroArquivado = 'ativos' | 'arquivados' | 'todos';
+
 export const interessesService = {
-  async listarInteresses(): Promise<InteresseModelo[]> {
-    const { data, error } = await supabase
+  async listarInteresses(filtroArquivado: FiltroArquivado = 'ativos'): Promise<InteresseModelo[]> {
+    let query = supabase
       .from('interesses_modelos')
       .select('*')
       .order('created_at', { ascending: false });
+
+    if (filtroArquivado === 'ativos') {
+      query = query.eq('arquivado', false);
+    } else if (filtroArquivado === 'arquivados') {
+      query = query.eq('arquivado', true);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       throw error;
@@ -20,12 +30,10 @@ export const interessesService = {
     status: InteresseStatus,
     observacaoInterna: string
   ): Promise<InteresseModelo> {
-    // Utilizamos a RPC criada que atende tanto Admin quanto Comercial
-    // A RPC limita os campos e valida o perfil internamente via SECURITY DEFINER.
     const { data, error } = await supabase.rpc('atualizar_interesse_comercial', {
       p_interesse_id: id,
       p_status: status,
-      p_observacao_interna: observacaoInterna || null, // null check se vazio
+      p_observacao_interna: observacaoInterna || null,
     });
 
     if (error) {
@@ -34,4 +42,44 @@ export const interessesService = {
 
     return data as InteresseModelo;
   },
+
+  async arquivarInteresse(id: string, motivo: string | null): Promise<InteresseModelo> {
+    const { data, error } = await supabase.rpc('arquivar_interesse', {
+      p_interesse_id: id,
+      p_arquivar: true,
+      p_motivo: motivo || null,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return data as InteresseModelo;
+  },
+
+  async restaurarInteresse(id: string): Promise<InteresseModelo> {
+    const { data, error } = await supabase.rpc('arquivar_interesse', {
+      p_interesse_id: id,
+      p_arquivar: false,
+      p_motivo: null,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return data as InteresseModelo;
+  },
+
+  async excluirInteresseDefinitivamente(id: string): Promise<boolean> {
+    const { data, error } = await supabase.rpc('excluir_interesse_definitivamente', {
+      p_interesse_id: id,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return data as boolean;
+  }
 };

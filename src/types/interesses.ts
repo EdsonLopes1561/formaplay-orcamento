@@ -19,6 +19,10 @@ export interface InteresseModelo {
   observacao_interna: string | null;
   created_at: string;
   updated_at: string;
+  arquivado: boolean;
+  arquivado_em: string | null;
+  arquivado_por: string | null;
+  motivo_arquivamento: string | null;
 }
 
 export type PerfilUsuario = 'administrador' | 'comercial' | 'producao';
