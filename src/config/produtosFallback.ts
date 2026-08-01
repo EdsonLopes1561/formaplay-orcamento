@@ -126,3 +126,19 @@ export function obterProdutoFallback(nome: string): Produto | undefined {
   const nomeNormalizado = normalizarNomeProduto(nome);
   return PRODUTOS_FALLBACK.find(p => p.nome.toLowerCase() === nomeNormalizado.toLowerCase());
 }
+
+/**
+ * Verifica se um produto está em desenvolvimento com base no seu nome normalizado.
+ */
+export function isProdutoEmDesenvolvimento(nome: string): boolean {
+  const nomeNormalizado = normalizarNomeProduto(nome);
+  return ['Desafio Kids', 'Desafio Logístico Premium', 'Edição do Professor'].includes(nomeNormalizado);
+}
+
+/**
+ * Verifica se um produto está disponível para venda/orçamento com base no seu nome normalizado.
+ */
+export function isProdutoDisponivel(nome: string): boolean {
+  const nomeNormalizado = normalizarNomeProduto(nome);
+  return nomeNormalizado === 'Desafio Logístico';
+}

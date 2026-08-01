@@ -2,8 +2,9 @@ import { calcularVolumesMultiProdutos } from '../config/produtosLogisticos';
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabase';
 import { Produto, ItemOrcamentoSnapshot } from '../types';
-import { PRODUTOS_FALLBACK } from '../config/produtosFallback';
+import { PRODUTOS_FALLBACK, isProdutoEmDesenvolvimento, isProdutoDisponivel, normalizarNomeProduto } from '../config/produtosFallback';
 import { criarItemSnapshot, calcularSubtotalItens, calcularQuantidadeTotalItens } from '../utils/orcamentoItens';
+import { interessesService } from '../services/interessesService';
 
 type Jogo = string;
 
@@ -82,6 +83,7 @@ export const SolicitacaoPublica: React.FC = () => {
     observacoes: '',
     embrulho_presente: false,
     forma_pagamento: 'Pix com desconto',
+    aceita_contato: false,
   });
   
   const [quantidadeStr, setQuantidadeStr] = useState<string>('1');
@@ -91,7 +93,9 @@ export const SolicitacaoPublica: React.FC = () => {
 
   const [loadingCep, setLoadingCep] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [loadingInteresse, setLoadingInteresse] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isSuccessInteresse, setIsSuccessInteresse] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [opcoesFrete, setOpcoesFrete] = useState<any[] | null>(null);
@@ -101,6 +105,7 @@ export const SolicitacaoPublica: React.FC = () => {
 
   const numeroInputRef = useRef<HTMLInputElement>(null);
   const enderecoInputRef = useRef<HTMLInputElement>(null);
+  const pedidoSectionRef = useRef<HTMLDivElement>(null);
   const [hasCepFailed, setHasCepFailed] = useState(false);
 
   // Progressive validation logic
@@ -146,6 +151,29 @@ export const SolicitacaoPublica: React.FC = () => {
   // Carregar produtos da API ou Fallback
   useEffect(() => {
     let active = true;
+
+    const getInitialProduto = (produtos: any[]) => {
+      const params = new URLSearchParams(window.location.search);
+      const modeloParam = params.get('modelo');
+      const mapaModelos: Record<string, string> = {
+        'kids': 'Desafio Kids',
+        'premium': 'Desafio Logístico Premium',
+        'professor': 'Edição do Professor',
+        'desafio-logistico': 'Desafio Logístico'
+      };
+      
+      if (modeloParam && mapaModelos[modeloParam]) {
+        const produtoMapeado = mapaModelos[modeloParam];
+        if (produtos.some(p => p.nome === produtoMapeado)) {
+          setTimeout(() => {
+            pedidoSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 300);
+          return produtoMapeado;
+        }
+      }
+      return produtos.length > 0 ? produtos[0].nome : '';
+    };
+
     const fetchProdutos = async () => {
       try {
         const res = await fetch('/api/produtos');
@@ -156,9 +184,8 @@ export const SolicitacaoPublica: React.FC = () => {
             p.ativo && ['disponivel', 'baixo_estoque', 'sob_encomenda'].includes(p.status_comercial)
           );
           setProdutosDisponiveis(filtrados);
-          if (filtrados.length > 0) {
-            setForm(prev => ({ ...prev, jogo: filtrados[0].nome }));
-          }
+          const initialJogo = getInitialProduto(filtrados);
+          if (initialJogo) setForm(prev => ({ ...prev, jogo: initialJogo }));
         }
       } catch (err) {
         console.error('Erro ao buscar produtos, usando fallback:', err);
@@ -167,9 +194,8 @@ export const SolicitacaoPublica: React.FC = () => {
             p.ativo && ['disponivel', 'baixo_estoque', 'sob_encomenda'].includes(p.status_comercial)
           );
           setProdutosDisponiveis(filtradosFallback);
-          if (filtradosFallback.length > 0) {
-            setForm(prev => ({ ...prev, jogo: filtradosFallback[0].nome }));
-          }
+          const initialJogo = getInitialProduto(filtradosFallback);
+          if (initialJogo) setForm(prev => ({ ...prev, jogo: initialJogo }));
         }
       } finally {
         if (active) setLoadingProdutos(false);
@@ -358,6 +384,40 @@ export const SolicitacaoPublica: React.FC = () => {
   const totalComPix = temCalculoFrete
     ? ((subtotalProdutos - descontoPix) + freteEstimado)
     : (subtotalProdutos - descontoPix);
+
+  const handleRegistrarInteresse = async () => {
+    if (!form.nome || (!form.telefone && !form.email) || !form.cidade || !form.estado) {
+      setSubmitError("Para registrar interesse, preencha: Nome, WhatsApp ou E-mail, Cidade e Estado.");
+      return;
+    }
+    if (!form.aceita_contato) {
+      setSubmitError("É necessário aceitar o contato para registrar seu interesse.");
+      return;
+    }
+
+    setLoadingInteresse(true);
+    setSubmitError(null);
+    try {
+      await interessesService.inserirInteresse({
+        nome: form.nome,
+        whatsapp: form.telefone || null,
+        email: form.email || null,
+        cidade: form.cidade,
+        estado: form.estado,
+        modelo_interesse: normalizarNomeProduto(form.jogo),
+        aceita_contato: true,
+        origem: 'site_formaplay',
+        status: 'novo',
+      });
+      setIsSuccessInteresse(true);
+    } catch (err: any) {
+      console.error('[Registro de Interesse] Erro:', err);
+      const errorMessage = err.message || err.toString() || "Erro desconhecido";
+      setSubmitError(`Falha ao registrar interesse: ${errorMessage}`);
+    } finally {
+      setLoadingInteresse(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -716,7 +776,7 @@ export const SolicitacaoPublica: React.FC = () => {
             </div>
 
             {/* Secao 3: Pedido */}
-            <div>
+            <div ref={pedidoSectionRef} className="scroll-mt-8">
               <h2 className="text-xl font-bold text-white border-b border-slate-700 pb-2 mb-4 flex items-center gap-2">
                 <span className="w-8 h-8 rounded-lg bg-green-500/20 text-green-400 flex items-center justify-center text-sm font-bold">3</span>
                 Seu Pedido
@@ -730,66 +790,143 @@ export const SolicitacaoPublica: React.FC = () => {
                     ) : (
                       <>
                         <option value="" disabled>Selecione um jogo...</option>
-                        {produtosDisponiveis.map(p => (
-                          <option key={p.id} value={p.nome}>{p.nome} ({fmtCurrency(p.preco_base)})</option>
-                        ))}
+                        {produtosDisponiveis.map(p => {
+                          const isDev = isProdutoEmDesenvolvimento(p.nome);
+                          const isDisp = isProdutoDisponivel(p.nome);
+                          let label = p.nome;
+                          if (isDev) label += " — Em desenvolvimento";
+                          else if (isDisp) label += ` — Disponível — ${fmtCurrency(p.preco_base)}`;
+                          else label += ` — ${fmtCurrency(p.preco_base)}`;
+                          
+                          return <option key={p.id} value={p.nome}>{label}</option>;
+                        })}
                       </>
                     )}
                   </select>
                 </div>
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-semibold text-slate-300 mb-1">Quantidade *</label>
-                  <div className="flex items-center">
-                    <button 
-                      type="button" 
-                      onClick={() => {
-                        const val = parseInt(quantidadeStr) || 1;
-                        if (val > 1) setQuantidadeStr((val - 1).toString());
-                      }}
-                      className="w-10 h-[42px] bg-slate-700 hover:bg-slate-600 text-white rounded-l-lg border border-slate-600 border-r-0 flex items-center justify-center font-bold transition-colors cursor-pointer"
-                    >
-                      -
-                    </button>
-                    <input 
-                      type="number" 
-                      required 
-                      min="1" 
-                      name="quantidade" 
-                      value={quantidadeStr} 
-                      onChange={(e) => setQuantidadeStr(e.target.value)} 
-                      onFocus={(e) => e.target.select()}
-                      onBlur={(e) => {
-                        const val = parseInt(e.target.value);
-                        if (isNaN(val) || val < 1) {
-                          setQuantidadeStr('1');
-                        } else {
-                          setQuantidadeStr(val.toString());
-                        }
-                      }}
-                      className="w-full h-[42px] px-2 text-center bg-[#0A0F1C] border border-slate-600 focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white font-bold" 
-                    />
-                    <button 
-                      type="button" 
-                      onClick={() => {
-                        const val = parseInt(quantidadeStr) || 1;
-                        setQuantidadeStr((val + 1).toString());
-                      }}
-                      className="w-10 h-[42px] bg-slate-700 hover:bg-slate-600 text-white rounded-r-lg border border-slate-600 border-l-0 flex items-center justify-center font-bold transition-colors cursor-pointer"
-                    >
-                      +
-                    </button>
+                
+                {!isProdutoEmDesenvolvimento(form.jogo) && (
+                  <>
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">Quantidade *</label>
+                      <div className="flex items-center">
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            const val = parseInt(quantidadeStr) || 1;
+                            if (val > 1) setQuantidadeStr((val - 1).toString());
+                          }}
+                          className="w-10 h-[42px] bg-slate-700 hover:bg-slate-600 text-white rounded-l-lg border border-slate-600 border-r-0 flex items-center justify-center font-bold transition-colors cursor-pointer"
+                        >
+                          -
+                        </button>
+                        <input 
+                          type="number" 
+                          required 
+                          min="1" 
+                          name="quantidade" 
+                          value={quantidadeStr} 
+                          onChange={(e) => setQuantidadeStr(e.target.value)} 
+                          onFocus={(e) => e.target.select()}
+                          onBlur={(e) => {
+                            const val = parseInt(e.target.value);
+                            if (isNaN(val) || val < 1) {
+                              setQuantidadeStr('1');
+                            } else {
+                              setQuantidadeStr(val.toString());
+                            }
+                          }}
+                          className="w-full h-[42px] px-2 text-center bg-[#0A0F1C] border border-slate-600 focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white font-bold" 
+                        />
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            const val = parseInt(quantidadeStr) || 1;
+                            setQuantidadeStr((val + 1).toString());
+                          }}
+                          className="w-10 h-[42px] bg-slate-700 hover:bg-slate-600 text-white rounded-r-lg border border-slate-600 border-l-0 flex items-center justify-center font-bold transition-colors cursor-pointer"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <div className="md:col-span-1 flex items-end">
+                      <button
+                        type="button"
+                        onClick={handleAdicionarProduto}
+                        disabled={!form.jogo}
+                        className="w-full h-[42px] bg-blue-600 text-white hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-400 font-bold px-4 py-2 rounded-lg transition-all active:scale-95 shadow-md flex items-center justify-center gap-1 cursor-pointer disabled:cursor-not-allowed"
+                      >
+                        <span>➕ Adicionar</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {form.jogo && isProdutoEmDesenvolvimento(form.jogo) && (
+                  <div className="md:col-span-4 bg-orange-900/20 border border-orange-500/30 p-5 rounded-xl mt-2 text-orange-100">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="bg-orange-500 text-white text-[10px] font-black uppercase px-2 py-1 rounded tracking-wider shadow-sm">Novidade FormaPlay</span>
+                      <h3 className="font-bold text-xl text-white">Modelo em desenvolvimento</h3>
+                    </div>
+                    <p className="text-base font-medium text-white mb-2">
+                      Este modelo faz parte da próxima linha de jogos educacionais da FormaPlay.
+                    </p>
+                    <p className="text-sm text-orange-200/90 mb-4">
+                      Cadastre seu interesse e seja um dos primeiros a receber novidades sobre o lançamento.
+                    </p>
+                    <p className="text-xs text-orange-200/60 mb-5 italic">
+                      * Valores, componentes, especificações e previsão de lançamento poderão sofrer alterações durante o desenvolvimento.
+                    </p>
+                    
+                    {isSuccessInteresse ? (
+                      <div className="bg-green-900/40 p-6 rounded-xl border border-green-500/50 text-center animate-fade-in-up">
+                        <div className="w-12 h-12 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <h4 className="text-lg font-bold text-green-400 mb-2">Interesse registrado com sucesso!</h4>
+                        <p className="text-green-200/80 text-sm">A FormaPlay entrará em contato quando houver novidades sobre este modelo.</p>
+                      </div>
+                    ) : (
+                      <div className="bg-slate-900/60 p-5 rounded-xl border border-slate-700">
+                        <div className="flex items-start gap-3 mb-5">
+                          <div className="flex items-center h-5 mt-0.5">
+                            <input id="aceita_contato" name="aceita_contato" type="checkbox" checked={form.aceita_contato} onChange={handleChange} className="w-5 h-5 text-blue-600 bg-[#0A0F1C] border-slate-600 rounded focus:ring-blue-500 focus:ring-offset-slate-900 transition-all cursor-pointer" />
+                          </div>
+                          <div className="text-sm">
+                            <label htmlFor="aceita_contato" className="font-bold text-white cursor-pointer text-base select-none">Aceito receber informações sobre o lançamento</label>
+                            <p className="text-slate-400 mt-0.5">Prometemos não enviar spam. Apenas atualizações importantes sobre o {form.jogo}.</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleRegistrarInteresse}
+                          disabled={loadingInteresse || !form.aceita_contato || !form.nome || (!form.telefone && !form.email) || !form.cidade || !form.estado}
+                          className={`w-full font-bold py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-md ${
+                            loadingInteresse || !form.aceita_contato || !form.nome || (!form.telefone && !form.email) || !form.cidade || !form.estado
+                              ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-80'
+                              : 'bg-blue-600 text-white hover:bg-blue-500 hover:shadow-blue-500/20 hover:-translate-y-0.5 active:translate-y-0'
+                          }`}
+                        >
+                          {loadingInteresse ? (
+                            <>
+                              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Registrando interesse...
+                            </>
+                          ) : (
+                            "Registrar interesse"
+                          )}
+                        </button>
+                      </div>
+                    )}
+
+                    {itensCarrinho.length > 0 && (
+                      <p className="text-sm mt-4 font-semibold text-orange-300">
+                        O registro de interesse será realizado separadamente e não será incluído no orçamento atual do carrinho.
+                      </p>
+                    )}
                   </div>
-                </div>
-                <div className="md:col-span-1 flex items-end">
-                  <button
-                    type="button"
-                    onClick={handleAdicionarProduto}
-                    disabled={!form.jogo}
-                    className="w-full h-[42px] bg-blue-600 text-white hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-400 font-bold px-4 py-2 rounded-lg transition-all active:scale-95 shadow-md flex items-center justify-center gap-1 cursor-pointer disabled:cursor-not-allowed"
-                  >
-                    <span>➕ Adicionar</span>
-                  </button>
-                </div>
+                )}
 
                 {/* Carrinho / Itens adicionados */}
                 <div className="md:col-span-4">
@@ -893,28 +1030,32 @@ export const SolicitacaoPublica: React.FC = () => {
                     )}
                   </div>
                 )}
-                <div className="md:col-span-4 bg-[#0A0F1C] p-4 rounded-lg border border-slate-700 flex items-start gap-3 mt-2 mb-2">
-                  <div className="flex items-center h-5 mt-0.5">
-                    <input id="embrulho_presente" name="embrulho_presente" type="checkbox" checked={form.embrulho_presente} onChange={handleChange} className="w-5 h-5 text-green-600 bg-[#0A0F1C] border-slate-600 rounded focus:ring-green-500 focus:ring-offset-slate-800 transition-all cursor-pointer" />
-                  </div>
-                  <div className="text-sm">
-                    <label htmlFor="embrulho_presente" className="font-bold text-white cursor-pointer text-base">Quero receber embrulhado para presente — sem custo adicional</label>
-                    <p className="text-slate-400 mt-0.5 font-medium">A FormaPlay prepara com carinho, sem custo adicional.</p>
-                  </div>
-                </div>
-                <div className="md:col-span-4">
-                  <label className="block text-sm font-semibold text-slate-300 mb-1">Observações adicionais (Opcional)</label>
-                  <textarea name="observacoes" value={form.observacoes} onChange={handleChange} rows={3} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none resize-none transition-all text-white placeholder-slate-500" placeholder="Alguma dúvida ou detalhe específico?"></textarea>
-                </div>
-                <div className="md:col-span-4 border-t border-slate-700 pt-4 mt-2">
-                  <label className="block text-sm font-semibold text-slate-300 mb-1">Forma de pagamento pretendida *</label>
-                  <select required name="forma_pagamento" value={form.forma_pagamento} onChange={handleChange} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none text-white transition-all shadow-sm">
-                    <option value="Pix com desconto">Pix com desconto (3% OFF)</option>
-                    <option value="Cartão">Cartão</option>
-                    <option value="Boleto / transferência">Boleto / transferência</option>
-                    <option value="A combinar">A combinar</option>
-                  </select>
-                </div>
+                {!isProdutoEmDesenvolvimento(form.jogo) && (
+                  <>
+                    <div className="md:col-span-4 bg-[#0A0F1C] p-4 rounded-lg border border-slate-700 flex items-start gap-3 mt-2 mb-2">
+                      <div className="flex items-center h-5 mt-0.5">
+                        <input id="embrulho_presente" name="embrulho_presente" type="checkbox" checked={form.embrulho_presente} onChange={handleChange} className="w-5 h-5 text-green-600 bg-[#0A0F1C] border-slate-600 rounded focus:ring-green-500 focus:ring-offset-slate-800 transition-all cursor-pointer" />
+                      </div>
+                      <div className="text-sm">
+                        <label htmlFor="embrulho_presente" className="font-bold text-white cursor-pointer text-base">Quero receber embrulhado para presente — sem custo adicional</label>
+                        <p className="text-slate-400 mt-0.5 font-medium">A FormaPlay prepara com carinho, sem custo adicional.</p>
+                      </div>
+                    </div>
+                    <div className="md:col-span-4">
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">Observações adicionais (Opcional)</label>
+                      <textarea name="observacoes" value={form.observacoes} onChange={handleChange} rows={3} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none resize-none transition-all text-white placeholder-slate-500" placeholder="Alguma dúvida ou detalhe específico?"></textarea>
+                    </div>
+                    <div className="md:col-span-4 border-t border-slate-700 pt-4 mt-2">
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">Forma de pagamento pretendida *</label>
+                      <select required name="forma_pagamento" value={form.forma_pagamento} onChange={handleChange} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none text-white transition-all shadow-sm">
+                        <option value="Pix com desconto">Pix com desconto (3% OFF)</option>
+                        <option value="Cartão">Cartão</option>
+                        <option value="Boleto / transferência">Boleto / transferência</option>
+                        <option value="A combinar">A combinar</option>
+                      </select>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
