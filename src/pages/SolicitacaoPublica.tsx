@@ -171,6 +171,12 @@ export const SolicitacaoPublica: React.FC = () => {
           return produtoMapeado;
         }
       }
+      
+      const defaultProduto = 'Desafio Logístico';
+      if (produtos.some(p => p.nome === defaultProduto)) {
+        return defaultProduto;
+      }
+      
       return produtos.length > 0 ? produtos[0].nome : '';
     };
 
