@@ -116,15 +116,20 @@ export function AcompanhamentoPublico() {
           setDados(normalizados);
 
           // Buscar documentos da Central sem bloquear o fluxo principal
-          supabase.rpc('buscar_documentos_publicos', { p_token: token })
-            .then(({ data: docs, error: errDocs }) => {
-              if (errDocs) {
-                console.error('Erro ao buscar documentos públicos (não crítico):', errDocs);
-              } else if (docs) {
-                setDocumentos(docs as DocumentoPublico[]);
-              }
-            })
-            .catch(e => console.error('Exceção ao buscar documentos:', e));
+          try {
+            const { data: docs, error: errDocs } = await supabase.rpc('buscar_documentos_publicos', { p_token: token });
+            if (errDocs) {
+              console.error('Erro ao buscar documentos públicos (não crítico):', errDocs);
+            } else if (docs) {
+              setDocumentos(docs as DocumentoPublico[]);
+            }
+          } catch (err: unknown) {
+            if (err instanceof Error) {
+              console.error('Exceção ao buscar documentos:', err.message);
+            } else {
+              console.error('Exceção ao buscar documentos:', err);
+            }
+          }
         }
       } catch (err) {
         console.error('Erro ao buscar pedido:', err);
