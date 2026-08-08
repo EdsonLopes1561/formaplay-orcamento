@@ -344,16 +344,20 @@ export function AcompanhamentoPublico() {
             Resumo do Pedido
           </h2>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
+            <div className="md:col-span-1">
               <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Cliente</p>
               <p className="font-semibold text-slate-200">{dados.cliente_nome_publico}</p>
             </div>
-            <div className="sm:col-span-2">
+            <div className="md:col-span-1">
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Orçamento de origem</p>
+              <p className="font-semibold text-slate-200">{dados.numero}</p>
+            </div>
+            <div className="sm:col-span-2 md:col-span-2">
               <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Produto</p>
               <p className="font-semibold text-slate-200 truncate" title={dados.produto}>{dados.produto || 'Não informado'}</p>
             </div>
-            <div>
+            <div className="sm:col-span-2 md:col-span-1">
               <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Quantidade</p>
               <p className="font-black text-emerald-400 text-lg leading-none">{dados.quantidade}</p>
             </div>
