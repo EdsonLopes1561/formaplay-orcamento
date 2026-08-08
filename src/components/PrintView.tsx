@@ -32,9 +32,9 @@ const getProdutoDiferenciais = (nome: string): string[] => {
 
 const getProdutoConteudo = (nome: string): string[] => {
   const k = (nome || '').toLowerCase();
-  if (k.includes('premium')) return ['Tabuleiro premium', 'Cartas operacionais premium', 'Peões personalizados', 'Dados', 'Manual especial do jogo', 'Caixa rígida premium'];
+  if (k.includes('premium')) return ['Tabuleiro premium', 'Cartas operacionais premium', 'Peões personalizados', '1 Dado', 'Manual especial do jogo', 'Caixa rígida premium'];
   if (k.includes('kids')) return ['Tabuleiro infantil', 'Cartas coloridas', 'Peças educativas', 'Manual infantil', 'Dinâmicas lúdicas'];
-  if (k.includes('logístico') || k.includes('logistico')) return ['Tabuleiro premium', 'Cartas operacionais', 'Peões personalizados', 'Dados', 'Manual do jogo', 'Dinâmicas educacionais'];
+  if (k.includes('logístico') || k.includes('logistico')) return ['Tabuleiro premium', 'Cartas operacionais', 'Peões personalizados', '1 Dado', 'Manual do jogo', 'Dinâmicas educacionais'];
   if (k.includes('professor')) return ['Material pedagógico', 'Cartas avançadas', 'Guia do educador', 'Dinâmicas em grupo', 'Aplicação em sala'];
   return [];
 };
