@@ -1671,16 +1671,14 @@ function App() {
                     <label className="form-label">Número do Orçamento</label>
                     <input
                       name="numero"
-                      value={form.numero}
-                      onChange={handleChange}
-                      readOnly={!!currentId}
-                      className={`form-input font-bold ${
+                      value={currentId ? form.numero : 'Gerado ao salvar'}
+                      readOnly={true}
+                      className={`form-input font-bold cursor-not-allowed opacity-80 ${
                         currentId
-                          ? 'text-amber-400 bg-amber-950/50 border border-amber-900 cursor-not-allowed opacity-80'
+                          ? 'text-amber-400 bg-amber-950/50 border border-amber-900'
                           : 'text-green-400 bg-green-950/50 border border-green-900'
                       }`}
-                      placeholder="#0001"
-                      title={currentId ? 'O número não pode ser alterado durante a edição' : ''}
+                      title={currentId ? 'O número não pode ser alterado' : 'O número será gerado automaticamente ao salvar'}
                     />
                   </div>
                   <div>
