@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from './supabase';
 import { UsuarioApp } from './types/interesses';
 
@@ -23,6 +23,13 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+
+  // Usado para saber se já estamos autenticados com este usuário e evitar recargas duplas
+  const currentUserRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    currentUserRef.current = user?.id || null;
+  }, [user]);
 
   useEffect(() => {
     let mounted = true;
@@ -85,17 +92,22 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
     carregarSessao();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
         if (mounted) {
           setUser(null);
           setUsuarioApp(null);
           setIsLoading(false);
         }
-      } else {
-        // Recarregar tudo caso o login acabe de acontecer
+      } else if (event === 'SIGNED_IN') {
+        // Se o mesmo usuário já estiver em memória, ignora (evita recarga pesada ao voltar para aba)
+        if (session && currentUserRef.current === session.user.id) {
+          return;
+        }
         carregarSessao();
       }
+      // Outros eventos como TOKEN_REFRESHED, INITIAL_SESSION, USER_UPDATED
+      // são ignorados para não desmontar o App. Apenas a SDK atualiza em segundo plano.
     });
 
     return () => {

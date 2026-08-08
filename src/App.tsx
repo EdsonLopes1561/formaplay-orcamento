@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Plus, Save, Printer, MessageCircle, FolderOpen, Copy, CopyPlus,
   RotateCcw, ChevronDown, CheckCircle, AlertCircle,
   FileText, Users, Tag, Sparkles, Check, Package, LogOut, User, BarChart2, Mailbox, Download, Activity, Link as LinkIcon, ExternalLink, Layers
 } from 'lucide-react';
-import { supabase } from './supabase.ts';
+import { supabase } from './supabase';
 import { Orcamento, Cliente, EMPRESA, PRODUTOS, emptyOrcamento, SolicitacaoOrcamento, formatarCampoCliente } from './types';
 import { calcularVolumesMultiProdutos } from './config/produtosLogisticos';
 import { PrintView } from './components/PrintView';
@@ -21,6 +21,7 @@ import { AssistenteNFeModal } from './components/AssistenteNFeModal';
 import { ProducaoModal } from './components/ProducaoModal';
 import { PainelProducaoModal } from './components/PainelProducaoModal';
 import { PainelInteressesModal } from './components/PainelInteressesModal';
+import { GerenciadorDocumentos } from './components/GerenciadorDocumentos';
 import { useAuth } from './AuthWrapper';
 
 type Toast = { type: 'success' | 'error'; message: string };
@@ -162,6 +163,56 @@ function App() {
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoOrcamento[]>([]);
   const [showSolicitacoes, setShowSolicitacoes] = useState(false);
   const [loadingSolicitacoes, setLoadingSolicitacoes] = useState(false);
+
+  // Estados da Camada 2 (Rascunho)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [draftAlert, setDraftAlert] = useState<{ exists: boolean; savedAt: number | null }>({ exists: false, savedAt: null });
+  const DRAFT_KEY = 'formaplay:draft-orcamento:v1';
+  const savedFormRef = useRef<string>('');
+
+  useEffect(() => {
+    savedFormRef.current = JSON.stringify(emptyOrcamento());
+  }, []);
+
+  // Detector universal de alterações
+  useEffect(() => {
+    const currentStr = JSON.stringify(form);
+    if (currentStr !== savedFormRef.current) {
+      setHasUnsavedChanges(true);
+    } else {
+      setHasUnsavedChanges(false);
+    }
+  }, [form]);
+
+  // Salvar rascunho automaticamente
+  useEffect(() => {
+    if (hasUnsavedChanges && !draftAlert.exists) {
+      const timer = setTimeout(() => {
+        const draft = { version: 1, currentId, form, savedAt: Date.now() };
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [form, currentId, hasUnsavedChanges, draftAlert.exists]);
+
+  const restaurarRascunho = () => {
+    const saved = localStorage.getItem(DRAFT_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setForm(parsed.form);
+        setCurrentId(parsed.currentId);
+      } catch {
+        // Ignorar
+      }
+    }
+    setDraftAlert({ exists: false, savedAt: null });
+  };
+
+  const descartarRascunho = () => {
+    localStorage.removeItem(DRAFT_KEY);
+    setDraftAlert({ exists: false, savedAt: null });
+  };
   const [solicitacaoOrigemId, setSolicitacaoOrigemId] = useState<string | null>(null);
   const [clienteData, setClienteData] = useState<Cliente | null>(null);
 
@@ -406,11 +457,8 @@ function App() {
   };
 
   const calcularNumeroOrcamento = async (): Promise<string> => {
-    const { count } = await supabase
-      .from('orcamentos')
-      .select('*', { count: 'exact', head: true });
-    const next = (count ?? 0) + 1;
-    return `#${String(next).padStart(4, '0')}`;
+    // A numeração agora é gerada automaticamente pelo banco de dados via Sequence e Trigger
+    return '';
   };
 
   const calcularValores = (f: Omit<Orcamento, 'id' | 'created_at'>) => {
@@ -434,7 +482,7 @@ function App() {
     const finalValue = isCheckbox ? (e.target as HTMLInputElement).checked : value;
     const numeric = ['quantidade', 'valor_unitario', 'frete', 'desconto'];
 
-    let updated = {
+    const updated = {
       ...form,
       [name]: numeric.includes(name) ? parseMoeda(value) : finalValue,
     };
@@ -517,26 +565,51 @@ function App() {
       await carregarHistorico();
       // Busca o próximo número correto ao iniciar o app
       const numero = await calcularNumeroOrcamento();
-      setForm((prev) => ({ ...prev, numero }));
+      setForm((prev) => {
+        const novo = { ...prev, numero };
+        // Atualizar o rascunho base apenas se o form ainda não sofreu outras edições
+        if (savedFormRef.current === JSON.stringify(prev)) {
+          savedFormRef.current = JSON.stringify(novo);
+        }
+        return novo;
+      });
+
+      // Carregar rascunho na inicialização
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.savedAt && Date.now() - parsed.savedAt > 7 * 24 * 60 * 60 * 1000) {
+            localStorage.removeItem(DRAFT_KEY);
+          } else if (parsed.version === 1 && parsed.form) {
+            setDraftAlert({ exists: true, savedAt: parsed.savedAt });
+          }
+        } catch (e) {
+          localStorage.removeItem(DRAFT_KEY);
+        }
+      }
     };
     init();
   }, [carregarHistorico]);
 
   const novoOrcamento = async () => {
-    if (currentId) {
+    if (hasUnsavedChanges || currentId) {
       const confirmar = window.confirm(
-        'Você está editando um orçamento. Deseja descartar as alterações e criar um novo orçamento?'
+        'Você tem alterações não salvas ou está editando um orçamento. Deseja descartar as alterações e iniciar um novo orçamento?'
       );
       if (!confirmar) return;
     }
-    const numero = await calcularNumeroOrcamento();
-    setForm({
+    const novo = {
       ...emptyOrcamento(),
-      numero,
+      numero: '',
       data_orcamento: new Date().toLocaleDateString('pt-BR'),
-    });
+    };
+    setForm(novo);
+    savedFormRef.current = JSON.stringify(novo);
     setCurrentId(null);
     setClienteData(null);
+    localStorage.removeItem(DRAFT_KEY);
+    setDraftAlert({ exists: false, savedAt: null });
   };
 
   const salvarOrcamento = async () => {
@@ -570,19 +643,26 @@ function App() {
         }
         showToast('success', 'Orçamento atualizado com sucesso!');
       } else {
-        const numero = form.numero || await calcularNumeroOrcamento();
+        const payloadToInsert = { ...payload };
+        // Deixa o banco de dados gerar o número
+        delete payloadToInsert.numero;
+        
         const { data, error } = await supabase
           .from('orcamentos')
-          .insert({ ...payload, numero })
+          .insert(payloadToInsert)
           .select()
           .maybeSingle();
         if (error) throw error;
         if (data) {
           setCurrentId((data as Orcamento).id ?? null);
-          setForm((prev) => ({ ...prev, numero: (data as Orcamento).numero }));
+          const updatedForm = { ...payloadToInsert, numero: (data as Orcamento).numero };
+          setForm(updatedForm);
+          savedFormRef.current = JSON.stringify(updatedForm);
         }
         showToast('success', 'Orçamento salvo com sucesso!');
       }
+
+      localStorage.removeItem(DRAFT_KEY);
 
       if (solicitacaoOrigemId && !currentId) {
         await supabase
@@ -616,8 +696,12 @@ function App() {
       subtotal: Number(rest.subtotal) || 0,
       total: Number(rest.total) || 0,
       cliente_id: rest.cliente_id,
+      itens: Array.isArray(rest.itens) ? rest.itens : [],
+      producao_checklist: Array.isArray(rest.producao_checklist) ? rest.producao_checklist : [],
     };
-    setForm(calcularValores(normalized));
+    const valores = calcularValores(normalized);
+    setForm(valores);
+    savedFormRef.current = JSON.stringify(valores);
     setCurrentId(id ?? null);
     
     if (rest.cliente_id) {
@@ -637,8 +721,11 @@ function App() {
       return;
     }
     if (currentId === id) {
-      setForm(emptyOrcamento());
+      const vazio = emptyOrcamento();
+      setForm(vazio);
+      savedFormRef.current = JSON.stringify(vazio);
       setCurrentId(null);
+      localStorage.removeItem(DRAFT_KEY);
     }
     showToast('success', 'Orçamento excluído.');
     await carregarHistorico();
@@ -929,6 +1016,35 @@ function App() {
         </header>
 
         <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+          {/* Draft Alert */}
+          {draftAlert.exists && (
+            <div className="bg-amber-900/30 border border-amber-500/50 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg shadow-amber-900/20">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="text-amber-400 flex-shrink-0" size={24} />
+                <div>
+                  <h3 className="text-amber-400 font-bold">Rascunho não salvo encontrado</h3>
+                  <p className="text-slate-300 text-sm">
+                    Encontramos alterações não salvas de uma edição anterior ({new Date(draftAlert.savedAt!).toLocaleString('pt-BR')}).
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={restaurarRascunho}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-amber-950 font-bold rounded-lg transition-colors text-sm whitespace-nowrap"
+                >
+                  Restaurar rascunho
+                </button>
+                <button
+                  onClick={descartarRascunho}
+                  className="px-4 py-2 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 font-medium rounded-lg transition-colors text-sm whitespace-nowrap"
+                >
+                  Descartar
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Edit mode banner */}
           {currentId && (
             <div className="flex items-center gap-3 px-5 py-3.5 bg-amber-950/40 border-2 border-amber-500/50 rounded-xl shadow-sm">
@@ -993,6 +1109,16 @@ function App() {
                     <button onClick={novoOrcamento} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-900 to-blue-800 text-white rounded-lg hover:from-blue-800 hover:to-blue-700 active:scale-95 transition-all font-bold text-sm shadow-md">
                       <Plus size={18} /> Novo Orçamento
                     </button>
+                    {hasUnsavedChanges && (
+                      <span className="hidden sm:inline-flex items-center text-amber-400 text-xs font-bold px-2 py-1 bg-amber-900/30 border border-amber-500/30 rounded-lg">
+                        Alterações não salvas
+                      </span>
+                    )}
+                    {!hasUnsavedChanges && currentId && (
+                      <span className="hidden sm:inline-flex items-center text-emerald-400 text-xs font-bold px-2 py-1 bg-emerald-900/30 border border-emerald-500/30 rounded-lg">
+                        Salvo
+                      </span>
+                    )}
                     <button onClick={salvarOrcamento} disabled={saving} className={`flex items-center gap-2 px-5 py-2.5 text-white rounded-lg active:scale-95 transition-all font-bold text-sm shadow-md disabled:opacity-60 ${currentId ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'}`}>
                       {saving ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save size={18} />}
                       {currentId ? 'Atualizar Orçamento' : 'Salvar'}
@@ -1481,7 +1607,15 @@ function App() {
                   </div>
                 </div>
               </div>
-              
+
+              {/* Documentos do Pedido */}
+              {currentId && usuarioApp && (
+                <GerenciadorDocumentos
+                  orcamentoId={currentId}
+                  perfilUsuario={usuarioApp.perfil}
+                />
+              )}
+
               {/* Entrega e Rastreamento */}
               <div className="bg-[#0f172a] rounded-xl shadow-xl border border-slate-800 border-l-4 border-l-indigo-500 p-6 relative overflow-hidden mt-5">
                 <h2 className="font-black text-slate-100 mb-2 flex items-center gap-3">

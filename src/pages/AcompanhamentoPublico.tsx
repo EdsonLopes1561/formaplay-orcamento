@@ -48,6 +48,16 @@ interface DadosAcompanhamento {
   observacao_entrega_publica?: string | null;
 }
 
+interface DocumentoPublico {
+  id: string;
+  tipo_documento: string;
+  titulo: string;
+  numero_documento?: string | null;
+  data_documento?: string | null;
+  nome_arquivo: string;
+  tamanho_bytes: number;
+}
+
 const ETAPAS_TIMELINE = [
   "Solicitação recebida",
   "Orçamento enviado",
@@ -65,6 +75,8 @@ export function AcompanhamentoPublico() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dados, setDados] = useState<DadosAcompanhamento | null>(null);
+  const [documentos, setDocumentos] = useState<DocumentoPublico[]>([]);
+  const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
 
   useEffect(() => {
     async function carregarDados() {
@@ -102,8 +114,19 @@ export function AcompanhamentoPublico() {
           };
           
           setDados(normalizados);
+
+          // Buscar documentos da Central sem bloquear o fluxo principal
+          supabase.rpc('buscar_documentos_publicos', { p_token: token })
+            .then(({ data: docs, error: errDocs }) => {
+              if (errDocs) {
+                console.error('Erro ao buscar documentos públicos (não crítico):', errDocs);
+              } else if (docs) {
+                setDocumentos(docs as DocumentoPublico[]);
+              }
+            })
+            .catch(e => console.error('Exceção ao buscar documentos:', e));
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error('Erro ao buscar pedido:', err);
         setError('Erro ao carregar os dados do pedido. Tente novamente mais tarde.');
       } finally {
@@ -140,9 +163,81 @@ export function AcompanhamentoPublico() {
     );
   }
 
+  const handleDownload = async (docId: string, isLegacyUrl: string | null = null) => {
+    if (isLegacyUrl) {
+      window.open(isLegacyUrl, '_blank');
+      return;
+    }
+
+    if (downloadingDocId || !token) return;
+    setDownloadingDocId(docId);
+
+    try {
+      const response = await fetch('/api/documentos-download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token_publico: token,
+          documento_id: docId
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro na requisição da API de download');
+      }
+
+      const data = await response.json();
+      
+      if (data.url) {
+        // Inicia o download nativo do navegador usando a URL temporária assinada
+        const a = document.createElement('a');
+        a.href = data.url;
+        a.download = data.nome_arquivo || 'documento';
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        throw new Error('URL não retornada pela API');
+      }
+    } catch (err) {
+      console.error('Erro no download:', err);
+      alert('Não foi possível disponibilizar este documento no momento. Tente novamente.');
+    } finally {
+      setDownloadingDocId(null);
+    }
+  };
+
+  const getTipoAmigavel = (tipo: string) => {
+    const mapa: Record<string, string> = {
+      orcamento: 'Orçamento',
+      nfe_pdf: 'NF-e — PDF',
+      nfe_xml: 'NF-e — XML',
+      boleto: 'Boleto',
+      comprovante_envio: 'Comprovante de envio',
+      outro: 'Documento'
+    };
+    return mapa[tipo] || 'Documento';
+  };
+
+  const getIconForDoc = (tipo: string) => {
+    if (tipo.includes('nfe')) return <Receipt size={20} className="text-blue-400" />;
+    if (tipo === 'boleto') return <FileDown size={20} className="text-amber-400" />;
+    if (tipo === 'comprovante_envio') return <Truck size={20} className="text-emerald-400" />;
+    return <FileText size={20} className="text-slate-400" />;
+  };
+
+  const formatSize = (bytes: number) => {
+    if (!bytes) return '';
+    return (bytes / 1024).toFixed(1) + ' KB';
+  };
+
+  const temNovaNfe = documentos.some(d => d.tipo_documento === 'nfe_pdf');
+  const showDocumentos = documentos.length > 0 || (dados.nf_pdf_url && !temNovaNfe);
+
   const isCancelado = dados.status_acompanhamento === 'Cancelado';
   const etapasAtuais = isCancelado ? [...ETAPAS_TIMELINE, "Cancelado"] : ETAPAS_TIMELINE;
-  let currentIndex = etapasAtuais.indexOf(dados.status_acompanhamento || "Solicitação recebida");
+  const currentIndex = etapasAtuais.indexOf(dados.status_acompanhamento || "Solicitação recebida");
   const nfIndex = etapasAtuais.indexOf("Nota fiscal emitida");
 
   const getStatusColor = (index: number, etapaNome: string) => {
@@ -374,6 +469,75 @@ export function AcompanhamentoPublico() {
                     <MessageCircle size={14} /> Observação
                   </p>
                   <p className="text-sm text-indigo-100/90 font-medium">{dados.observacao_entrega_publica}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {showDocumentos && (
+          <div className="bg-[#0f172a] rounded-3xl border border-slate-800/80 p-6 sm:p-8 shadow-xl mb-8">
+            <h2 className="text-xl font-black text-white flex items-center gap-2 mb-6">
+              <FileDown className="text-blue-400" />
+              Documentos disponíveis
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {documentos.map(doc => (
+                <div key={doc.id} className="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-4 hover:border-blue-500/40 transition-colors group">
+                  <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center flex-shrink-0 group-hover:bg-slate-800/80 transition-colors">
+                    {getIconForDoc(doc.tipo_documento)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-slate-200 truncate" title={doc.titulo}>{doc.titulo}</h3>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-[11px] sm:text-xs text-slate-500 font-medium">
+                      <span className="text-blue-400/80 font-semibold">{getTipoAmigavel(doc.tipo_documento)}</span>
+                      {doc.numero_documento && <span>Nº {doc.numero_documento}</span>}
+                      {doc.data_documento && <span>{new Date(doc.data_documento + 'T12:00:00Z').toLocaleDateString('pt-BR')}</span>}
+                      <span>{formatSize(doc.tamanho_bytes)}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleDownload(doc.id)}
+                    disabled={downloadingDocId === doc.id}
+                    className="mt-3 sm:mt-0 flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 rounded-xl bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 font-bold text-sm transition-all whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+                    aria-label={`Baixar ${doc.titulo}`}
+                  >
+                    {downloadingDocId === doc.id ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                        Preparando...
+                      </>
+                    ) : (
+                      <>
+                        <Download size={16} />
+                        Baixar
+                      </>
+                    )}
+                  </button>
+                </div>
+              ))}
+
+              {dados.nf_pdf_url && !temNovaNfe && (
+                <div className="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-4 hover:border-blue-500/40 transition-colors group">
+                  <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center flex-shrink-0">
+                    <Receipt size={20} className="text-blue-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-slate-200 truncate">Nota Fiscal Eletrônica</h3>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-[11px] sm:text-xs text-slate-500 font-medium">
+                      <span className="text-blue-400/80 font-semibold">NF-e — PDF</span>
+                      {dados.nf_numero && <span>Nº {dados.nf_numero}</span>}
+                      {dados.nf_emitida_em && <span>{new Date(dados.nf_emitida_em + 'T12:00:00Z').toLocaleDateString('pt-BR')}</span>}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleDownload('legacy', dados.nf_pdf_url)}
+                    className="mt-3 sm:mt-0 flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 rounded-xl bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 font-bold text-sm transition-all whitespace-nowrap w-full sm:w-auto"
+                    aria-label="Acessar Nota Fiscal Eletrônica"
+                  >
+                    <ExternalLink size={16} />
+                    Acessar
+                  </button>
                 </div>
               )}
             </div>

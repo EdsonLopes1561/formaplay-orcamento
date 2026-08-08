@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, CheckCircle, Package, Clock, User, AlertCircle, RefreshCw } from 'lucide-react';
-import { supabase } from '../supabase.ts';
-import { Orcamento } from '../types.ts';
+import { supabase } from '../supabase';
+import { Orcamento } from '../types';
 
 interface ProducaoModalProps {
   isOpen: boolean;

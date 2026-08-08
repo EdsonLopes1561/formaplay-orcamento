@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { X, RefreshCw, Package, ExternalLink, User, Layers } from 'lucide-react';
-import { supabase } from '../supabase.ts';
+import { supabase } from '../supabase';
 
 interface PainelProducaoModalProps {
   isOpen: boolean;
