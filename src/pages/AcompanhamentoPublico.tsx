@@ -46,6 +46,8 @@ interface DadosAcompanhamento {
   previsao_entrega?: string | null;
   data_entrega?: string | null;
   observacao_entrega_publica?: string | null;
+  status_producao?: string | null;
+  producao_itens_concluidos?: number;
 }
 
 interface DocumentoPublico {
@@ -643,6 +645,34 @@ export function AcompanhamentoPublico() {
                         )
                       )}
 
+                      {etapa === "Pedido em produção" && dados.producao_itens_concluidos !== undefined && (isActive || isPast) && (
+                        <div className="mt-3 bg-slate-900/60 border border-slate-700/50 p-4 rounded-xl shadow-inner max-w-md">
+                          {dados.producao_itens_concluidos === 0 ? (
+                            <p className="text-sm text-slate-300 font-medium">Preparando produção...</p>
+                          ) : (
+                            <>
+                              <div className="flex justify-between items-center mb-2">
+                                <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                  {dados.producao_itens_concluidos === 17 ? 'Produção concluída — preparando envio' : 'Progresso da produção'}
+                                </span>
+                                <span className="text-sm font-black text-emerald-400">
+                                  {Math.round((dados.producao_itens_concluidos / 17) * 100)}%
+                                </span>
+                              </div>
+                              <div className="w-full bg-slate-800 rounded-full h-2 mb-2 overflow-hidden shadow-inner">
+                                <div 
+                                  className="bg-gradient-to-r from-emerald-600 to-emerald-400 h-2 rounded-full transition-all duration-1000 ease-out" 
+                                  style={{ width: `${Math.round((dados.producao_itens_concluidos / 17) * 100)}%` }} 
+                                />
+                              </div>
+                              <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium text-right">
+                                {dados.producao_itens_concluidos} de 17 etapas concluídas
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      )}
+
                       {isActive && !isCancelado && (
                         etapa === "Pedido entregue" ? (
                           <div className="mt-2 sm:mt-3 bg-gradient-to-r from-emerald-900/40 to-emerald-900/10 border border-emerald-500/30 p-3 sm:p-4 rounded-xl shadow-lg">
@@ -651,11 +681,11 @@ export function AcompanhamentoPublico() {
                               Parabéns! O Desafio Logístico chegou ao destino final. Agora a rota continua com aprendizado, estratégia e muita diversão.
                             </p>
                           </div>
-                        ) : (
+                        ) : etapa !== "Pedido em produção" ? (
                           <p className="text-xs sm:text-sm text-blue-200/90 mt-1 sm:mt-1.5 font-medium leading-relaxed max-w-md">
                             Este é o status atual do seu pedido.<br className="hidden sm:block" /> Acompanhe as próximas atualizações por aqui.
                           </p>
-                        )
+                        ) : null
                       )}
                       {isActive && isCancelado && (
                         <p className="text-xs sm:text-sm text-rose-500/90 mt-1 font-medium">
