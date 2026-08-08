@@ -388,21 +388,6 @@ export function AcompanhamentoPublico() {
                       <p className="text-xs text-slate-400 mt-0.5">Emitida em {new Date(dados.nf_emitida_em + 'T12:00:00Z').toLocaleDateString('pt-BR')}</p>
                     )}
                   </div>
-                  {dados.nf_pdf_url && dados.nf_pdf_url.startsWith('http') ? (
-                    <a 
-                      href={dados.nf_pdf_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg transition-all active:scale-95 sm:ml-auto w-fit"
-                      title="Baixar DANFE / Nota Fiscal"
-                    >
-                      <Download size={20} /> Baixar DANFE
-                    </a>
-                  ) : (
-                    <div className="text-sm text-slate-400 font-medium sm:text-right bg-slate-800/50 px-3 py-2 rounded-lg border border-slate-700/30">
-                      Nota fiscal emitida. Link de download ainda não disponível.
-                    </div>
-                  )}
                 </div>
               </div>
             )}
@@ -517,7 +502,11 @@ export function AcompanhamentoPublico() {
                     ) : (
                       <>
                         <Download size={16} />
-                        Baixar
+                        {doc.tipo_documento === 'nfe_pdf' ? 'Baixar DANFE' : 
+                         doc.tipo_documento === 'nfe_xml' ? 'Baixar XML' :
+                         doc.tipo_documento === 'orcamento' ? 'Baixar orçamento' :
+                         doc.tipo_documento === 'comprovante_envio' ? 'Baixar comprovante' :
+                         'Baixar arquivo'}
                       </>
                     )}
                   </button>
@@ -542,8 +531,8 @@ export function AcompanhamentoPublico() {
                     className="mt-3 sm:mt-0 flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 rounded-xl bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 font-bold text-sm transition-all whitespace-nowrap w-full sm:w-auto"
                     aria-label="Acessar Nota Fiscal Eletrônica"
                   >
-                    <ExternalLink size={16} />
-                    Acessar
+                    <Download size={16} />
+                    Baixar DANFE
                   </button>
                 </div>
               )}
