@@ -171,11 +171,17 @@ export function EditorLinhaTempoModal({ isOpen, onClose, orcamento }: EditorLinh
         p_data_status: dataStatusDate.toISOString(),
         p_observacao_publica: edits.observacao_publica.trim() || null
       });
-      if (err) throw err;
+      
+      if (err) {
+        console.error('Erro ao adicionar etapa:', err);
+        setError('Erro ao adicionar etapa: ' + err.message);
+        return;
+      }
       
       setSuccess('Etapa adicionada com sucesso!');
-      loadHistorico();
+      await loadHistorico();
     } catch (err: any) {
+      console.error('Exceção ao adicionar etapa:', err);
       setError('Erro ao adicionar etapa: ' + err.message);
     }
   };
