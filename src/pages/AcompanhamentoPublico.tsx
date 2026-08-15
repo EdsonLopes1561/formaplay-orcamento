@@ -565,6 +565,7 @@ export function AcompanhamentoPublico() {
                 // Busca data real no histórico ou aplica fallbacks de segurança para pedidos antigos
                 const hist = dados.historico_status?.find(h => h.status === etapa);
                 let dataEtapa: string | undefined = hist?.data_status;
+                const observacao = hist?.observacao_publica;
                 
                 // Aplicar regra de prioridade de rastreamento (Fase 4)
                 if (etapa === "Pedido em fase de entrega" && dados.data_envio) {
