@@ -1,0 +1,9 @@
+feat: adicionar arquivamento e exclusão segura de interesses
+
+- adicionar soft delete para registros de interesse;
+- permitir arquivar e restaurar por administrador e comercial;
+- permitir exclusão definitiva apenas para administrador;
+- exigir confirmação digitando EXCLUIR;
+- adicionar filtros de ativos, arquivados e todos;
+- manter segurança por RPC e RBAC;
+- preservar layout dark premium.

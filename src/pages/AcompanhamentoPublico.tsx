@@ -60,17 +60,7 @@ interface DocumentoPublico {
   tamanho_bytes: number;
 }
 
-const ETAPAS_TIMELINE = [
-  "Solicitação recebida",
-  "Orçamento enviado",
-  "Aguardando confirmação do cliente",
-  "Aguardando pagamento/autorização de compra",
-  "Pedido autorizado para produção",
-  "Pedido em produção",
-  "Nota fiscal emitida",
-  "Pedido em fase de entrega",
-  "Pedido entregue"
-];
+import { ETAPAS_TIMELINE } from '../constants/etapasTimeline';
 
 export function AcompanhamentoPublico() {
   const { token } = useParams<{ token: string }>();
@@ -636,6 +626,15 @@ export function AcompanhamentoPublico() {
                             Aguardando
                           </p>
                         )
+                      )}
+
+                      {/* Exibição da Observação Específica da Etapa */}
+                      {observacao && (
+                        <div className="mt-2 bg-slate-900/40 border border-slate-700/30 p-3 rounded-xl">
+                          <p className="text-xs sm:text-sm text-slate-300 font-medium">
+                            {observacao}
+                          </p>
+                        </div>
                       )}
 
                       {etapa === "Pedido em produção" && dados.producao_itens_concluidos !== undefined && (isActive || isPast) && (
