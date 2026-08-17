@@ -80,7 +80,7 @@ export function EditorLinhaTempoModal({ isOpen, onClose, orcamento }: EditorLinh
         }
       });
 
-      const currentStatusNormalized = normalizeStatus(orcamento.status_acompanhamento);
+      const currentStatusNormalized = normalizeStatus(orcamento.status_acompanhamento || '');
       const currentIndex = ETAPAS_TIMELINE.indexOf(currentStatusNormalized);
       const isCancelado = currentStatusNormalized === 'Cancelado';
 

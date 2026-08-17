@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Search, User, Mail, MessageCircle, AlertCircle, Save, Archive, ArchiveRestore, Trash2 } from 'lucide-react';
+import { X, Search, User, Mail, MessageCircle, AlertCircle, Save, Archive, ArchiveRestore, Trash2, Clock, CheckCircle } from 'lucide-react';
 import { interessesService, FiltroArquivado } from '../services/interessesService';
 import { InteresseModelo, InteresseStatus } from '../types/interesses';
 import { useAuth } from '../AuthWrapper';
@@ -7,6 +7,7 @@ import { useAuth } from '../AuthWrapper';
 interface PainelInteressesModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onRefresh?: () => void;
 }
 
 function obterMensagemErro(error: unknown): string {
@@ -26,7 +27,7 @@ function obterMensagemErro(error: unknown): string {
   return 'Ocorreu um erro inesperado.';
 }
 
-export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ isOpen, onClose }) => {
+export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ isOpen, onClose, onRefresh }) => {
   const { usuarioApp } = useAuth();
   const isAdmin = usuarioApp?.perfil === 'administrador';
 
@@ -74,6 +75,7 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
       if (!interesse) return;
       await interessesService.atualizarInteresse(id, novoStatus, interesse.observacao_interna || '');
       await carregarInteresses();
+      onRefresh?.();
     } catch (error: unknown) {
       console.error('Erro ao atualizar status', error);
       alert('Erro ao atualizar status: ' + obterMensagemErro(error));
@@ -104,6 +106,7 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
       setArquivarId(null);
       setArquivarMotivo('');
       await carregarInteresses();
+      onRefresh?.();
     } catch (error: unknown) {
       console.error('Erro ao arquivar', error);
       alert('Erro ao arquivar: ' + obterMensagemErro(error));
@@ -117,6 +120,7 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
     try {
       await interessesService.restaurarInteresse(id);
       await carregarInteresses();
+      onRefresh?.();
     } catch (error: unknown) {
       console.error('Erro ao restaurar', error);
       alert('Erro ao restaurar: ' + obterMensagemErro(error));
@@ -133,6 +137,7 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
       setExcluirId(null);
       setExcluirConfirmText('');
       await carregarInteresses();
+      onRefresh?.();
     } catch (error: unknown) {
       console.error('Erro ao excluir', error);
       alert('Erro ao excluir: ' + obterMensagemErro(error));
@@ -171,6 +176,17 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
 
   const getStatusLabel = (status: string) => {
     return status.replace('_', ' ').toUpperCase();
+  };
+
+  const formatDataSp = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      const dataStr = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+      const horaStr = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }).format(d);
+      return `${dataStr} às ${horaStr}`;
+    } catch (e) {
+      return new Date(dateStr).toLocaleString('pt-BR');
+    }
   };
 
   if (!isOpen) return null;
@@ -300,6 +316,26 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
                         </div>
                         <div className="text-slate-500 mt-1">
                           {item.cidade || 'Cidade não informada'}{item.estado ? ` - ${item.estado}` : ''}
+                        </div>
+                        
+                        <div className="mt-3 space-y-1">
+                          {item.origem === 'site_formaplay' && (
+                            <div className="text-xs text-slate-400 flex items-center gap-1">
+                              <span>🌐</span> Site FormaPlay
+                            </div>
+                          )}
+                          <div className="text-xs text-slate-400 flex items-center gap-1">
+                            <Clock size={12} /> Solicitado em: {formatDataSp(item.created_at)}
+                          </div>
+                          <div className="text-xs flex items-center gap-1 mt-1">
+                            {item.aceita_contato === true ? (
+                              <span className="text-teal-400 flex items-center gap-1"><CheckCircle size={12} /> Contato autorizado</span>
+                            ) : item.aceita_contato === false ? (
+                              <span className="text-slate-500 flex items-center gap-1">Contato não autorizado</span>
+                            ) : (
+                              <span className="text-slate-500 flex items-center gap-1">Autorização não informada</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>

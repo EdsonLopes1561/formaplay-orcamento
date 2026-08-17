@@ -164,6 +164,8 @@ function App() {
   const [showSolicitacoes, setShowSolicitacoes] = useState(false);
   const [loadingSolicitacoes, setLoadingSolicitacoes] = useState(false);
 
+  const [interessesNovosCount, setInteressesNovosCount] = useState(0);
+
   // Estados da Camada 2 (Rascunho)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [draftAlert, setDraftAlert] = useState<{ exists: boolean; savedAt: number | null }>({ exists: false, savedAt: null });
@@ -447,8 +449,35 @@ function App() {
     }
   };
 
+  const carregarInteressesCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('interesses_modelos')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'novo')
+        .eq('arquivado', false)
+        .eq('origem', 'site_formaplay');
+      
+      if (!error && count !== null) {
+        setInteressesNovosCount(count);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar contagem de interesses:", err);
+    }
+  };
+
   useEffect(() => {
     carregarSolicitacoes();
+    carregarInteressesCount();
+
+    const onFocus = () => {
+      carregarInteressesCount();
+    };
+
+    window.addEventListener('focus', onFocus);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+    };
   }, []);
 
   const showToast = (type: Toast['type'], message: string) => {
@@ -1173,6 +1202,7 @@ function App() {
                     {(usuarioApp?.perfil === 'administrador' || usuarioApp?.perfil === 'comercial') && (
                       <button onClick={() => setShowInteresses(true)} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border-2 border-slate-700 text-teal-400 hover:border-teal-500/50 hover:bg-teal-500/10 rounded-lg active:scale-95 transition-all font-bold text-sm shadow-md">
                         <Users size={18} /> Interesses
+                        {interessesNovosCount > 0 && <span className="bg-teal-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-1 animate-pulse">{interessesNovosCount}</span>}
                       </button>
                     )}
                   </>
@@ -2208,6 +2238,7 @@ function App() {
       <PainelInteressesModal
         isOpen={showInteresses}
         onClose={() => setShowInteresses(false)}
+        onRefresh={carregarInteressesCount}
       />
     </>
   );
