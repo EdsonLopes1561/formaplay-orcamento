@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Search, User, Mail, MessageCircle, AlertCircle, Save, Archive, ArchiveRestore, Trash2, Clock, CheckCircle } from 'lucide-react';
+import { X, Search, User, Mail, MessageCircle, AlertCircle, Save, Archive, ArchiveRestore, Trash2, Clock, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { interessesService, FiltroArquivado } from '../services/interessesService';
 import { InteresseModelo, InteresseStatus } from '../types/interesses';
 import { useAuth } from '../AuthWrapper';
@@ -41,6 +41,8 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
   const [editingId, setEditingId] = useState<string | null>(null);
   const [obsText, setObsText] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
+  
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   // Modais de confirmação
   const [arquivarId, setArquivarId] = useState<string | null>(null);
@@ -67,6 +69,15 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
       carregarInteresses();
     }
   }, [isOpen, carregarInteresses]);
+
+  const toggleExpand = (id: string) => {
+    setExpandedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
+      return newSet;
+    });
+  };
 
   const handleMudarStatus = async (id: string, novoStatus: InteresseStatus) => {
     setSavingId(id);
@@ -146,10 +157,48 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
     }
   };
 
-  const abrirWhatsApp = (numero: string | null) => {
-    if (!numero) return;
-    const numLimpo = numero.replace(/\D/g, '');
-    window.open(`https://wa.me/55${numLimpo}`, '_blank');
+  const normalizarWhatsAppBrasil = (numero?: string | null): string | null => {
+    if (!numero) return null;
+
+    let n = numero.replace(/\D/g, '');
+    n = n.replace(/^0+/, '');
+
+    // Número nacional: DDD + telefone
+    if (n.length === 10 || n.length === 11) {
+      return `55${n}`;
+    }
+
+    // Número já contendo DDI brasileiro
+    if ((n.length === 12 || n.length === 13) && n.startsWith('55')) {
+      return n;
+    }
+
+    return null;
+  };
+
+  const enviarMensagemWhatsApp = (item: InteresseModelo) => {
+    const numero = normalizarWhatsAppBrasil(item.whatsapp);
+
+    if (!numero || item.aceita_contato !== true) {
+      return;
+    }
+
+    const primeiroNome = (item.nome || '').trim().split(' ')[0] || '';
+    const texto = `Olá, ${primeiroNome}! Tudo bem?\n\nAqui é o Edson, da FormaPlay – Jogos Educacionais.\n\nAgradecemos pelo seu interesse no ${item.modelo_interesse}.\n\nSeu interesse foi registrado e, assim que tivermos novidades sobre o desenvolvimento e a disponibilidade desse modelo, entraremos em contato por aqui.\n\nObrigado por acompanhar os projetos da FormaPlay! 🎲💙`;
+
+    const url = `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+    window.open(url, '_blank');
+  };
+
+  const enviarEmail = (item: InteresseModelo) => {
+    if (!item.email || item.aceita_contato !== true) return;
+    
+    const primeiroNome = (item.nome || '').trim().split(' ')[0] || '';
+    const assunto = `FormaPlay – Obrigado pelo interesse no ${item.modelo_interesse}`;
+    const corpo = `Olá, ${primeiroNome}!\n\nAgradecemos pelo seu interesse no ${item.modelo_interesse} da FormaPlay – Jogos Educacionais.\n\nSeu interesse foi registrado e, assim que tivermos novidades sobre o desenvolvimento e a disponibilidade desse modelo, entraremos em contato.\n\nObrigado por acompanhar os projetos da FormaPlay!\n\nAtenciosamente,\nEdson Lopes\nFormaPlay – Jogos Educacionais`;
+
+    const url = `mailto:${item.email}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+    window.open(url, '_blank');
   };
 
   const interessesFiltrados = interesses.filter(item => {
@@ -301,7 +350,7 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
                         <div className="flex items-center gap-2">
                           <MessageCircle size={14} className="text-emerald-400" /> 
                           {item.whatsapp ? (
-                            <button onClick={() => abrirWhatsApp(item.whatsapp)} className="hover:text-emerald-300 hover:underline">
+                            <button onClick={() => enviarMensagemWhatsApp(item)} className={`hover:underline ${item.aceita_contato ? 'hover:text-emerald-300' : 'cursor-not-allowed opacity-70'}`} title={item.aceita_contato ? "Enviar WhatsApp" : "Contato não autorizado"}>
                               {item.whatsapp}
                             </button>
                           ) : 'Não informado'}
@@ -309,9 +358,9 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
                         <div className="flex items-center gap-2">
                           <Mail size={14} className="text-blue-400" />
                           {item.email ? (
-                            <a href={`mailto:${item.email}`} className="hover:text-blue-300 hover:underline">
+                            <button onClick={() => enviarEmail(item)} className={`hover:underline ${item.aceita_contato ? 'hover:text-blue-300' : 'cursor-not-allowed opacity-70'}`} title={item.aceita_contato ? "Enviar E-mail" : "Contato não autorizado"}>
                               {item.email}
-                            </a>
+                            </button>
                           ) : 'Não informado'}
                         </div>
                         <div className="text-slate-500 mt-1">
@@ -364,6 +413,90 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
                           </div>
                           {item.motivo_arquivamento && (
                             <div className="text-slate-400 italic">"{item.motivo_arquivamento}"</div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Botão Ver Detalhes */}
+                      {Boolean(item.finalidade_uso || item.interesse_personalizacao || item.observacoes) && (
+                        <div className="mt-4 border-t border-slate-700/50 pt-3">
+                          <button 
+                            onClick={() => toggleExpand(item.id)}
+                            className="flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors"
+                          >
+                            {expandedIds.has(item.id) ? (
+                              <><ChevronUp size={14} /> Ocultar detalhes</>
+                            ) : (
+                              <><ChevronDown size={14} /> Ver detalhes</>
+                            )}
+                          </button>
+
+                          {expandedIds.has(item.id) && (
+                            <div className="mt-3 space-y-4 p-4 bg-slate-900/40 rounded-lg border border-slate-700/50 text-sm animate-in fade-in slide-in-from-top-2 duration-200">
+                              
+                              {/* Interesse */}
+                              <div>
+                                <h4 className="font-semibold text-teal-400 mb-2 border-b border-slate-700/50 pb-1">Interesse</h4>
+                                <div className="space-y-1.5">
+                                  {item.modelo_interesse && (
+                                    <div><span className="text-slate-500 text-xs mr-2">Modelo:</span> <span className="text-slate-300">{item.modelo_interesse}</span></div>
+                                  )}
+                                  {item.tipo_interessado && (
+                                    <div><span className="text-slate-500 text-xs mr-2">Perfil:</span> <span className="text-slate-300 capitalize">{item.tipo_interessado.replace('_', ' ')}</span></div>
+                                  )}
+                                  {item.quantidade_estimada && (
+                                    <div><span className="text-slate-500 text-xs mr-2">Quantidade estimada:</span> <span className="text-slate-300">{item.quantidade_estimada}</span></div>
+                                  )}
+                                  {item.interesse_personalizacao && (
+                                    <div><span className="text-slate-500 text-xs mr-2">Interesse em personalização:</span> <span className="text-slate-300">{item.interesse_personalizacao}</span></div>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Como pretende utilizar */}
+                              {item.finalidade_uso && (
+                                <div>
+                                  <h4 className="font-semibold text-teal-400 mb-2 border-b border-slate-700/50 pb-1">Como pretende utilizar</h4>
+                                  <p className="text-slate-300 whitespace-pre-wrap">{item.finalidade_uso}</p>
+                                </div>
+                              )}
+
+                              {/* Sugestão / necessidade / observações */}
+                              {item.observacoes && (
+                                <div>
+                                  <h4 className="font-semibold text-teal-400 mb-2 border-b border-slate-700/50 pb-1">Sugestão / necessidade / observações</h4>
+                                  <p className="text-slate-300 whitespace-pre-wrap">{item.observacoes}</p>
+                                </div>
+                              )}
+                              
+                              {/* Contato */}
+                              <div>
+                                <h4 className="font-semibold text-teal-400 mb-2 border-b border-slate-700/50 pb-1">Contato</h4>
+                                <div className="space-y-1.5">
+                                  {item.whatsapp && (
+                                    <div><span className="text-slate-500 text-xs mr-2">WhatsApp:</span> <span className="text-slate-300">{item.whatsapp}</span></div>
+                                  )}
+                                  {item.email && (
+                                    <div><span className="text-slate-500 text-xs mr-2">E-mail:</span> <span className="text-slate-300">{item.email}</span></div>
+                                  )}
+                                  {(item.cidade || item.estado) && (
+                                    <div><span className="text-slate-500 text-xs mr-2">Cidade:</span> <span className="text-slate-300">{item.cidade || ''}{item.estado ? ` - ${item.estado}` : ''}</span></div>
+                                  )}
+                                  {item.origem && (
+                                    <div><span className="text-slate-500 text-xs mr-2">Origem:</span> <span className="text-slate-300">{item.origem === 'site_formaplay' ? 'Site FormaPlay' : item.origem}</span></div>
+                                  )}
+                                  {item.created_at && (
+                                    <div><span className="text-slate-500 text-xs mr-2">Solicitado em:</span> <span className="text-slate-300">{formatDataSp(item.created_at)}</span></div>
+                                  )}
+                                  <div>
+                                    <span className="text-slate-500 text-xs mr-2">Autorização:</span> 
+                                    <span className="text-slate-300">
+                                      {item.aceita_contato === true ? 'Contato autorizado' : item.aceita_contato === false ? 'Contato não autorizado' : 'Autorização não informada'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           )}
                         </div>
                       )}
@@ -430,6 +563,41 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
                             ) : (
                               <div className="text-sm text-slate-400 bg-slate-900/50 p-2 rounded border border-slate-800 flex-1 flex items-start break-words overflow-hidden whitespace-pre-wrap">
                                 {item.observacao_interna || <span className="text-slate-600 italic">Nenhuma observação.</span>}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Área de Contato Rápido */}
+                          <div className="pt-3 border-t border-slate-700/50 mt-1">
+                            <label className="text-xs font-semibold text-slate-500 block mb-2">Contato</label>
+                            
+                            {item.aceita_contato === false || item.aceita_contato == null ? (
+                              <div className="bg-slate-800/80 border border-slate-700 rounded-lg p-2 text-center text-xs text-slate-400">
+                                {item.aceita_contato === false ? 'Contato não autorizado' : 'Autorização não informada'}
+                              </div>
+                            ) : (
+                              <div className="flex flex-col gap-2">
+                                {item.whatsapp ? (
+                                  <button
+                                    onClick={() => enviarMensagemWhatsApp(item)}
+                                    className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 transition-colors border border-emerald-500/20 text-sm font-medium"
+                                  >
+                                    <MessageCircle size={14} /> WhatsApp
+                                  </button>
+                                ) : null}
+                                
+                                {item.email ? (
+                                  <button
+                                    onClick={() => enviarEmail(item)}
+                                    className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition-colors border border-blue-500/20 text-sm font-medium"
+                                  >
+                                    <Mail size={14} /> E-mail
+                                  </button>
+                                ) : null}
+                                
+                                {!item.whatsapp && !item.email && (
+                                  <div className="text-xs text-slate-500 text-center py-1">Nenhum canal disponível</div>
+                                )}
                               </div>
                             )}
                           </div>
