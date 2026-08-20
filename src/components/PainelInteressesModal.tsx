@@ -328,7 +328,13 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
                 const isExpanded = expandedInteresseId === item.id;
                 
                 return (
-                  <div key={item.id} className={`rounded-xl border shadow-sm transition-colors ${item.arquivado ? 'bg-slate-800/50 border-slate-800 opacity-80' : 'bg-slate-800 border-slate-700 hover:border-slate-600'}`}>
+                  <div key={item.id} className={`rounded-xl border shadow-sm transition-all duration-200 overflow-hidden ${
+                    isExpanded 
+                      ? 'bg-slate-800 border-slate-600 border-l-[4px] border-l-teal-500 shadow-lg' 
+                      : item.arquivado 
+                        ? 'bg-slate-800/30 border-slate-800 border-l-[4px] border-l-transparent opacity-80' 
+                        : 'bg-slate-800/50 border-slate-700 border-l-[4px] border-l-transparent hover:border-slate-600'
+                  }`}>
                     
                     {/* FAIXA COMPACTA (CABEÇALHO) */}
                     <div 
@@ -342,12 +348,14 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
                       role="button"
                       tabIndex={0}
                       aria-expanded={isExpanded}
-                      className="p-4 flex flex-col md:flex-row md:items-center gap-3 md:gap-4 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded-xl"
+                      className={`p-4 flex flex-col md:flex-row md:items-center gap-3 md:gap-4 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-500 transition-colors ${
+                        isExpanded ? 'bg-slate-800' : ''
+                      }`}
                     >
                       {/* Ícone e Nome + Status */}
                       <div className="flex items-center gap-3 md:w-1/3 min-w-[250px]">
                         {isExpanded ? <ChevronDown size={18} className="text-teal-400 shrink-0" /> : <ChevronRight size={18} className="text-slate-400 shrink-0" />}
-                        <h3 className="font-bold text-base text-white truncate flex-1" title={item.nome}>{item.nome}</h3>
+                        <h3 className={`font-bold truncate flex-1 transition-colors ${isExpanded ? 'text-teal-300 text-[17px]' : 'text-white text-base'}`} title={item.nome}>{item.nome}</h3>
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold shadow-sm shrink-0 ${getStatusColor(item.status)}`}>
                           {getStatusLabel(item.status)}
                         </span>
@@ -368,7 +376,7 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
                       </div>
                       
                       {/* Data */}
-                      <div className="text-xs text-slate-500 shrink-0 flex items-center gap-1 pl-8 md:pl-0">
+                      <div className={`text-xs shrink-0 flex items-center gap-1 pl-8 md:pl-0 font-medium ${isExpanded ? 'text-slate-400' : 'text-slate-300'}`}>
                         <Clock size={12} /> {formatDataSp(item.created_at)}
                       </div>
                     </div>
@@ -376,7 +384,7 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
                     {/* CONTEÚDO EXPANDIDO */}
                     {isExpanded && (
                       <div 
-                        className="p-5 border-t border-slate-700/50 bg-slate-900/40 rounded-b-xl animate-in slide-in-from-top-2 fade-in duration-200 cursor-default"
+                        className="p-5 border-t border-teal-500/40 bg-slate-900/60 animate-in slide-in-from-top-2 fade-in duration-200 cursor-default"
                         onClick={(e) => e.stopPropagation()} // Evita fechar ao clicar no fundo do conteúdo
                       >
                         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

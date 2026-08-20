@@ -282,7 +282,7 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport, onOpenTorreC
 
           {/* Revenue Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-lg flex items-center gap-5 hover:border-slate-700 transition-colors group">
+            <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-lg flex items-center gap-5 hover:border-slate-700 transition-colors group" title="Todos os orçamentos gerados, independentemente do status">
               <div className="p-4 bg-blue-600/20 text-blue-400 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-inner">
                 <DollarSign size={28} strokeWidth={2.5} />
               </div>
@@ -316,10 +316,13 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport, onOpenTorreC
           </div>
 
           {/* Quantities and Status */}
-          <h3 className="text-xl font-black text-white mb-5 flex items-center gap-2">
-            <Layers size={22} className="text-blue-500" />
-            Volume de Orçamentos
-          </h3>
+          <div className="mb-5">
+            <h3 className="text-xl font-black text-white flex items-center gap-2">
+              <Layers size={22} className="text-blue-500" />
+              Volume de Orçamentos
+            </h3>
+            <p className="text-sm font-medium text-slate-400 mt-1">Situação atual por status</p>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
             <div className="bg-[#0f172a] p-5 rounded-2xl border border-slate-800 shadow-lg text-center relative overflow-hidden group hover:border-blue-600 transition-colors">
               <div className="absolute top-0 left-0 w-full h-1 bg-blue-500 opacity-50 group-hover:opacity-100 transition-opacity"></div>
@@ -369,9 +372,9 @@ export function DashboardModal({ orcamentos, onClose, onOpenExport, onOpenTorreC
             <div>
               <h3 className="text-xl font-black text-white flex items-center gap-2">
                 <TrendingUp size={22} className="text-emerald-500" />
-                Taxa de Aprovação
+                Conversão Geral
               </h3>
-              <p className="text-sm text-slate-400 font-medium mt-1">Porcentagem de orçamentos que foram convertidos em vendas</p>
+              <p className="text-sm text-slate-400 font-medium mt-1">{metrics.aprovados} aprovados de {metrics.totalOrçamentos} orçamentos gerados</p>
             </div>
             <div className="flex items-center gap-4 w-full md:w-1/2 justify-end relative z-10">
               <div className="flex-1 max-w-xs h-4 bg-slate-950 border border-slate-800 rounded-full overflow-hidden shadow-inner">

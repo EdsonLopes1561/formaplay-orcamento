@@ -69,61 +69,85 @@ export function TorreControleModal({ onClose, onOpenDashboard }: TorreControleMo
     return null;
   };
 
-  const getRegiaoNormalizada = (o: any) => {
-      let rawCidade = String(o?.cidade || o?.cliente_cidade || '').trim();
-      let rawEstado = String(o?.estado || o?.cliente_uf || '').trim().toUpperCase();
-      let cReg = 'Não informado';
+  const normalizeRegiaoKey = (raw: string) => {
+    let s = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    s = s.replace(/[´`']/g, "'");
+    s = s.toLowerCase().replace(/\s+/g, ' ').trim();
+    return s;
+  };
 
-      if (rawCidade && rawCidade.toLowerCase() !== 'undefined' && rawCidade !== 'null') {
-        rawCidade = rawCidade.replace(/[\/\-]+\s*$/, '').trim();
-        
-        const ufMatch = rawCidade.match(/[\/\-]\s*([A-Za-z]{2})$/);
-        if (ufMatch) {
-          rawCidade = rawCidade.replace(/[\/\-]\s*([A-Za-z]{2})$/, '').trim();
-          if (!rawEstado) rawEstado = ufMatch[1].toUpperCase();
-        }
+  const getRegiaoRawData = (o: any) => {
+    let rawCidade = String(o?.cidade || o?.cliente_cidade || '').trim();
+    let rawEstado = String(o?.estado || o?.cliente_uf || '').trim().toUpperCase();
 
-        if (rawEstado && rawEstado.length >= 2) {
-          cReg = `${rawCidade}/${rawEstado.slice(0,2)}`;
-        } else {
-          cReg = rawCidade;
-        }
+    if (rawCidade && rawCidade.toLowerCase() !== 'undefined' && rawCidade !== 'null') {
+      rawCidade = rawCidade.replace(/[\/\-]+\s*$/, '').trim();
+      
+      const ufMatch = rawCidade.match(/[\/\-]\s*([A-Za-z]{2})$/);
+      if (ufMatch) {
+        rawCidade = rawCidade.replace(/[\/\-]\s*([A-Za-z]{2})$/, '').trim();
+        if (!rawEstado) rawEstado = ufMatch[1].toUpperCase();
       }
-      return cReg;
+    } else {
+      return { raw: 'Não informado', key: 'nao informado' };
+    }
+    
+    let key = normalizeRegiaoKey(rawCidade);
+    if (rawEstado && rawEstado.length >= 2) {
+      key = `${key}|${rawEstado.slice(0,2).toLowerCase()}`;
+    }
+    
+    let display = rawCidade.replace(/\s+/g, ' ').trim();
+    if (rawEstado && rawEstado.length >= 2) {
+      display = `${display}/${rawEstado.slice(0,2).toUpperCase()}`;
+    }
+    
+    return { raw: display, key };
   };
 
   // Valores Únicos para Comboboxes e Mapa Canônico de Regiões
   const { uniqueProdutos, uniqueCidades, canonicalMap } = useMemo(() => {
     const prods = new Set<string>();
-    const allCidades = new Set<string>();
+    const regioesVariations = new Map<string, Set<string>>();
 
     (orcamentos || []).forEach(o => {
       const p = String(o?.produto || '').trim();
       if (p) prods.add(p);
-      const reg = getRegiaoNormalizada(o);
-      allCidades.add(reg);
-    });
-
-    const arrCidades = Array.from(allCidades);
-    const map = new Map<string, string>();
-
-    arrCidades.forEach(c => {
-      if (c !== 'Não informado' && !c.includes('/')) {
-        const withUf = arrCidades.find(other => other.startsWith(c + '/'));
-        if (withUf) {
-          map.set(c, withUf);
-        } else {
-          map.set(c, c);
+      
+      const reg = getRegiaoRawData(o);
+      if (reg.key !== 'nao informado') {
+        if (!regioesVariations.has(reg.key)) {
+          regioesVariations.set(reg.key, new Set());
         }
-      } else {
-        map.set(c, c);
+        regioesVariations.get(reg.key)!.add(reg.raw);
       }
     });
 
+    const map = new Map<string, string>();
     const cids = new Set<string>();
-    arrCidades.forEach(c => {
-      const canonical = map.get(c) || c;
-      if (canonical !== 'Não informado') cids.add(canonical);
+
+    const fixedCanonical: Record<string, string> = {
+      'jau|sp': 'Jaú/SP',
+      'sao paulo|sp': 'São Paulo/SP',
+      'mogi guacu|sp': 'Mogi Guaçu/SP',
+      "santa barbara d'oeste|sp": "Santa Bárbara d'Oeste/SP"
+    };
+
+    regioesVariations.forEach((variations, key) => {
+      let canonical = '';
+      if (fixedCanonical[key]) {
+        canonical = fixedCanonical[key];
+      } else {
+        const arr = Array.from(variations);
+        const withAccent = arr.find(v => /[áàâãéèêíïóôõöúçñ]/i.test(v));
+        if (withAccent) {
+          canonical = withAccent;
+        } else {
+          canonical = arr[0];
+        }
+      }
+      map.set(key, canonical);
+      cids.add(canonical);
     });
 
     return {
@@ -134,8 +158,9 @@ export function TorreControleModal({ onClose, onOpenDashboard }: TorreControleMo
   }, [orcamentos]);
 
   const getRegiao = (o: any) => {
-    const basic = getRegiaoNormalizada(o);
-    return canonicalMap.get(basic) || basic;
+    const reg = getRegiaoRawData(o);
+    if (reg.key === 'nao informado') return 'Não informado';
+    return canonicalMap.get(reg.key) || reg.raw;
   };
 
   // Filtragem Geral
@@ -259,18 +284,29 @@ export function TorreControleModal({ onClose, onOpenDashboard }: TorreControleMo
 
   // Cálculos do Funil
   const funnel = useMemo(() => {
-    let enviados = 0;
+    let gerados = orcamentosFiltrados.length;
+    let enviadosAcumulados = 0;
     let aprovados = 0;
+    
+    let statusCount = { aberto: 0, enviado: 0, aprovado: 0, cancelado: 0 };
+    
     (orcamentosFiltrados || []).forEach(o => {
       const st = o?.status || 'Aberto';
-      if (st === 'Enviado') enviados++;
+      if (st === 'Enviado' || st === 'Aprovado' || st === 'Recusado') enviadosAcumulados++;
       if (st === 'Aprovado') aprovados++;
+      
+      if (st === 'Aberto') statusCount.aberto++;
+      else if (st === 'Enviado') statusCount.enviado++;
+      else if (st === 'Aprovado') statusCount.aprovado++;
+      else if (st === 'Cancelado') statusCount.cancelado++;
     });
+    
     return {
-      solicitacoes: solicitacoesFiltradas.length,
-      orcamentos: orcamentosFiltrados.length,
-      enviados,
-      aprovados
+      solicitacoes: solicitacoesFiltradas.length, // Para métrica separada
+      gerados,
+      enviados: enviadosAcumulados,
+      aprovados,
+      statusCount
     };
   }, [solicitacoesFiltradas, orcamentosFiltrados]);
 
@@ -350,27 +386,74 @@ export function TorreControleModal({ onClose, onOpenDashboard }: TorreControleMo
   };
 
   const FunnelGraphic = ({ data }: { data: any }) => {
-    const max = Math.max(Number(data?.solicitacoes) || 0, Number(data?.orcamentos) || 0, Number(data?.enviados) || 0, Number(data?.aprovados) || 0, 1);
+    // A barra base (100%) é sempre Gerados
+    const baseGerados = Math.max(Number(data?.gerados) || 1, 1);
+    
+    const pEnviados = data.gerados > 0 ? ((data.enviados / data.gerados) * 100).toFixed(1).replace('.', ',') : '0,0';
+    const pAprovados = data.enviados > 0 ? ((data.aprovados / data.enviados) * 100).toFixed(1).replace('.', ',') : '0,0';
+    const pFinal = data.gerados > 0 ? ((data.aprovados / data.gerados) * 100).toFixed(1).replace('.', ',') : '0,0';
+
     const steps = [
-      { label: 'Solicitações (Site)', value: Number(data?.solicitacoes) || 0, from: 'from-blue-600', to: 'to-blue-400', shadow: 'shadow-blue-500/20' },
-      { label: 'Orçamentos Gerados', value: Number(data?.orcamentos) || 0, from: 'from-indigo-600', to: 'to-indigo-400', shadow: 'shadow-indigo-500/20' },
-      { label: 'Orçamentos Enviados', value: Number(data?.enviados) || 0, from: 'from-purple-600', to: 'to-purple-400', shadow: 'shadow-purple-500/20' },
-      { label: 'Orçamentos Aprovados', value: Number(data?.aprovados) || 0, from: 'from-emerald-600', to: 'to-emerald-400', shadow: 'shadow-emerald-500/30' },
+      { 
+        label: '1. Orçamentos Gerados', 
+        value: Number(data?.gerados) || 0, 
+        from: 'from-blue-600', to: 'to-blue-400', shadow: 'shadow-blue-500/20', 
+        sub: <div><span className="text-blue-400 font-semibold">100%</span> <span className="text-slate-500">Base</span></div> 
+      },
+      { 
+        label: '2. Orçamentos Enviados', 
+        value: Number(data?.enviados) || 0, 
+        from: 'from-indigo-600', to: 'to-indigo-400', shadow: 'shadow-indigo-500/20', 
+        sub: <div><span className="text-indigo-400 font-semibold">{pEnviados}%</span> <span className="text-slate-500">dos orçamentos gerados foram enviados</span></div> 
+      },
+      { 
+        label: '3. Orçamentos Aprovados', 
+        value: Number(data?.aprovados) || 0, 
+        from: 'from-emerald-600', to: 'to-emerald-400', shadow: 'shadow-emerald-500/30', 
+        sub: (
+          <div className="flex flex-col gap-0.5">
+            <div><span className="text-emerald-400 font-semibold">{pFinal}%</span> <span className="text-slate-500">conversão geral</span></div>
+            <div><span className="text-emerald-400 font-semibold">{pAprovados}%</span> <span className="text-slate-500">dos enviados foram aprovados</span></div>
+          </div>
+        )
+      },
     ];
     
     return (
-      <div className="flex flex-col gap-4 py-2">
-        {steps.map((step, idx) => (
-          <div key={idx} className="relative group">
-            <div className="flex justify-between text-xs mb-1.5 font-bold text-slate-400 uppercase tracking-wide">
-              <span>{step.label}</span>
-              <span className="text-white">{step.value}</span>
+      <div className="flex flex-col h-full justify-between">
+        <div className="flex flex-col gap-6 py-2">
+          {steps.map((step, idx) => {
+            const percent = Math.min((step.value / baseGerados) * 100, 100);
+            return (
+              <div key={idx} className="relative group">
+                <div className="flex justify-between items-end mb-2">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-300 uppercase tracking-wide">{step.label}</span>
+                    <div className="text-[13px] mt-1 tracking-wide">{step.sub}</div>
+                  </div>
+                  <span className="text-white font-black text-xl">{step.value}</span>
+                </div>
+                <div className="w-full bg-slate-900 rounded-lg overflow-hidden border border-slate-800/50 mt-1 h-10 shadow-inner flex justify-start">
+                  <div className={`bg-gradient-to-r ${step.from} ${step.to} h-full transition-all duration-700 ease-out group-hover:brightness-110 shadow-[inset_0_1px_rgba(255,255,255,0.2)] ${step.shadow}`} style={{ width: `${Math.max(percent, 0)}%` }}></div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-slate-800/60 flex flex-col gap-4">
+          <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+            <div className="flex flex-col">
+               <span className="text-xs font-bold text-emerald-500 uppercase tracking-widest">Conversão Final</span>
+               <span className="text-sm font-medium text-emerald-400/80">{data.aprovados} aprovados de {data.gerados} orçamentos gerados</span>
             </div>
-            <div className="w-full flex justify-center">
-              <div className={`bg-gradient-to-r ${step.from} ${step.to} h-8 rounded-lg shadow-lg ${step.shadow} transition-all duration-700 ease-out group-hover:brightness-125 border border-white/5`} style={{ width: `${Math.max((step.value / max) * 100, 5)}%` }}></div>
-            </div>
+            <span className="text-3xl font-black text-emerald-400">{pFinal}%</span>
           </div>
-        ))}
+
+          <div className="text-center text-xs font-semibold text-slate-400 bg-slate-900/50 py-2.5 rounded-lg border border-slate-800/50">
+             Situação atual: {data.statusCount?.aberto || 0} abertos &bull; {data.statusCount?.enviado || 0} enviados &bull; {data.statusCount?.aprovado || 0} aprovados &bull; {data.statusCount?.cancelado || 0} cancelados
+          </div>
+        </div>
       </div>
     );
   };
@@ -457,8 +540,8 @@ export function TorreControleModal({ onClose, onOpenDashboard }: TorreControleMo
         ) : detalheVisivel ? (
           
           /* VISÃO DETALHADA (DRILL-DOWN) */
-          <div className="flex-1 overflow-y-auto p-8 bg-slate-900/50 flex flex-col animate-fade-in">
-            <div className="flex items-center justify-between mb-8">
+          <div className="flex-1 p-8 bg-slate-900/50 flex flex-col min-h-0 animate-fade-in">
+            <div className="flex items-center justify-between mb-8 shrink-0">
               <div className="flex items-center gap-4">
                 <button onClick={() => setDetalheVisivel(null)} className="flex items-center justify-center p-2.5 bg-slate-900 border border-slate-800 shadow-sm rounded-xl hover:bg-slate-700 hover:border-slate-500 hover:text-white transition-all text-slate-400 group">
                   <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
@@ -471,11 +554,11 @@ export function TorreControleModal({ onClose, onOpenDashboard }: TorreControleMo
             </div>
 
             {detalheVisivel.length > 0 ? (
-              <div className="bg-[#0f172a] rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex-1">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-950/80 border-b border-slate-800">
+              <div className="bg-[#0f172a] rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex-1 flex flex-col min-h-0">
+                <div className="overflow-auto flex-1">
+                  <table className="w-full text-left border-collapse relative">
+                    <thead className="sticky top-0 z-10">
+                      <tr className="bg-slate-950/95 backdrop-blur-sm border-b border-slate-800 shadow-sm">
                         <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Orçamento</th>
                         <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Cliente</th>
                         <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
@@ -553,22 +636,22 @@ export function TorreControleModal({ onClose, onOpenDashboard }: TorreControleMo
                 <div className="text-2xl font-black text-amber-400 truncate" title={formatCurrency(cardsData.totalNegociacao)}>{formatCurrency(cardsData.totalNegociacao)}</div>
               </div>
               
-              <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 shadow-lg flex flex-col justify-between relative overflow-hidden">
+              <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 shadow-lg flex flex-col justify-between relative overflow-hidden" title="Média do valor dos orçamentos aprovados">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-blue-400 opacity-50"></div>
                 <div className="flex items-center justify-between text-slate-400 mb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider">Ticket Médio</span>
-                  <DollarSign size={18} className="text-blue-400 opacity-60" />
+                  <span className="text-xs font-bold uppercase tracking-wider leading-tight">Ticket Médio<br/>Aprovado</span>
+                  <DollarSign size={18} className="text-blue-400 opacity-60 shrink-0 ml-1" />
                 </div>
-                <div className="text-2xl font-black text-white truncate" title={formatCurrency(cardsData.ticketMedio)}>{formatCurrency(cardsData.ticketMedio)}</div>
+                <div className="text-2xl font-black text-white truncate">{formatCurrency(cardsData.ticketMedio)}</div>
               </div>
               
-              <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 shadow-lg flex flex-col justify-between relative overflow-hidden">
+              <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 shadow-lg flex flex-col justify-between relative overflow-hidden" title="Percentual de orçamentos gerados que foram aprovados">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-600 to-purple-400 opacity-50"></div>
                 <div className="flex items-center justify-between text-slate-400 mb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider">Aprovação</span>
-                  <Target size={18} className="text-purple-400 opacity-60" />
+                  <span className="text-xs font-bold uppercase tracking-wider leading-tight">Conversão<br/>Geral</span>
+                  <Target size={18} className="text-purple-400 opacity-60 shrink-0 ml-1" />
                 </div>
-                <div className="text-2xl font-black text-white">{Number(cardsData.taxa || 0).toFixed(1)}%</div>
+                <div className="text-2xl font-black text-white">{Number(cardsData.taxa || 0).toFixed(1).replace('.', ',')}%</div>
               </div>
               
               <div onClick={() => openDetalhe('Volume Total', orcamentosFiltrados)} className="group cursor-pointer p-5 rounded-2xl border border-slate-600 shadow-lg hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:-translate-y-1 bg-gradient-to-br from-slate-700 to-slate-800 text-white transition-all flex flex-col justify-between relative overflow-hidden">
@@ -587,11 +670,28 @@ export function TorreControleModal({ onClose, onOpenDashboard }: TorreControleMo
             {/* Linha 2: Funil e Saúde do Follow-up */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               
-              <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-xl col-span-1 xl:col-span-2 flex flex-col">
-                <h3 className="text-sm font-black text-white mb-6 flex items-center gap-2 uppercase tracking-widest"><BarChart2 size={20} className="text-emerald-500"/> Funil Comercial</h3>
-                <div className="px-2 flex-1 flex flex-col justify-center">
-                  <FunnelGraphic data={funnel} />
+              <div className="col-span-1 xl:col-span-2 flex flex-col gap-6">
+                
+                {/* Captação Independente */}
+                <div className="bg-[#0f172a] p-5 rounded-2xl border border-slate-800 shadow-xl flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                   <div>
+                     <h3 className="text-sm font-black text-white flex items-center gap-2 uppercase tracking-widest"><MapPin size={20} className="text-blue-500"/> Captação do Site</h3>
+                     <p className="text-xs text-slate-500 mt-1 font-medium">Indicador independente de entrada de leads</p>
+                   </div>
+                   <div className="text-left sm:text-right">
+                     <span className="text-3xl font-black text-white">{funnel.solicitacoes}</span>
+                     <span className="text-sm font-medium text-slate-400 ml-1.5">solicitações recebidas</span>
+                   </div>
                 </div>
+
+                {/* Funil de Orçamentos */}
+                <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-xl flex-1 flex flex-col">
+                  <h3 className="text-sm font-black text-white mb-6 flex items-center gap-2 uppercase tracking-widest"><BarChart2 size={20} className="text-emerald-500"/> Funil Comercial — Orçamentos</h3>
+                  <div className="px-2 flex-1 flex flex-col justify-center">
+                    <FunnelGraphic data={funnel} />
+                  </div>
+                </div>
+                
               </div>
 
               <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-xl col-span-1 flex flex-col">
