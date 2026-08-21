@@ -63,6 +63,7 @@ export interface Orcamento {
   cliente_bairro?: string;
   cliente_cidade?: string;
   cliente_uf?: string;
+  cliente_pais?: string | null;
   cliente_endereco_completo?: string;
   proxima_acao?: string;
   data_retorno?: string;
@@ -144,6 +145,7 @@ export interface SolicitacaoOrcamento {
   bairro: string | null;
   cidade: string | null;
   estado: string | null;
+  pais?: string | null;
   jogo_escolhido: string;
   quantidade: number;
   valor_estimado: number;
