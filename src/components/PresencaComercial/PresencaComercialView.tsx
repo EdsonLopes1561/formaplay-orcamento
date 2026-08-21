@@ -1,17 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { usePresencaComercial } from '../../hooks/usePresencaComercial';
 import { interessesService } from '../../services/interessesService';
-import { Map, MapPin, Globe, AlertTriangle, CheckCircle, Navigation, TrendingUp, Activity } from 'lucide-react';
+import { Map, MapPin, Globe, AlertTriangle, CheckCircle, TrendingUp, Activity, Filter } from 'lucide-react';
+import { MapaBrasilPresenca } from './MapaBrasilPresenca';
 
 interface PresencaComercialViewProps {
   orcamentos: any[];
   solicitacoes: any[];
 }
 
+type MetricType = 'todos' | 'vendas' | 'orcamentos' | 'solicitacoes' | 'interesses';
+
 export function PresencaComercialView({ orcamentos, solicitacoes }: PresencaComercialViewProps) {
   const [interesses, setInteresses] = useState<any[]>([]);
   const [loadingInteresses, setLoadingInteresses] = useState(true);
   const [errorInteresses, setErrorInteresses] = useState(false);
+  const [activeMetric, setActiveMetric] = useState<MetricType>('todos');
 
   useEffect(() => {
     let isMounted = true;
@@ -45,6 +49,31 @@ export function PresencaComercialView({ orcamentos, solicitacoes }: PresencaCome
     interesses
   });
 
+  const top10 = useMemo(() => {
+    return [...nodes]
+      .filter(n => {
+        if (!n.key.startsWith('BR|')) return false;
+        if (activeMetric === 'vendas' && n.vendas === 0) return false;
+        if (activeMetric === 'orcamentos' && n.orcamentos === 0) return false;
+        if (activeMetric === 'solicitacoes' && n.solicitacoes === 0) return false;
+        if (activeMetric === 'interesses' && n.interesses === 0) return false;
+        if (activeMetric === 'todos' && n.totalSinais === 0) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        let valA = a.totalSinais;
+        let valB = b.totalSinais;
+        if (activeMetric === 'vendas') { valA = a.vendas; valB = b.vendas; }
+        else if (activeMetric === 'orcamentos') { valA = a.orcamentos; valB = b.orcamentos; }
+        else if (activeMetric === 'solicitacoes') { valA = a.solicitacoes; valB = b.solicitacoes; }
+        else if (activeMetric === 'interesses') { valA = a.interesses; valB = b.interesses; }
+
+        if (valB !== valA) return valB - valA;
+        return (a.cidade || '').localeCompare(b.cidade || '');
+      })
+      .slice(0, 10);
+  }, [nodes, activeMetric]);
+
   if (loading || loadingInteresses) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center min-h-[500px] bg-slate-900/50">
@@ -64,13 +93,13 @@ export function PresencaComercialView({ orcamentos, solicitacoes }: PresencaCome
     );
   }
 
-  const top10 = [...nodes]
-    .filter(n => n.key.startsWith('BR|'))
-    .sort((a, b) => {
-      if (b.totalSinais !== a.totalSinais) return b.totalSinais - a.totalSinais;
-      return (a.cidade || '').localeCompare(b.cidade || '');
-    })
-    .slice(0, 10);
+  const filters: { label: string; value: MetricType; colorClass: string }[] = [
+    { label: 'Todos', value: 'todos', colorClass: 'hover:border-indigo-500 text-indigo-100 data-[active=true]:bg-indigo-500/20 data-[active=true]:border-indigo-500 data-[active=true]:text-indigo-400' },
+    { label: 'Vendas', value: 'vendas', colorClass: 'hover:border-emerald-500 text-emerald-100 data-[active=true]:bg-emerald-500/20 data-[active=true]:border-emerald-500 data-[active=true]:text-emerald-400' },
+    { label: 'Orçamentos', value: 'orcamentos', colorClass: 'hover:border-blue-500 text-blue-100 data-[active=true]:bg-blue-500/20 data-[active=true]:border-blue-500 data-[active=true]:text-blue-400' },
+    { label: 'Solicitações', value: 'solicitacoes', colorClass: 'hover:border-amber-500 text-amber-100 data-[active=true]:bg-amber-500/20 data-[active=true]:border-amber-500 data-[active=true]:text-amber-400' },
+    { label: 'Interesses', value: 'interesses', colorClass: 'hover:border-purple-500 text-purple-100 data-[active=true]:bg-purple-500/20 data-[active=true]:border-purple-500 data-[active=true]:text-purple-400' }
+  ];
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 bg-slate-950/30 flex flex-col min-h-0 animate-fade-in">
@@ -153,6 +182,25 @@ export function PresencaComercialView({ orcamentos, solicitacoes }: PresencaCome
         </div>
       </div>
 
+      {/* Toolbar / Filtros */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900/40 p-4 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-2 text-slate-400 font-bold text-sm uppercase tracking-wider">
+          <Filter size={16} /> Filtro Cartográfico
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {filters.map(f => (
+            <button
+              key={f.value}
+              data-active={activeMetric === f.value}
+              onClick={() => setActiveMetric(f.value)}
+              className={`px-4 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-sm font-bold transition-colors ${f.colorClass}`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Main Grid: Ranking e Mapa */}
       <div className="flex flex-col lg:flex-row gap-8 flex-1">
         
@@ -163,34 +211,42 @@ export function PresencaComercialView({ orcamentos, solicitacoes }: PresencaCome
             
             {top10.length > 0 ? (
               <div className="space-y-4">
-                {top10.map((n, idx) => (
-                  <div key={n.key} className="flex flex-col gap-1.5 pb-3 border-b border-slate-800/50 last:border-0 last:pb-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex gap-3">
-                        <span className="text-sm font-black text-slate-500 min-w-[18px]">{idx + 1}.</span>
-                        <div>
-                          <div className="text-sm font-bold text-slate-200">{n.cidade} <span className="text-slate-500 font-medium">/ {n.estado}</span></div>
-                          <div className="text-[11px] font-medium text-slate-400 mt-1 flex flex-wrap gap-x-2 gap-y-1">
-                             {n.vendas > 0 && <span className="text-emerald-400">{n.vendas} venda{n.vendas !== 1 && 's'}</span>}
-                             {n.vendas > 0 && <span className="text-slate-700">•</span>}
-                             {n.orcamentos > 0 && <span>{n.orcamentos} orçam.</span>}
-                             {n.orcamentos > 0 && <span className="text-slate-700">•</span>}
-                             {n.solicitacoes > 0 && <span>{n.solicitacoes} solicit.</span>}
-                             {n.solicitacoes > 0 && <span className="text-slate-700">•</span>}
-                             {n.interesses > 0 && <span>{n.interesses} inter.</span>}
+                {top10.map((n, idx) => {
+                  let badgeValue = n.totalSinais;
+                  if (activeMetric === 'vendas') badgeValue = n.vendas;
+                  else if (activeMetric === 'orcamentos') badgeValue = n.orcamentos;
+                  else if (activeMetric === 'solicitacoes') badgeValue = n.solicitacoes;
+                  else if (activeMetric === 'interesses') badgeValue = n.interesses;
+
+                  return (
+                    <div key={n.key} className="flex flex-col gap-1.5 pb-3 border-b border-slate-800/50 last:border-0 last:pb-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex gap-3">
+                          <span className="text-sm font-black text-slate-500 min-w-[18px]">{idx + 1}.</span>
+                          <div>
+                            <div className="text-sm font-bold text-slate-200">{n.cidade} <span className="text-slate-500 font-medium">/ {n.estado}</span></div>
+                            <div className="text-[11px] font-medium text-slate-400 mt-1 flex flex-wrap gap-x-2 gap-y-1">
+                               {n.vendas > 0 && <span className="text-emerald-400">{n.vendas} venda{n.vendas !== 1 && 's'}</span>}
+                               {n.vendas > 0 && <span className="text-slate-700">•</span>}
+                               {n.orcamentos > 0 && <span>{n.orcamentos} orçam.</span>}
+                               {n.orcamentos > 0 && <span className="text-slate-700">•</span>}
+                               {n.solicitacoes > 0 && <span>{n.solicitacoes} solicit.</span>}
+                               {n.solicitacoes > 0 && <span className="text-slate-700">•</span>}
+                               {n.interesses > 0 && <span>{n.interesses} inter.</span>}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <span className="text-sm font-black text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-lg border border-indigo-500/20">{n.totalSinais} sinais</span>
+                        <div className="flex flex-col items-end">
+                          <span className="text-sm font-black text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-lg border border-indigo-500/20">{badgeValue}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="h-32 flex items-center justify-center border-2 border-dashed border-slate-800 rounded-xl bg-slate-900/50">
-                <p className="text-xs text-slate-500 font-medium italic">Nenhum sinal com cidade brasileira detectado.</p>
+                <p className="text-xs text-slate-500 font-medium italic">Nenhum sinal encontrado para este filtro.</p>
               </div>
             )}
           </div>
@@ -215,16 +271,10 @@ export function PresencaComercialView({ orcamentos, solicitacoes }: PresencaCome
           </div>
         </div>
 
-        {/* Coluna Direita: Placeholder do Mapa */}
-        <div className="w-full lg:w-[65%] min-h-[350px] lg:min-h-[500px] flex flex-col items-center justify-center p-8 bg-slate-900/30 rounded-2xl border-2 border-dashed border-slate-700/50 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/10 via-slate-900/5 to-transparent"></div>
-          <Navigation size={80} className="text-slate-700 mb-6 group-hover:text-indigo-500/50 transition-colors duration-700" strokeWidth={1} />
-          <h2 className="text-2xl font-black text-slate-300 mb-2 relative z-10 text-center">Mapa de presença em preparação</h2>
-          <p className="text-slate-500 text-sm font-medium max-w-md text-center relative z-10">
-            Na próxima etapa, as cidades alcançadas serão exibidas geograficamente aqui no mapa do Brasil.
-          </p>
+        {/* Coluna Direita: Mapa Interativo */}
+        <div className="w-full lg:w-[65%] flex">
+          <MapaBrasilPresenca nodes={nodes} metric={activeMetric} ufs={ufsBrasil} />
         </div>
-
       </div>
 
     </div>
