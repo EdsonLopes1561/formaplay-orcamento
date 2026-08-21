@@ -7,6 +7,7 @@ export interface InteresseModelo {
   email: string | null;
   cidade: string | null;
   estado: string | null;
+  pais: string | null;
   tipo_interessado: string | null;
   modelo_interesse: string;
   finalidade_uso: string | null;

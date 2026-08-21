@@ -5,6 +5,7 @@ import { Produto, ItemOrcamentoSnapshot } from '../types';
 import { PRODUTOS_FALLBACK, isProdutoEmDesenvolvimento, isProdutoDisponivel, normalizarNomeProduto } from '../config/produtosFallback';
 import { criarItemSnapshot, calcularSubtotalItens, calcularQuantidadeTotalItens } from '../utils/orcamentoItens';
 import { interessesService } from '../services/interessesService';
+import { useLocationData, normalizeText } from '../hooks/useLocationData';
 
 type Jogo = string;
 
@@ -79,6 +80,7 @@ export const SolicitacaoPublica: React.FC = () => {
     bairro: '',
     cidade: '',
     estado: '',
+    pais: '',
     jogo: '' as string,
     observacoes: '',
     embrulho_presente: false,
@@ -86,6 +88,9 @@ export const SolicitacaoPublica: React.FC = () => {
     aceita_contato: false,
   });
   
+  const { getPaises, getEstados, getCidades } = useLocationData();
+  const cidadesDisponiveis = getCidades(form.pais, form.estado);
+
   const [quantidadeStr, setQuantidadeStr] = useState<string>('1');
   const [itensCarrinho, setItensCarrinho] = useState<ItemOrcamentoSnapshot[]>([]);
   const [produtosDisponiveis, setProdutosDisponiveis] = useState<Produto[]>([]);
@@ -111,12 +116,13 @@ export const SolicitacaoPublica: React.FC = () => {
   // Progressive validation logic
   const isNomeFilled = !!form.nome.trim();
   const isTelefoneFilled = !!form.telefone.trim();
+  const isPaisFilled = !!form.pais.trim();
   const isCepComplete = form.cep.replace(/\D/g, '').length === 8;
   const isEnderecoFilled = !!form.endereco.trim();
   const isNumeroFilled = !!form.numero.trim();
   const isBairroFilled = !!form.bairro.trim();
   const isCidadeFilled = !!form.cidade.trim();
-  const isEstadoFilled = form.estado.trim().length === 2;
+  const isEstadoFilled = form.pais === 'Brasil' ? form.estado.trim().length === 2 : !!form.estado.trim();
 
   const isTelefoneEnabled = isNomeFilled;
   const isDocumentoEnabled = isNomeFilled;
@@ -124,22 +130,28 @@ export const SolicitacaoPublica: React.FC = () => {
   const isCepEnabled = isNomeFilled && isTelefoneFilled;
 
   // Address fields progressive unlocking:
-  const isEnderecoEnabled = isCepEnabled && (isCepComplete || isEnderecoFilled || hasCepFailed);
-  const isNumeroEnabled = isCepEnabled && (isEnderecoFilled || isNumeroFilled);
-  const isComplementoEnabled = isCepEnabled && (isEnderecoFilled || isNumeroFilled);
-  const isBairroEnabled = isCepEnabled && (isNumeroFilled || isBairroFilled || isCepComplete || hasCepFailed);
-  const isCidadeEnabled = isCepEnabled && (isBairroFilled || isCidadeFilled || isCepComplete || hasCepFailed);
-  const isEstadoEnabled = isCepEnabled && (isCidadeFilled || isEstadoFilled || isCepComplete || hasCepFailed);
+  const isPaisEnabled = isCepEnabled;
+  const isEstadoEnabled = isPaisEnabled && (isPaisFilled || isCepComplete || hasCepFailed);
+  const isCidadeEnabled = isPaisEnabled && (isEstadoFilled || isCepComplete || hasCepFailed);
+  const isEnderecoEnabled = isPaisEnabled && (isCidadeFilled || isCepComplete || hasCepFailed);
+  const isNumeroEnabled = isPaisEnabled && (isEnderecoFilled || isCepComplete || hasCepFailed);
+  const isComplementoEnabled = isPaisEnabled && (isEnderecoFilled || isCepComplete || hasCepFailed);
+  const isBairroEnabled = isPaisEnabled && (isNumeroFilled || isCepComplete || hasCepFailed);
+
+  const isCidadeOfficial = form.pais === 'Brasil' 
+    ? cidadesDisponiveis.some(c => normalizeText(c.nome) === normalizeText(form.cidade))
+    : true;
 
   const isFormValid =
     isNomeFilled &&
     isTelefoneFilled &&
-    isCepComplete &&
+    isPaisFilled &&
+    isEstadoFilled &&
+    isCidadeFilled &&
+    isCidadeOfficial &&
     isEnderecoFilled &&
     isNumeroFilled &&
     isBairroFilled &&
-    isCidadeFilled &&
-    isEstadoFilled &&
     itensCarrinho.length > 0;
 
   const fmtCurrency = (v: any) => {
@@ -234,7 +246,9 @@ export const SolicitacaoPublica: React.FC = () => {
         setHasCepFailed(false);
       }
       if (justNumbers.length === 8) {
-        fetchCep(justNumbers);
+        if (!form.pais || form.pais === 'Brasil') {
+          fetchCep(justNumbers);
+        }
       }
       return;
     }
@@ -243,18 +257,28 @@ export const SolicitacaoPublica: React.FC = () => {
   };
 
   const fetchCep = async (cepStr: string) => {
+    if (form.pais && form.pais !== 'Brasil') {
+      return;
+    }
     try {
       setLoadingCep(true);
       setHasCepFailed(false);
       const res = await fetch(`https://viacep.com.br/ws/${cepStr}/json/`);
       const data = await res.json();
       if (!data.erro) {
+        const uf = data.uf;
+        const cidadeRaw = data.localidade;
+        const cids = getCidades('Brasil', uf);
+        const cityMatch = cids.find(c => normalizeText(c.nome) === normalizeText(cidadeRaw));
+        const cidadeFinal = cityMatch ? cityMatch.nome : cidadeRaw;
+
         setForm(prev => ({
           ...prev,
+          pais: 'Brasil',
           endereco: data.logradouro || prev.endereco,
           bairro: data.bairro || prev.bairro,
-          cidade: data.localidade || prev.cidade,
-          estado: data.uf || prev.estado,
+          cidade: cidadeFinal || prev.cidade,
+          estado: uf || prev.estado,
         }));
         setTimeout(() => {
           if (data.logradouro) {
@@ -313,6 +337,7 @@ export const SolicitacaoPublica: React.FC = () => {
 
   const calcularFrete = async () => {
     if (itensCarrinho.length === 0) return;
+    if (form.pais !== 'Brasil') return;
     if (!form.cep) return;
     
     setLoadingFrete(true);
@@ -369,7 +394,7 @@ export const SolicitacaoPublica: React.FC = () => {
   };
   
   let freteEstimado = freteSelecionado ? freteSelecionado.price : 0;
-  if (!freteSelecionado && form.estado && itensCarrinho.length === 1) {
+  if (!freteSelecionado && form.estado && itensCarrinho.length === 1 && form.pais === 'Brasil') {
     const uf = form.estado.toUpperCase();
     if (uf === 'SP') {
       freteEstimado = 20;
@@ -392,8 +417,8 @@ export const SolicitacaoPublica: React.FC = () => {
     : (subtotalProdutos - descontoPix);
 
   const handleRegistrarInteresse = async () => {
-    if (!form.nome || (!form.telefone && !form.email) || !form.cidade || !form.estado) {
-      setSubmitError("Para registrar interesse, preencha: Nome, WhatsApp ou E-mail, Cidade e Estado.");
+    if (!form.nome || (!form.telefone && !form.email) || !form.pais || !form.cidade || !form.estado) {
+      setSubmitError("Para registrar interesse, preencha: Nome, WhatsApp ou E-mail, País, Estado e Cidade.");
       return;
     }
     if (!form.aceita_contato) {
@@ -408,8 +433,9 @@ export const SolicitacaoPublica: React.FC = () => {
         nome: form.nome,
         whatsapp: form.telefone || null,
         email: form.email || null,
-        cidade: form.cidade,
+        pais: form.pais,
         estado: form.estado,
+        cidade: form.cidade,
         modelo_interesse: normalizarNomeProduto(form.jogo),
         aceita_contato: true,
         origem: 'site_formaplay',
@@ -429,7 +455,7 @@ export const SolicitacaoPublica: React.FC = () => {
     e.preventDefault();
 
     // Validacao basica front-end
-    if (!form.nome || !form.telefone || !form.cep || !form.endereco || !form.numero || !form.cidade || !form.estado || itensCarrinho.length === 0) {
+    if (!form.nome || !form.telefone || !form.pais || !form.endereco || !form.numero || !form.cidade || !form.estado || itensCarrinho.length === 0) {
       setSubmitError("Por favor, preencha todos os campos obrigatórios e adicione pelo menos um produto.");
       return;
     }
@@ -457,13 +483,14 @@ export const SolicitacaoPublica: React.FC = () => {
           cpf_cnpj: form.documento || null,
           telefone: form.telefone,
           email: form.email || null,
-          cep: form.cep,
+          cep: form.cep || null,
           endereco: form.endereco,
           numero: form.numero,
           complemento: form.complemento || null,
           bairro: form.bairro,
-          cidade: form.cidade,
+          pais: form.pais,
           estado: form.estado,
+          cidade: form.cidade,
           jogo_escolhido: jogoEscolhido,
           quantidade: Number(quantidadeFinal) || 1,
           valor_estimado: Number(subtotalProdutos) || 0,
@@ -746,11 +773,56 @@ export const SolicitacaoPublica: React.FC = () => {
                 return (
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="md:col-span-1">
-                      <label className="block text-sm font-semibold text-slate-300 mb-1">CEP *</label>
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">CEP</label>
                       <div className="relative">
-                        <input required name="cep" value={form.cep} onChange={handleChange} maxLength={8} disabled={!isCepEnabled} className={inputClass} placeholder="Apenas números" />
+                        <input name="cep" value={form.cep} onChange={handleChange} maxLength={8} disabled={!isCepEnabled} className={inputClass} placeholder="Apenas números" />
                         {loadingCep && <div className="absolute right-3 top-3 w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>}
                       </div>
+                    </div>
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">País *</label>
+                      <select required name="pais" value={form.pais} onChange={handleChange} disabled={!isPaisEnabled} className={inputClass}>
+                        <option value="" disabled>Selecione...</option>
+                        {getPaises().map(p => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">Estado (UF) *</label>
+                      {form.pais === 'Brasil' ? (
+                        <select required name="estado" value={form.estado} onChange={handleChange} disabled={!isEstadoEnabled} className={inputClass}>
+                          <option value="" disabled>UF</option>
+                          {getEstados('Brasil').map(uf => (
+                            <option key={uf} value={uf}>{uf}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input required name="estado" value={form.estado} onChange={handleChange} disabled={!isEstadoEnabled} className={inputBaseClass} placeholder="Estado/Província" />
+                      )}
+                    </div>
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-semibold text-slate-300 mb-1">Cidade *</label>
+                      <input 
+                        required 
+                        name="cidade" 
+                        value={form.cidade} 
+                        onChange={handleChange} 
+                        disabled={!isCidadeEnabled} 
+                        list={form.pais === 'Brasil' ? "cidades-list" : undefined}
+                        className={inputBaseClass} 
+                        placeholder="Nome da cidade" 
+                      />
+                      {form.pais === 'Brasil' && (
+                        <datalist id="cidades-list">
+                          {cidadesDisponiveis.map(c => (
+                            <option key={`${c.codigoIbge}-${c.nome}`} value={c.nome} />
+                          ))}
+                        </datalist>
+                      )}
+                      {form.pais === 'Brasil' && form.cidade && !isCidadeOfficial && (
+                        <p className="text-red-400 text-xs mt-1 font-medium">Selecione uma cidade válida da lista.</p>
+                      )}
                     </div>
                     <div className="md:col-span-3">
                       <label className="block text-sm font-semibold text-slate-300 mb-1">Endereço (Rua, Av...) *</label>
@@ -760,21 +832,13 @@ export const SolicitacaoPublica: React.FC = () => {
                       <label className="block text-sm font-semibold text-slate-300 mb-1">Número *</label>
                       <input ref={numeroInputRef} required name="numero" value={form.numero} onChange={handleChange} disabled={!isNumeroEnabled} className={inputBaseClass} />
                     </div>
-                    <div className="md:col-span-3">
+                    <div className="md:col-span-2">
                       <label className="block text-sm font-semibold text-slate-300 mb-1">Complemento</label>
                       <input name="complemento" value={form.complemento} onChange={handleChange} disabled={!isComplementoEnabled} className={inputClass} placeholder="Apto, Bloco, Casa 2..." />
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-sm font-semibold text-slate-300 mb-1">Bairro *</label>
-                      <input required name="bairro" value={form.bairro} onChange={handleChange} disabled={!isBairroEnabled} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed placeholder-slate-500" />
-                    </div>
-                    <div className="md:col-span-1">
-                      <label className="block text-sm font-semibold text-slate-300 mb-1">Cidade *</label>
-                      <input required name="cidade" value={form.cidade} onChange={handleChange} disabled={!isCidadeEnabled} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed placeholder-slate-500" />
-                    </div>
-                    <div className="md:col-span-1">
-                      <label className="block text-sm font-semibold text-slate-300 mb-1">Estado (UF) *</label>
-                      <input required name="estado" value={form.estado} onChange={handleChange} maxLength={2} disabled={!isEstadoEnabled} className="uppercase w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed placeholder-slate-500" placeholder="SP" />
+                      <input required name="bairro" value={form.bairro} onChange={handleChange} disabled={!isBairroEnabled} className={inputBaseClass} />
                     </div>
                   </div>
                 );
@@ -1068,7 +1132,16 @@ export const SolicitacaoPublica: React.FC = () => {
             {/* Secao Frete */}
             {itensCarrinho.length > 0 && (
               <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700 mt-6">
-                {(!form?.cep || form?.cep?.length < 8) ? (
+                {form.pais && form.pais !== 'Brasil' ? (
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
+                    <div>
+                      <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                        ✈️ Frete internacional - Sob consulta
+                      </h3>
+                      <p className="text-sm text-slate-400">Após o envio da solicitação, entraremos em contato para informar as opções e o valor do frete internacional.</p>
+                    </div>
+                  </div>
+                ) : (!form?.cep || form?.cep?.length < 8) ? (
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
                     <div>
                       <h3 className="font-bold text-white text-lg flex items-center gap-2">
