@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Search, User, Mail, MessageCircle, AlertCircle, Save, Archive, ArchiveRestore, Trash2, Clock, ChevronDown, ChevronRight } from 'lucide-react';
+import { X, Search, User, Mail, MessageCircle, AlertCircle, Save, Archive, ArchiveRestore, Trash2, Clock, ChevronDown, ChevronRight, MapPin } from 'lucide-react';
 import { interessesService, FiltroArquivado } from '../services/interessesService';
 import { InteresseModelo, InteresseStatus } from '../types/interesses';
 import { useAuth } from '../AuthWrapper';
@@ -25,6 +25,21 @@ function obterMensagemErro(error: unknown): string {
   }
 
   return 'Ocorreu um erro inesperado.';
+}
+
+function formatarLocalizacao(cidade?: string | null, estado?: string | null, pais?: string | null): string {
+  if (!cidade && !estado && !pais) return 'Localização não informada';
+  
+  let c = cidade ? cidade.trim() : '';
+  let e = estado ? estado.trim() : '';
+  let p = pais ? pais.trim() : '';
+  
+  // Limpeza cosmética segura para legados: se a cidade já termina com "/UF", remove a duplicidade visual
+  if (c && e && c.toUpperCase().endsWith(`/${e.toUpperCase()}`)) {
+    c = c.slice(0, -(e.length + 1)).trim();
+  }
+  
+  return [c, e, p].filter(Boolean).join(' / ');
 }
 
 export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ isOpen, onClose, onRefresh }) => {
@@ -405,9 +420,12 @@ export const PainelInteressesModal: React.FC<PainelInteressesModalProps> = ({ is
                                   <Mail size={14} className="text-slate-500 mt-0.5 shrink-0" />
                                   <span className="text-slate-300 break-all">{item.email || 'Não informado'}</span>
                                 </div>
-                                {(item.cidade || item.estado) && (
-                                  <div className="text-slate-400 text-xs mt-2 pl-6">
-                                    {item.cidade || ''}{item.estado ? ` - ${item.estado}` : ''}
+                                {(item.cidade || item.estado || item.pais) && (
+                                  <div className="flex items-start gap-2 text-sm mt-2 pl-6">
+                                    <MapPin size={14} className="text-slate-500 mt-0.5 shrink-0" />
+                                    <span className="text-slate-300 break-words">
+                                      {formatarLocalizacao(item.cidade, item.estado, item.pais)}
+                                    </span>
                                   </div>
                                 )}
                                 <div className="text-slate-400 text-xs pl-6">
