@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { X, Plus, Edit, Trash2, Search, User, Users, Building2, Mail, Phone, MapPin } from 'lucide-react';
 import { Cliente } from '../types';
 import { supabase } from '../supabase';
+import { useLocationData, normalizeText } from '../hooks/useLocationData';
 
 interface ClientesModalProps {
   onClose: () => void;
@@ -9,6 +10,7 @@ interface ClientesModalProps {
   onClienteUpdated?: (cliente: Cliente) => void;
   isOpen?: boolean;
 }
+
 
 export function ClientesModal({ onClose, onSelectCliente, onClienteUpdated, isOpen }: ClientesModalProps) {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -30,11 +32,17 @@ export function ClientesModal({ onClose, onSelectCliente, onClienteUpdated, isOp
     bairro: '',
     cidade: '',
     estado: '',
+    pais: '',
     complemento: '',
     contato_responsavel: '',
     tipo_cliente: '',
     observacoes: '',
   });
+
+  const [locationDirty, setLocationDirty] = useState(false);
+  const [legacyLocationMsg, setLegacyLocationMsg] = useState<string | null>(null);
+  const { getPaises, getEstados, getCidades } = useLocationData();
+  const cidadesDisponiveis = getCidades(formData.pais, formData.estado);
 
   const [isSearchingCep, setIsSearchingCep] = useState(false);
   const [cepError, setCepError] = useState<string | null>(null);
@@ -51,6 +59,7 @@ export function ClientesModal({ onClose, onSelectCliente, onClienteUpdated, isOp
   const isBairroFilled = !!formData.bairro?.trim();
   const isCidadeFilled = !!formData.cidade?.trim();
   const isEstadoFilled = !!formData.estado?.trim();
+  const isPaisFilled = !!formData.pais?.trim();
 
   const isNonAddressEnabled = isNomeFilled;
   const isCepEnabled = isNomeFilled;
@@ -60,12 +69,23 @@ export function ClientesModal({ onClose, onSelectCliente, onClienteUpdated, isOp
   const isNumeroEnabled = isNomeFilled && (isEnderecoFilled || isNumeroFilled);
   const isComplementoEnabled = isNomeFilled && (isEnderecoFilled || isNumeroFilled);
   const isBairroEnabled = isNomeFilled && (isNumeroFilled || isBairroFilled || isCepComplete || hasCepFailed);
-  const isCidadeEnabled = isNomeFilled && (isBairroFilled || isCidadeFilled || isCepComplete || hasCepFailed);
-  const isEstadoEnabled = isNomeFilled && (isCidadeFilled || isEstadoFilled || isCepComplete || hasCepFailed);
+  const isPaisEnabled = isNomeFilled;
 
   // Form validation:
   const hasAddressOrCep = isEnderecoFilled || !!formData.cep?.trim();
-  const isFormValid = isNomeFilled && (!hasAddressOrCep || isNumeroFilled);
+  let isLocationValid = true;
+  if (!editingCliente || locationDirty) {
+    if (formData.pais === 'Brasil') {
+      const cityExists = cidadesDisponiveis.some(c => c.nome === formData.cidade);
+      isLocationValid = isPaisFilled && isEstadoFilled && isCidadeFilled && cityExists;
+    } else if (isPaisFilled || isEstadoFilled || isCidadeFilled) {
+      isLocationValid = isPaisFilled && isEstadoFilled && isCidadeFilled;
+    } else {
+      isLocationValid = false; // Novo cliente OBRIGA localização
+    }
+  }
+
+  const isFormValid = isNomeFilled && (!hasAddressOrCep || isNumeroFilled) && isLocationValid;
 
   const fetchCep = async (cepStr: string, formattedCep: string) => {
     setIsSearchingCep(true);
@@ -82,14 +102,39 @@ export function ClientesModal({ onClose, onSelectCliente, onClienteUpdated, isOp
           enderecoInputRef.current?.focus();
         }, 50);
       } else {
-        setFormData((prev) => ({
-          ...prev,
-          cep: formattedCep,
-          endereco: data.logradouro || prev.endereco,
-          bairro: data.bairro || prev.bairro,
-          cidade: data.localidade || prev.cidade,
-          estado: data.uf || prev.estado,
-        }));
+        setFormData((prev) => {
+          let parsedPais = prev.pais;
+          let parsedEstado = prev.estado;
+          let parsedCidade = prev.cidade;
+
+          if (data.uf) {
+            parsedPais = 'Brasil';
+            parsedEstado = data.uf;
+            
+            if (data.localidade) {
+              const cidadesDaUf = getCidades('Brasil', data.uf);
+              const cityMatch = cidadesDaUf.find(cid => normalizeText(cid.nome) === normalizeText(data.localidade));
+              if (cityMatch) {
+                parsedCidade = cityMatch.nome;
+              } else {
+                parsedCidade = data.localidade;
+              }
+            }
+          }
+          
+          return {
+            ...prev,
+            cep: formattedCep,
+            endereco: data.logradouro || prev.endereco,
+            bairro: data.bairro || prev.bairro,
+            pais: parsedPais,
+            estado: parsedEstado,
+            cidade: parsedCidade,
+          };
+        });
+        setLocationDirty(true);
+        setLegacyLocationMsg(null);
+
         setTimeout(() => {
           if (data.logradouro) {
             numeroInputRef.current?.focus();
@@ -172,14 +217,25 @@ export function ClientesModal({ onClose, onSelectCliente, onClienteUpdated, isOp
       alert('O campo Número é obrigatório quando há endereço preenchido ou CEP informado.');
       return;
     }
+    if (!isLocationValid) {
+      alert('Por favor, preencha corretamente País, Estado e Cidade.');
+      return;
+    }
 
     setLoading(true);
     try {
+      const payload = { ...formData };
+      if (editingCliente && !locationDirty) {
+        payload.pais = editingCliente.pais;
+        payload.estado = editingCliente.estado;
+        payload.cidade = editingCliente.cidade;
+      }
+
       let savedCliente: Cliente | null = null;
       if (editingCliente?.id) {
         const { data, error } = await supabase
           .from('clientes')
-          .update(formData)
+          .update(payload)
           .eq('id', editingCliente.id)
           .select()
           .single();
@@ -191,7 +247,7 @@ export function ClientesModal({ onClose, onSelectCliente, onClienteUpdated, isOp
         }
         savedCliente = data;
       } else {
-        const { data, error } = await supabase.from('clientes').insert(formData).select().single();
+        const { data, error } = await supabase.from('clientes').insert(payload).select().single();
         if (error) {
           console.error('Erro ao salvar cliente:', error);
           alert('Erro ao salvar cliente: ' + error.message);
@@ -220,12 +276,15 @@ export function ClientesModal({ onClose, onSelectCliente, onClienteUpdated, isOp
         bairro: '',
         cidade: '',
         estado: '',
+        pais: '',
         complemento: '',
         contato_responsavel: '',
         tipo_cliente: '',
         observacoes: '',
       });
       setHasCepFailed(false);
+      setLocationDirty(false);
+      setLegacyLocationMsg(null);
     } catch (error) {
       console.error('Erro ao salvar cliente:', error);
       alert('Erro ao salvar cliente');
@@ -234,8 +293,56 @@ export function ClientesModal({ onClose, onSelectCliente, onClienteUpdated, isOp
   };
 
   const handleEdit = (cliente: Cliente) => {
+    let parsedCliente = { ...cliente };
+    let msg: string | null = null;
+    let dirty = false;
+
+    if (!cliente.pais) {
+      const cidLimpa = (cliente.cidade || '').trim();
+      if (cliente.cidade?.includes('/')) {
+        const [c, uf] = cliente.cidade.split('/');
+        const ufLimpa = (uf || '').trim().toUpperCase();
+        const cidReal = (c || '').trim();
+        const estadosBr = getEstados('Brasil');
+        
+        if (estadosBr.includes(ufLimpa)) {
+          parsedCliente.pais = 'Brasil';
+          parsedCliente.estado = ufLimpa;
+          
+          const cidadesDaUf = getCidades('Brasil', ufLimpa);
+          const cityMatch = cidadesDaUf.find(cid => normalizeText(cid.nome) === normalizeText(cidReal));
+          
+          if (cityMatch) {
+            parsedCliente.cidade = cityMatch.nome;
+          } else {
+            parsedCliente.cidade = cidReal;
+            msg = 'Localização antiga não padronizada';
+          }
+        } else {
+          msg = 'Localização antiga não padronizada';
+        }
+      } else if (cliente.cidade && !cliente.estado) {
+        let matches: { uf: string, cidade: string }[] = [];
+        const estadosBr = getEstados('Brasil');
+        for (const uf of estadosBr) {
+          const cidMatch = getCidades('Brasil', uf).find(c => normalizeText(c.nome) === normalizeText(cidLimpa));
+          if (cidMatch) matches.push({ uf, cidade: cidMatch.nome });
+        }
+        
+        if (matches.length === 1) {
+          msg = `Sugestão encontrada: ${matches[0].cidade}/${matches[0].uf}. Edite a localização para padronizar.`;
+        } else {
+          msg = 'Localização antiga não padronizada';
+        }
+      } else if (cliente.cidade || cliente.estado) {
+        msg = 'Localização antiga não padronizada';
+      }
+    }
+
     setEditingCliente(cliente);
-    setFormData(cliente);
+    setFormData(parsedCliente);
+    setLocationDirty(dirty);
+    setLegacyLocationMsg(msg);
     setShowForm(true);
   };
 
@@ -297,10 +404,12 @@ export function ClientesModal({ onClose, onSelectCliente, onClienteUpdated, isOp
                 setFormData({
                   nome: '', razao_social: '', nome_fantasia: '', documento: '', inscricao_estadual: '',
                   email: '', telefone: '', cep: '', endereco: '', numero: '', bairro: '', cidade: '',
-                  estado: '', complemento: '', contato_responsavel: '', tipo_cliente: '', observacoes: '',
+                  estado: '', pais: '', complemento: '', contato_responsavel: '', tipo_cliente: '', observacoes: '',
                 });
                 setCepError(null);
                 setHasCepFailed(false);
+                setLocationDirty(false);
+                setLegacyLocationMsg(null);
               }}
               className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-700 hover:text-white transition-all border border-slate-800 text-slate-400"
             >
@@ -486,28 +595,110 @@ export function ClientesModal({ onClose, onSelectCliente, onClienteUpdated, isOp
                   className={inputClassName}
                 />
               </div>
+              
+              <div className="md:col-span-2">
+                {legacyLocationMsg && !locationDirty && (
+                  <div className="mb-3 px-3 py-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold rounded-lg flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    {legacyLocationMsg}
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className={labelClassName}>País</label>
+                    <select
+                      value={formData.pais || ''}
+                      onChange={(e) => {
+                        setFormData({ ...formData, pais: e.target.value, estado: '', cidade: '' });
+                        setLocationDirty(true);
+                      }}
+                      disabled={!isPaisEnabled}
+                      className={`${inputClassName} cursor-pointer`}
+                    >
+                      <option value="" className="bg-slate-900">Selecione o país</option>
+                      {getPaises().map(p => (
+                        <option key={p} value={p} className="bg-slate-900">{p}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className={labelClassName}>UF / Estado</label>
+                    {formData.pais === 'Brasil' ? (
+                      <select
+                        value={formData.estado || ''}
+                        onChange={(e) => {
+                          setFormData({ ...formData, estado: e.target.value, cidade: '' });
+                          setLocationDirty(true);
+                        }}
+                        disabled={!formData.pais}
+                        className={`${inputClassName} cursor-pointer`}
+                      >
+                        <option value="" className="bg-slate-900">Selecione a UF</option>
+                        {getEstados('Brasil').map(uf => (
+                          <option key={uf} value={uf} className="bg-slate-900">{uf}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.estado || ''}
+                        onChange={(e) => {
+                          setFormData({ ...formData, estado: e.target.value });
+                          setLocationDirty(true);
+                        }}
+                        disabled={!formData.pais}
+                        className={inputClassName}
+                        placeholder={formData.pais ? "Estado/Província" : ""}
+                      />
+                    )}
+                  </div>
 
-              <div className="grid grid-cols-4 gap-4">
-                <div className="col-span-3">
-                  <label className={labelClassName}>Cidade</label>
-                  <input
-                    type="text"
-                    value={formData.cidade || ''}
-                    onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
-                    disabled={!isCidadeEnabled}
-                    className={inputClassName}
-                  />
-                </div>
-                <div className="col-span-1">
-                  <label className={labelClassName}>UF</label>
-                  <input
-                    type="text"
-                    value={formData.estado || ''}
-                    onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
-                    disabled={!isEstadoEnabled}
-                    className={inputClassName}
-                    maxLength={2}
-                  />
+                  <div>
+                    <label className={labelClassName}>Cidade</label>
+                    {formData.pais === 'Brasil' ? (
+                      <div className="relative">
+                        <input
+                          type="text"
+                          list="cidades-list"
+                          value={formData.cidade || ''}
+                          onChange={(e) => {
+                            setFormData({ ...formData, cidade: e.target.value });
+                            setLocationDirty(true);
+                          }}
+                          disabled={!formData.estado}
+                          className={inputClassName}
+                          placeholder={formData.estado ? "Digite para buscar..." : ""}
+                          autoComplete="off"
+                        />
+                        <datalist id="cidades-list">
+                          {cidadesDisponiveis.map(c => (
+                            <option key={c.codigoIbge || c.nome} value={c.nome} />
+                          ))}
+                        </datalist>
+                        {/* Se for legado e a cidade não estiver na lista (ex: Sãn Paollo) */}
+                        {formData.cidade && !locationDirty && !cidadesDisponiveis.some(c => c.nome === formData.cidade) && (
+                          <p className="text-amber-400 text-[10px] mt-1">Valor atual: {formData.cidade}</p>
+                        )}
+                        {/* Se digitou algo inválido (não bate com a base), avisar */}
+                        {formData.cidade && locationDirty && !cidadesDisponiveis.some(c => c.nome === formData.cidade) && (
+                          <p className="text-rose-400 text-[10px] mt-1">Selecione uma cidade válida da lista.</p>
+                        )}
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.cidade || ''}
+                        onChange={(e) => {
+                          setFormData({ ...formData, cidade: e.target.value });
+                          setLocationDirty(true);
+                        }}
+                        disabled={!formData.estado}
+                        className={inputClassName}
+                        placeholder={formData.pais ? "Cidade" : ""}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -532,15 +723,18 @@ export function ClientesModal({ onClose, onSelectCliente, onClienteUpdated, isOp
                  setFormData({
                    nome: '', razao_social: '', nome_fantasia: '', documento: '', inscricao_estadual: '',
                    email: '', telefone: '', cep: '', endereco: '', numero: '', bairro: '', cidade: '',
-                   estado: '', complemento: '', contato_responsavel: '', tipo_cliente: '', observacoes: '',
+                   estado: '', pais: '', complemento: '', contato_responsavel: '', tipo_cliente: '', observacoes: '',
                  });
                  setCepError(null);
                  setHasCepFailed(false);
+                 setLocationDirty(false);
+                 setLegacyLocationMsg(null);
                }}
-               className="px-6 py-2.5 bg-slate-900 text-slate-300 border border-slate-800 rounded-xl hover:bg-slate-800 hover:text-white transition-all font-bold text-sm shadow-sm active:scale-95"
+               className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-sm transition-all border border-slate-800"
              >
                Cancelar
              </button>
+
              <button
                onClick={handleSave}
                disabled={loading || !isFormValid}

@@ -13,6 +13,7 @@ export interface Cliente {
   bairro: string;
   cidade: string;
   estado: string;
+  pais?: string;
   complemento: string;
   contato_responsavel?: string;
   tipo_cliente: string;
