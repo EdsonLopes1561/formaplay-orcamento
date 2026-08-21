@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { X, TrendingUp, BarChart2, DollarSign, Target, Activity, Users, MapPin, AlertTriangle, Calendar, Layers, CheckCircle, Package, FileText, MessageCircle, ArrowLeft, Flame, Sun, Snowflake, Filter } from 'lucide-react';
 import { supabase } from '../supabase';
 import { FormaPlayBrand } from './FormaPlayBrand';
+import { PresencaComercialView } from './PresencaComercial/PresencaComercialView';
 
 interface TorreControleModalProps {
   onClose: () => void;
@@ -13,6 +14,7 @@ export function TorreControleModal({ onClose, onOpenDashboard }: TorreControleMo
   const [error, setError] = useState(false);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [solicitacoes, setSolicitacoes] = useState<any[]>([]);
+  const [visaoAtiva, setVisaoAtiva] = useState<'financeira' | 'comercial'>('financeira');
   
   // Filtros
   const [periodo, setPeriodo] = useState('Todos');
@@ -473,12 +475,26 @@ export function TorreControleModal({ onClose, onOpenDashboard }: TorreControleMo
                 <span>Torre de Controle</span>
                 <span className="text-4xl -mt-1"><FormaPlayBrand /></span>
               </h2>
-              <p className="text-sm text-slate-400 font-medium mt-0.5">Inteligência comercial e monitoramento estratégico.</p>
+              <div className="flex flex-col gap-3 mt-0.5">
+                <p className="text-sm text-slate-400 font-medium">Inteligência comercial e monitoramento estratégico.</p>
+                <div className="flex bg-slate-900 rounded-xl p-1 border border-slate-800 shadow-inner w-max">
+                  <button 
+                    onClick={() => setVisaoAtiva('financeira')}
+                    className={`font-bold py-1 px-4 rounded-lg shadow-sm text-xs transition-all ${visaoAtiva === 'financeira' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:text-slate-300'}`}>
+                    Visão Financeira
+                  </button>
+                  <button 
+                    onClick={() => setVisaoAtiva('comercial')}
+                    className={`font-bold py-1 px-4 rounded-lg shadow-sm text-xs transition-all ${visaoAtiva === 'comercial' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:text-slate-300'}`}>
+                    Presença Comercial
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           
           <div className="flex items-center gap-3">
-            {!detalheVisivel && (
+            {!detalheVisivel && visaoAtiva === 'financeira' && (
               <div className="flex flex-wrap gap-2 justify-end mr-2">
                 <div className="flex items-center bg-slate-900/80 hover:bg-slate-900 transition-colors rounded-xl p-1.5 border border-slate-800 shadow-inner">
                   <Calendar size={16} className="text-emerald-400 ml-2" />
@@ -601,6 +617,8 @@ export function TorreControleModal({ onClose, onOpenDashboard }: TorreControleMo
             )}
           </div>
           
+        ) : visaoAtiva === 'comercial' ? (
+          <PresencaComercialView orcamentos={orcamentos} solicitacoes={solicitacoes} />
         ) : (
           
           /* VISÃO GERAL (CARDS & GRAFICOS) */
