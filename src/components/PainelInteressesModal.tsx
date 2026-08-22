@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { X, Search, User, Mail, MessageCircle, AlertCircle, Save, Archive, ArchiveRestore, Trash2, Clock, ChevronDown, ChevronRight, MapPin } from 'lucide-react';
 import { interessesService, FiltroArquivado } from '../services/interessesService';
-import { InteresseModelo, InteresseStatus } from '../types/interesses';
+import { InteresseModelo, InteresseStatus } from '../interfaces/interesses';
 import { useAuth } from '../AuthWrapper';
 
 interface PainelInteressesModalProps {

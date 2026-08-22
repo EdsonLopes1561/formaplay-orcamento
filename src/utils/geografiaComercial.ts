@@ -1,6 +1,6 @@
 import { Orcamento, SolicitacaoOrcamento } from '../types';
-import { InteresseModelo } from '../types/interesses';
-import { PresencaCidade, ResolucaoGeografica } from '../types/geografia';
+import { InteresseModelo } from '../interfaces/interesses';
+import { PresencaCidade, ResolucaoGeografica } from '../interfaces/geografia';
 import { normalizeText, ESTADOS_BR } from './locationUtils';
 
 interface CidadesBrData {

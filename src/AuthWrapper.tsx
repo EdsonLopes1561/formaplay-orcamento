@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from './supabase';
-import { UsuarioApp } from './types/interesses';
+import { UsuarioApp } from './interfaces/interesses';
 
 interface AuthContextData {
   user: any | null;

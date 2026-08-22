@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import { InteresseModelo, InteresseStatus } from '../types/interesses';
+import { InteresseModelo, InteresseStatus } from '../interfaces/interesses';
 
 export type FiltroArquivado = 'ativos' | 'arquivados' | 'todos';
 

@@ -5,7 +5,7 @@ import {
   Loader2, Upload, ShieldCheck, Lock
 } from 'lucide-react';
 import { supabase } from '../supabase';
-import { PerfilUsuario } from '../types/interesses';
+import { PerfilUsuario } from '../interfaces/interesses';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 

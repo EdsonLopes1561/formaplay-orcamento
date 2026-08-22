@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
 import { Map as MapIcon } from 'lucide-react';
-import { PresencaCidade } from '../../types/geografia';
+import { PresencaCidade } from '../../interfaces/geografia';
 import brasilEstados from '../../assets/data/brasil_estados.json';
 
 type MetricType = 'todos' | 'vendas' | 'orcamentos' | 'solicitacoes' | 'interesses';

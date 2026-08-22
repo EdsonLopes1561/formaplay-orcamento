@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { agregarPresencaComercial } from '../utils/geografiaComercial';
-import { PresencaCidade } from '../types/geografia';
+import { PresencaCidade } from '../interfaces/geografia';
 
 export interface UsePresencaComercialProps {
   enabled: boolean;
