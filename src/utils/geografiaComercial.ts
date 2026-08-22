@@ -80,7 +80,8 @@ export function agregarPresencaComercial({ orcamentos, solicitacoes, interesses,
     tipo: 'vendas' | 'orcamentos' | 'solicitacoes' | 'interesses',
     pais: string | null,
     estado: string | null,
-    cidade: string | null
+    cidade: string | null,
+    quantidade: number = 1
   ) => {
     let p = pais ? pais.trim() : null;
     let u = estado ? estado.trim() : null;
@@ -187,16 +188,24 @@ export function agregarPresencaComercial({ orcamentos, solicitacoes, interesses,
     }
 
     const node = mapResult.get(key)!;
-    node[tipo] += 1;
+    node[tipo] += (tipo === 'vendas' ? quantidade : 1);
     node.totalSinais += 1;
   };
 
   for (const o of orcamentos) {
     if (o.status === 'Recusado' || o.status === 'Cancelado') continue;
     
+    let qtd = 1;
+    if (o.status === 'Aprovado') {
+      qtd = parseInt(String(o.quantidade)) || 1;
+      if (o.itens && o.itens.length > 0) {
+        qtd = o.itens.reduce((acc, it) => acc + (parseInt(String(it.quantidade)) || 0), 0);
+      }
+    }
+
     const loc = extrairLocalizacaoOrcamento(o);
     if (o.status === 'Aprovado') {
-      processarSinal('vendas', loc.pais, loc.estado, loc.cidade);
+      processarSinal('vendas', loc.pais, loc.estado, loc.cidade, qtd);
     } else if (o.status === 'Aberto' || o.status === 'Enviado') {
       processarSinal('orcamentos', loc.pais, loc.estado, loc.cidade);
     }

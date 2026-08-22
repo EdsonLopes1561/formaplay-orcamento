@@ -1,6 +1,6 @@
 export const normalizeText = (text: string): string => {
   if (!text) return '';
-  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/['´\`’]/g, "").toLowerCase().trim();
 };
 
 export const ESTADOS_BR = [
