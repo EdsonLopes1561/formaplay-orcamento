@@ -172,6 +172,8 @@ function App() {
   const DRAFT_KEY = 'formaplay:draft-orcamento:v1';
   const savedFormRef = useRef<string>('');
 
+  const [solicitacaoOrigemId, setSolicitacaoOrigemId] = useState<string | null>(null);
+
   useEffect(() => {
     savedFormRef.current = JSON.stringify(emptyOrcamento());
   }, []);
@@ -190,12 +192,12 @@ function App() {
   useEffect(() => {
     if (hasUnsavedChanges && !draftAlert.exists) {
       const timer = setTimeout(() => {
-        const draft = { version: 1, currentId, form, savedAt: Date.now() };
+        const draft = { version: 1, currentId, form, solicitacaoOrigemId, savedAt: Date.now() };
         localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [form, currentId, hasUnsavedChanges, draftAlert.exists]);
+  }, [form, currentId, solicitacaoOrigemId, hasUnsavedChanges, draftAlert.exists]);
 
   const restaurarRascunho = () => {
     const saved = localStorage.getItem(DRAFT_KEY);
@@ -204,6 +206,7 @@ function App() {
         const parsed = JSON.parse(saved);
         setForm(parsed.form);
         setCurrentId(parsed.currentId);
+        setSolicitacaoOrigemId(parsed.solicitacaoOrigemId || null);
       } catch {
         // Ignorar
       }
@@ -213,9 +216,10 @@ function App() {
 
   const descartarRascunho = () => {
     localStorage.removeItem(DRAFT_KEY);
+    setSolicitacaoOrigemId(null);
     setDraftAlert({ exists: false, savedAt: null });
   };
-  const [solicitacaoOrigemId, setSolicitacaoOrigemId] = useState<string | null>(null);
+
   const [clienteData, setClienteData] = useState<Cliente | null>(null);
 
   const [loadingFrete, setLoadingFrete] = useState(false);
@@ -658,6 +662,8 @@ function App() {
         }
       });
 
+      let savedOrcamentoId = currentId;
+
       if (currentId) {
         const { data: updatedData, error: updateError } = await supabase
           .from('orcamentos')
@@ -683,7 +689,8 @@ function App() {
           .maybeSingle();
         if (error) throw error;
         if (data) {
-          setCurrentId((data as Orcamento).id ?? null);
+          savedOrcamentoId = (data as Orcamento).id ?? null;
+          setCurrentId(savedOrcamentoId);
           const updatedForm = { ...payloadToInsert, numero: (data as Orcamento).numero };
           setForm(updatedForm);
           savedFormRef.current = JSON.stringify(updatedForm);
@@ -693,13 +700,19 @@ function App() {
 
       localStorage.removeItem(DRAFT_KEY);
 
-      if (solicitacaoOrigemId && !currentId) {
-        await supabase
+      if (solicitacaoOrigemId && !currentId && savedOrcamentoId) {
+        const { error: solError } = await supabase
           .from('solicitacoes_orcamento')
-          .update({ status: 'Convertida' })
+          .update({ status: 'Convertida', orcamento_id: savedOrcamentoId })
           .eq('id', solicitacaoOrigemId);
-        setSolicitacaoOrigemId(null);
-        await carregarSolicitacoes();
+        
+        if (solError) {
+          console.error('[salvar] Erro ao vincular solicitação:', solError);
+          showToast('error', 'Orçamento salvo, mas não foi possível atualizar a solicitação de origem. Verifique a Inbox.');
+        } else {
+          setSolicitacaoOrigemId(null);
+          await carregarSolicitacoes();
+        }
       }
 
       await carregarHistorico();
@@ -2205,6 +2218,7 @@ function App() {
       {showSolicitacoes && (
         <SolicitacoesModal
           solicitacoes={solicitacoes}
+          orcamentos={historico}
           onClose={() => setShowSolicitacoes(false)}
           onRefresh={carregarSolicitacoes}
           onConverter={converterSolicitacao}

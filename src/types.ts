@@ -158,6 +158,7 @@ export interface SolicitacaoOrcamento {
   observacoes_cliente: string | null;
   created_at: string;
   itens?: ItemOrcamentoSnapshot[];
+  orcamento_id?: string | null;
 }
 
 export const EMPRESA = {

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { X, MessageCircle, RefreshCw, Mailbox, Check, Archive, AlertCircle, Copy } from 'lucide-react';
-import { SolicitacaoOrcamento } from '../types';
+import { SolicitacaoOrcamento, Orcamento } from '../types';
 import { supabase } from '../supabase';
 
 interface SolicitacoesModalProps {
   solicitacoes: SolicitacaoOrcamento[];
+  orcamentos?: Orcamento[];
   onClose: () => void;
   onRefresh: () => void;
   onConverter: (solicitacao: SolicitacaoOrcamento) => void;
@@ -28,6 +29,7 @@ function urlBase64ToUint8Array(base64String: string) {
 
 export function SolicitacoesModal({
   solicitacoes,
+  orcamentos,
   onClose,
   onRefresh,
   onConverter,
@@ -491,6 +493,11 @@ FormaPlay — Jogos Educacionais`;
                       <div className="flex flex-wrap items-center gap-2 mb-2">
                         <span className="font-black text-white text-lg">{sol.codigo}</span>
                         {getStatusBadge(sol.status)}
+                        {sol.orcamento_id && orcamentos && (
+                          <span className="bg-slate-800/80 text-[10px] text-slate-300 font-bold px-2.5 py-0.5 rounded-md border border-slate-700 shadow-sm flex items-center gap-1">
+                            Orçamento {orcamentos.find(o => o.id === sol.orcamento_id)?.numero || 'Vinculado'}
+                          </span>
+                        )}
                         <span className="text-blue-800 font-bold hidden sm:inline">•</span>
                         <span className="text-xs font-bold text-slate-400">
                           {new Date(sol.created_at).toLocaleString('pt-BR')}
@@ -523,7 +530,7 @@ FormaPlay — Jogos Educacionais`;
                       >
                         {copiedId === sol.id ? <Check size={16} strokeWidth={2.5} /> : <Copy size={16} strokeWidth={2.5} />}
                       </button>
-                      {sol.status === 'Pendente' && (
+                      {sol.status === 'Pendente' && !sol.orcamento_id && (
                         <button
                           onClick={() => onConverter(sol)}
                           disabled={updating === sol.id}
@@ -532,6 +539,11 @@ FormaPlay — Jogos Educacionais`;
                         >
                           <Check size={16} strokeWidth={2.5} /> Converter
                         </button>
+                      )}
+                      {sol.status === 'Pendente' && sol.orcamento_id && (
+                        <div className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 text-slate-400 border border-slate-700 text-xs font-bold rounded-xl" title="Esta solicitação já possui um orçamento vinculado">
+                          <Check size={16} strokeWidth={2.5} /> Convertida
+                        </div>
                       )}
                       {sol.status === 'Pendente' && (
                         <button
