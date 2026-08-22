@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
+import { Map as MapIcon } from 'lucide-react';
 import { PresencaCidade } from '../../types/geografia';
 import brasilEstados from '../../assets/data/brasil_estados.json';
 
@@ -13,6 +14,17 @@ interface MapaBrasilPresencaProps {
 
 export function MapaBrasilPresenca({ nodes, metric, ufs }: MapaBrasilPresencaProps) {
   const [tooltipData, setTooltipData] = useState<PresencaCidade | null>(null);
+  const [position, setPosition] = useState({ coordinates: [-54, -15] as [number, number], zoom: 1 });
+
+  function handleMoveEnd(pos: any) {
+    setPosition(pos);
+  }
+
+  function handleReset() {
+    setPosition({ coordinates: [-54, -15], zoom: 1 });
+  }
+
+  const currentZoom = position.zoom;
 
   // Filtra apenas cidades com coordenadas válidas E que tenham valor na métrica atual
   const validNodes = useMemo(() => {
@@ -48,15 +60,32 @@ export function MapaBrasilPresenca({ nodes, metric, ufs }: MapaBrasilPresencaPro
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/10 via-slate-900/50 to-[#0f172a] pointer-events-none"></div>
 
+      {/* Reset Zoom Button */}
+      {currentZoom > 1.1 && (
+        <button
+          onClick={handleReset}
+          className="absolute top-4 left-4 z-40 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-600 shadow-lg text-xs font-bold tracking-wide flex items-center gap-1.5 transition-all backdrop-blur-sm animate-fade-in"
+        >
+          <MapIcon size={14} />
+          Ver Brasil
+        </button>
+      )}
+
       <ComposableMap
         projection="geoMercator"
         projectionConfig={{
           scale: 650,
-          center: [-54, -15]
         }}
         className="w-full h-full"
       >
-        <ZoomableGroup zoom={1} minZoom={1} maxZoom={5} translateExtent={[[-100, -100], [900, 700]]}>
+        <ZoomableGroup 
+          zoom={position.zoom} 
+          center={position.coordinates} 
+          onMoveEnd={handleMoveEnd} 
+          minZoom={1} 
+          maxZoom={20} 
+          translateExtent={[[-1000, -1000], [1800, 1600]]}
+        >
           <Geographies geography={brasilEstados}>
             {({ geographies }) =>
               geographies.map(geo => {
@@ -69,8 +98,9 @@ export function MapaBrasilPresenca({ nodes, metric, ufs }: MapaBrasilPresencaPro
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    stroke={semMunicipio ? '#f97316' : '#1e293b'}
+                    stroke={semMunicipio ? '#10b981' : '#1e293b'}
                     strokeWidth={semMunicipio ? 0.8 : 0.5}
+                    vectorEffect="non-scaling-stroke"
                     style={{
                       default: {
                         fill: isAlcancado ? '#1e293b' : '#0f172a',
@@ -93,7 +123,7 @@ export function MapaBrasilPresenca({ nodes, metric, ufs }: MapaBrasilPresencaPro
             }
           </Geographies>
 
-          {/* Labels das UFs (renderizados sob os markers laranjas) */}
+          {/* Labels das UFs (renderizados sob os markers) */}
           {brasilEstados.features.map((geo: any) => {
             const uf = geo.properties.uf;
             const isAlcancado = ufs.includes(uf);
@@ -103,7 +133,7 @@ export function MapaBrasilPresenca({ nodes, metric, ufs }: MapaBrasilPresencaPro
             if (lng === undefined || lat === undefined) return null;
 
             return (
-              <Marker key={`label-${uf}`} coordinates={[lng, lat]} style={{ pointerEvents: 'none' }}>
+              <Marker key={`label-${uf}`} coordinates={[lng, lat]} className="pointer-events-none">
                 <text
                   textAnchor="middle"
                   alignmentBaseline="middle"
@@ -117,34 +147,40 @@ export function MapaBrasilPresenca({ nodes, metric, ufs }: MapaBrasilPresencaPro
             );
           })}
 
-          {/* Markers Laranjas (Cidades) */}
+          {/* Markers Verdes (Cidades) */}
           {validNodes.map(node => {
-            const valor = getMetricValue(node);
-            const radius = 3 + Math.sqrt(valor) * 1.5;
+            // Compensação inversa de zoom: raio virtualmente constante
+            const baseRadius = 3;
+            const interactionRadius = 12;
+            const visualRadius = baseRadius / currentZoom;
+            const touchRadius = interactionRadius / currentZoom;
             
             return (
               <Marker 
                 key={node.key} 
                 coordinates={[node.lng!, node.lat!]}
-                onMouseEnter={() => setTooltipData(node)}
-                onMouseLeave={() => setTooltipData(null)}
-                onTouchStart={() => setTooltipData(node)}
               >
-                {/* Halo */}
-                <circle
-                  r={radius * 1.8}
-                  fill="#f97316" // laranja FormaPlay
-                  opacity={0.1}
-                  className="animate-pulse"
-                />
-                {/* Central Dot */}
-                <circle
-                  r={radius}
-                  fill="#f97316"
-                  stroke="#fff"
-                  strokeWidth={1}
-                  className="transition-all duration-300 hover:fill-orange-400 cursor-pointer shadow-lg drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]"
-                />
+                <g
+                  onMouseEnter={() => setTooltipData(node)}
+                  onMouseLeave={() => setTooltipData(null)}
+                  onTouchStart={() => setTooltipData(node)}
+                  className="cursor-pointer"
+                >
+                  {/* Hitbox invisível */}
+                  <circle
+                    r={touchRadius}
+                    fill="transparent"
+                  />
+                  {/* Central Dot */}
+                  <circle
+                    r={visualRadius}
+                    fill="#10b981" // emerald-500
+                    stroke="#ffffff"
+                    strokeWidth={0.5}
+                    vectorEffect="non-scaling-stroke"
+                    className="transition-colors duration-300 hover:fill-emerald-400"
+                  />
+                </g>
               </Marker>
             );
           })}
@@ -164,7 +200,7 @@ export function MapaBrasilPresenca({ nodes, metric, ufs }: MapaBrasilPresencaPro
           
           <div className="flex items-end justify-between mb-3">
              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{getMetricLabel()}</span>
-             <span className="text-2xl font-black text-orange-500 leading-none">{getMetricValue(tooltipData)}</span>
+             <span className="text-2xl font-black text-emerald-500 leading-none">{getMetricValue(tooltipData)}</span>
           </div>
 
           <div className="space-y-1.5 text-xs font-medium">
@@ -200,7 +236,7 @@ export function MapaBrasilPresenca({ nodes, metric, ufs }: MapaBrasilPresencaPro
       <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 pointer-events-none bg-slate-900/70 backdrop-blur-md p-2 md:p-3 rounded-xl border border-slate-700/50 shadow-lg">
         <div className="space-y-1.5 md:space-y-2">
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.6)]"></div>
+            <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-emerald-500 shadow-sm"></div>
             <span className="text-[9px] md:text-xs font-medium text-slate-300">Cidade identificada</span>
           </div>
           <div className="flex items-center gap-2">
@@ -213,16 +249,14 @@ export function MapaBrasilPresenca({ nodes, metric, ufs }: MapaBrasilPresencaPro
             if (!hasEstadoSemMunicipio) return null;
             return (
               <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded bg-slate-800 border border-orange-500"></div>
+                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded bg-slate-800 border border-emerald-500"></div>
                 <span className="text-[9px] md:text-xs font-medium text-slate-400">UF sem município identificado</span>
               </div>
             );
           })()}
         </div>
-        <div className="mt-2 pt-1.5 md:mt-3 md:pt-2 border-t border-slate-700/50">
-          <span className="text-[8px] md:text-[10px] text-slate-500">Tamanho do ponto = intensidade</span>
-        </div>
       </div>
     </div>
   );
 }
+
