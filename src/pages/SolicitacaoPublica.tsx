@@ -1052,9 +1052,15 @@ export const SolicitacaoPublica: React.FC = () => {
                           <div className="md:w-2/3 p-6">
                             <div className="flex justify-between items-start mb-2">
                               <h3 className="text-xl font-black text-white">{produto.nome}</h3>
-                              <span className="bg-green-500/20 text-green-400 font-bold px-3 py-1 rounded-full text-sm whitespace-nowrap ml-2">
-                                {fmtCurrency(obterPrecoProduto(produto.nome))}
-                              </span>
+                              {isProdutoEmDesenvolvimento(produto.nome) ? (
+                                <span className="bg-orange-500/20 text-orange-400 font-bold px-3 py-1 rounded-full text-xs whitespace-nowrap ml-2 uppercase tracking-wider">
+                                  Em Desenvolvimento
+                                </span>
+                              ) : (
+                                <span className="bg-green-500/20 text-green-400 font-bold px-3 py-1 rounded-full text-sm whitespace-nowrap ml-2">
+                                  {fmtCurrency(obterPrecoProduto(produto.nome))}
+                                </span>
+                              )}
                             </div>
                             <p className="text-slate-300 mb-4">{produto.descricao}</p>
                             <div className="mb-4">
@@ -1092,7 +1098,13 @@ export const SolicitacaoPublica: React.FC = () => {
                                 <img src={outraOpcao.imagem} alt={outraOpcao.nome} className="max-h-full object-contain transition-transform group-hover:scale-110" />
                               </div>
                               <h5 className="font-bold text-white text-sm mb-1 leading-tight">{outraOpcao.nome}</h5>
-                              <span className="text-green-400 font-semibold text-sm mt-auto">{fmtCurrency(obterPrecoProduto(outraOpcao.nome))}</span>
+                              {isProdutoEmDesenvolvimento(outraOpcao.nome) ? (
+                                <span className="text-orange-400 bg-orange-500/10 border border-orange-500/30 px-2 py-0.5 rounded text-[10px] font-bold mt-auto self-start uppercase tracking-wider">
+                                  Em Desenvolvimento
+                                </span>
+                              ) : (
+                                <span className="text-green-400 font-semibold text-sm mt-auto">{fmtCurrency(obterPrecoProduto(outraOpcao.nome))}</span>
+                              )}
                             </button>
                           ))}
                         </div>
