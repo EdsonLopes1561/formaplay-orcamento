@@ -83,17 +83,13 @@ export const interessesService = {
     return data as boolean;
   },
 
-  async inserirInteresse(dados: Partial<InteresseModelo>): Promise<InteresseModelo> {
-    const { data, error } = await supabase
+  async inserirInteresse(dados: Partial<InteresseModelo>): Promise<void> {
+    const { error } = await supabase
       .from('interesses_modelos')
-      .insert(dados)
-      .select()
-      .single();
+      .insert(dados);
 
     if (error) {
       throw error;
     }
-
-    return data as InteresseModelo;
   }
 };
