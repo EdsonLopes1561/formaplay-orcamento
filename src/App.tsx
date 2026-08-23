@@ -2223,6 +2223,7 @@ function App() {
           onRefresh={carregarSolicitacoes}
           onConverter={converterSolicitacao}
           loading={loadingSolicitacoes}
+          usuarioApp={usuarioApp}
         />
       )}
 

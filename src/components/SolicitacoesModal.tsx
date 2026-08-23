@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { X, MessageCircle, RefreshCw, Mailbox, Check, Archive, AlertCircle, Copy } from 'lucide-react';
+import { X, MessageCircle, RefreshCw, Mailbox, Check, Archive, AlertCircle, Copy, Trash2 } from 'lucide-react';
 import { SolicitacaoOrcamento, Orcamento } from '../types';
+import { UsuarioApp } from '../interfaces/interesses';
 import { supabase } from '../supabase';
 
 interface SolicitacoesModalProps {
@@ -10,6 +11,7 @@ interface SolicitacoesModalProps {
   onRefresh: () => void;
   onConverter: (solicitacao: SolicitacaoOrcamento) => void;
   loading: boolean;
+  usuarioApp?: UsuarioApp | null;
 }
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -34,6 +36,7 @@ export function SolicitacoesModal({
   onRefresh,
   onConverter,
   loading,
+  usuarioApp,
 }: SolicitacoesModalProps) {
   const fmt = (val: number) =>
     val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -41,6 +44,36 @@ export function SolicitacoesModal({
   const [filtro, setFiltro] = useState<string>('Pendente');
   const [updating, setUpdating] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const isAdmin = usuarioApp?.perfil === 'administrador';
+
+  const excluirSolicitacao = async (sol: SolicitacaoOrcamento) => {
+    if (sol.status !== 'Arquivada' || sol.orcamento_id || !isAdmin) return;
+
+    const confirm = window.confirm(`Excluir solicitação definitivamente?\n\n${sol.codigo} — ${sol.nome_razao}\n\nEsta ação não pode ser desfeita e removerá permanentemente os dados desta solicitação.`);
+    if (!confirm) return;
+
+    setUpdating(sol.id);
+    try {
+      const { error, count } = await supabase
+        .from('solicitacoes_orcamento')
+        .delete({ count: 'exact' })
+        .eq('id', sol.id)
+        .eq('status', 'Arquivada')
+        .is('orcamento_id', null);
+
+      if (error) throw error;
+      if (count === 0) throw new Error('Nenhuma solicitação excluída. Verifique se a solicitação ainda está arquivada e sem orçamento vinculado.');
+
+      alert('Solicitação excluída definitivamente.');
+      onRefresh();
+    } catch (err: any) {
+      console.error(err);
+      alert(`Erro ao excluir solicitação: ${err.message || err}`);
+    } finally {
+      setUpdating(null);
+    }
+  };
 
   const [permission, setPermission] = useState<string>(
     typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
@@ -553,6 +586,16 @@ FormaPlay — Jogos Educacionais`;
                           title="Arquivar"
                         >
                           <Archive size={16} strokeWidth={2.5} />
+                        </button>
+                      )}
+                      {sol.status === 'Arquivada' && !sol.orcamento_id && isAdmin && (
+                        <button
+                          onClick={() => excluirSolicitacao(sol)}
+                          disabled={updating === sol.id}
+                          className="flex items-center justify-center p-2 bg-rose-500/10 text-rose-500 border border-rose-500/30 text-xs font-bold rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm disabled:opacity-50 active:scale-95 cursor-pointer ml-1"
+                          title="Excluir definitivamente"
+                        >
+                          <Trash2 size={16} strokeWidth={2.5} />
                         </button>
                       )}
                     </div>
