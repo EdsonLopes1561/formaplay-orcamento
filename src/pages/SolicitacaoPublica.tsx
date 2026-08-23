@@ -728,8 +728,6 @@ export const SolicitacaoPublica: React.FC = () => {
               </h2>
               {(() => {
                 const inputClass = "w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white placeholder-slate-500 disabled:opacity-50 disabled:bg-slate-900/30 disabled:border-slate-700 disabled:cursor-not-allowed";
-                const inputBaseClass = "w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white disabled:opacity-50 disabled:bg-slate-900/30 disabled:border-slate-700 disabled:cursor-not-allowed";
-                const stateInputClass = "w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none uppercase transition-all text-white placeholder-slate-500 disabled:opacity-50 disabled:bg-slate-900/30 disabled:border-slate-700 disabled:cursor-not-allowed";
 
                 return (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -763,7 +761,6 @@ export const SolicitacaoPublica: React.FC = () => {
               {(() => {
                 const inputClass = "w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white placeholder-slate-500 disabled:opacity-50 disabled:bg-slate-900/30 disabled:border-slate-700 disabled:cursor-not-allowed";
                 const inputBaseClass = "w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all text-white disabled:opacity-50 disabled:bg-slate-900/30 disabled:border-slate-700 disabled:cursor-not-allowed";
-                const stateInputClass = "w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none uppercase transition-all text-white placeholder-slate-500 disabled:opacity-50 disabled:bg-slate-900/30 disabled:border-slate-700 disabled:cursor-not-allowed";
 
                 return (
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
