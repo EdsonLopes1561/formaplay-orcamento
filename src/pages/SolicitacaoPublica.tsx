@@ -84,7 +84,7 @@ export const SolicitacaoPublica: React.FC = () => {
     jogo: '' as string,
     observacoes: '',
     embrulho_presente: false,
-    forma_pagamento: 'Pix com desconto',
+    forma_pagamento: 'A combinar',
     aceita_contato: false,
   });
   
@@ -405,16 +405,11 @@ export const SolicitacaoPublica: React.FC = () => {
     }
   }
 
-  const descontoPix = subtotalProdutos * 0.03;
   const temCalculoFrete = !!freteSelecionado || (itensCarrinho.length === 1 && !!form.estado);
 
   const totalEstimado = temCalculoFrete 
     ? (subtotalProdutos + freteEstimado) 
     : subtotalProdutos;
-
-  const totalComPix = temCalculoFrete
-    ? ((subtotalProdutos - descontoPix) + freteEstimado)
-    : (subtotalProdutos - descontoPix);
 
   const handleRegistrarInteresse = async () => {
     if (!form.nome || (!form.telefone && !form.email) || !form.pais || !form.cidade || !form.estado) {
@@ -495,7 +490,7 @@ export const SolicitacaoPublica: React.FC = () => {
           quantidade: Number(quantidadeFinal) || 1,
           valor_estimado: Number(subtotalProdutos) || 0,
           frete_estimado: Number(freteEstimado) || 0,
-          desconto_pix: Number(descontoPix) || 0,
+          desconto_pix: 0,
           total_estimado: Number(totalEstimado) || 0,
           observacoes_cliente: (() => {
             let obsFrete = '';
@@ -1130,7 +1125,7 @@ export const SolicitacaoPublica: React.FC = () => {
                     <div className="md:col-span-4 border-t border-slate-700 pt-4 mt-2">
                       <label className="block text-sm font-semibold text-slate-300 mb-1">Forma de pagamento pretendida *</label>
                       <select required name="forma_pagamento" value={form.forma_pagamento} onChange={handleChange} className="w-full px-4 py-2 bg-[#0A0F1C] border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none text-white transition-all shadow-sm">
-                        <option value="Pix com desconto">Pix com desconto (3% OFF)</option>
+                        <option value="Pix">Pix</option>
                         <option value="Cartão">Cartão</option>
                         <option value="Boleto / transferência">Boleto / transferência</option>
                         <option value="A combinar">A combinar</option>
@@ -1242,11 +1237,6 @@ export const SolicitacaoPublica: React.FC = () => {
                     <span>Produtos ({totalItensQtd} item/itens)</span>
                     <span className="font-semibold text-white">{fmtCurrency(subtotalProdutos)}</span>
                   </div>
-                  
-                  <div className="flex justify-between">
-                    <span>Desconto PIX (3%)</span>
-                    <span className="font-semibold text-green-400">-{fmtCurrency(descontoPix)}</span>
-                  </div>
 
                   <div className="flex justify-between pb-3 border-b border-slate-700">
                     <div className="flex items-center gap-1">
@@ -1262,27 +1252,15 @@ export const SolicitacaoPublica: React.FC = () => {
                   </div>
 
                   <div className="pt-2">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className={`font-medium ${form.forma_pagamento !== 'Pix com desconto' ? 'text-white font-bold text-lg' : 'text-slate-500'}`}>Total Estimado (Prazo)</span>
-                      <span className={`${form.forma_pagamento !== 'Pix com desconto' ? 'text-2xl font-black text-white' : 'text-lg font-bold text-slate-300'}`}>
+                    <div className="flex justify-between items-center">
+                      <span className="text-white font-bold text-lg">Total Estimado</span>
+                      <span className="text-2xl font-black text-white">
                         {temCalculoFrete 
                           ? fmtCurrency(totalEstimado) 
                           : 'A combinar'
                         }
                       </span>
                     </div>
-                    <div className={`flex justify-between items-center ${form.forma_pagamento !== 'Pix com desconto' ? 'opacity-50' : ''}`}>
-                      <span className="text-green-500 font-bold">Total com Desconto PIX</span>
-                      <span className={`${form.forma_pagamento === 'Pix com desconto' ? 'text-2xl font-black' : 'text-lg font-bold'} text-green-400`}>
-                        {temCalculoFrete 
-                          ? fmtCurrency(totalComPix) 
-                          : `${fmtCurrency(subtotalProdutos - descontoPix)} + frete`
-                        }
-                      </span>
-                    </div>
-                    {form.forma_pagamento !== 'Pix com desconto' && (
-                      <p className="text-xs text-orange-400 font-medium mt-2 text-right">Desconto de 3% exclusivo para pagamento via Pix.</p>
-                    )}
                   </div>
                 </div>
 
