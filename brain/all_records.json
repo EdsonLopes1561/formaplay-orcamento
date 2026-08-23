@@ -1,0 +1,532 @@
+{
+  "orcamentos": [
+    {
+      "id": "1550a6fe-9111-4a19-a58d-6b336fc16df2",
+      "status": "Aberto",
+      "cliente_pais": null,
+      "cliente_uf": null,
+      "cliente_cidade": null,
+      "cliente": null
+    },
+    {
+      "id": "7dcc8e5f-b1ad-4b88-a45a-fea9389b5713",
+      "status": "Aberto",
+      "cliente_pais": null,
+      "cliente_uf": null,
+      "cliente_cidade": null,
+      "cliente": null
+    },
+    {
+      "id": "8130212b-b7cc-496f-9683-e84a22bf4e38",
+      "status": "Aberto",
+      "cliente_pais": null,
+      "cliente_uf": null,
+      "cliente_cidade": null,
+      "cliente": null
+    },
+    {
+      "id": "12dd2d20-3fba-4348-8be3-01b2a1f21653",
+      "status": "Aberto",
+      "cliente_pais": null,
+      "cliente_uf": null,
+      "cliente_cidade": null,
+      "cliente": null
+    },
+    {
+      "id": "fe3b5bbd-8d2e-4ca6-9b52-d31b1a201077",
+      "status": "Aberto",
+      "cliente_pais": null,
+      "cliente_uf": null,
+      "cliente_cidade": null,
+      "cliente": null
+    },
+    {
+      "id": "b2f25ecc-516d-407f-8eb3-6c27df519a57",
+      "status": "Aprovado",
+      "cliente_pais": null,
+      "cliente_uf": null,
+      "cliente_cidade": null,
+      "cliente": null
+    },
+    {
+      "id": "ea33e4a5-b412-47a7-9262-e259d57cab43",
+      "status": "Aprovado",
+      "cliente_pais": null,
+      "cliente_uf": null,
+      "cliente_cidade": null,
+      "cliente": null
+    },
+    {
+      "id": "62eaf6ca-67db-4b39-9062-3b792b3f2996",
+      "status": "Cancelado",
+      "cliente_pais": null,
+      "cliente_uf": null,
+      "cliente_cidade": null,
+      "cliente": null
+    },
+    {
+      "id": "7dbaed2f-2778-4291-a62e-65d8c43d43da",
+      "status": "Aberto",
+      "cliente_pais": null,
+      "cliente_uf": null,
+      "cliente_cidade": null,
+      "cliente": null
+    },
+    {
+      "id": "e36f871a-c0d7-427f-b717-4af68a87cb40",
+      "status": "Cancelado",
+      "cliente_pais": null,
+      "cliente_uf": null,
+      "cliente_cidade": null,
+      "cliente": {
+        "id": "5889a39b-5d27-4d04-9331-e5a2bcea7cd6",
+        "pais": null,
+        "cidade": "Mogi Guaçu",
+        "estado": "São Paulo"
+      }
+    },
+    {
+      "id": "9edc55b4-181a-4e20-ba81-854250a58c37",
+      "status": "Aberto",
+      "cliente_pais": null,
+      "cliente_uf": null,
+      "cliente_cidade": null,
+      "cliente": null
+    },
+    {
+      "id": "c37e41dd-58d1-456e-921e-4e728cd2892a",
+      "status": "Aprovado",
+      "cliente_pais": null,
+      "cliente_uf": null,
+      "cliente_cidade": null,
+      "cliente": null
+    },
+    {
+      "id": "dbd85448-fb67-4788-adf9-e6eff53372bc",
+      "status": "Enviado",
+      "cliente_pais": null,
+      "cliente_uf": "SP",
+      "cliente_cidade": "Mogi Guaçu",
+      "cliente": {
+        "id": "cd339153-2311-4ef3-b987-de28c0879de9",
+        "pais": null,
+        "cidade": "Mogi Guaçu",
+        "estado": "SP"
+      }
+    },
+    {
+      "id": "42aa554a-095d-4735-9d87-0da1012e4cd4",
+      "status": "Aberto",
+      "cliente_pais": null,
+      "cliente_uf": "SP",
+      "cliente_cidade": "Jaú",
+      "cliente": {
+        "id": "ac8b768e-a27f-4b90-99b7-da5e20f29960",
+        "pais": null,
+        "cidade": "Jaú",
+        "estado": "SP"
+      }
+    },
+    {
+      "id": "d952135e-ff56-4f55-b604-3482f66be266",
+      "status": "Enviado",
+      "cliente_pais": null,
+      "cliente_uf": "SP",
+      "cliente_cidade": "Suzano",
+      "cliente": {
+        "id": "1bda9617-7c4c-4647-88eb-5abb604c73c8",
+        "pais": null,
+        "cidade": "Suzano",
+        "estado": "SP"
+      }
+    },
+    {
+      "id": "63eef51c-dea8-4872-9eec-8a2a39259c3f",
+      "status": "Enviado",
+      "cliente_pais": null,
+      "cliente_uf": "SP",
+      "cliente_cidade": "Pariquera-Açu",
+      "cliente": {
+        "id": "8dc18363-96e0-4d8a-bd30-9646cc9d4d2b",
+        "pais": null,
+        "cidade": "Pariquera-Açu",
+        "estado": "SP"
+      }
+    },
+    {
+      "id": "829b4aaf-c81d-426d-8943-9f67a34eafb1",
+      "status": "Enviado",
+      "cliente_pais": null,
+      "cliente_uf": "SP",
+      "cliente_cidade": "Santa Rosa de Viterbo",
+      "cliente": null
+    },
+    {
+      "id": "815d2cfd-5afb-4965-a224-b3a7e288b344",
+      "status": "Enviado",
+      "cliente_pais": null,
+      "cliente_uf": "SP",
+      "cliente_cidade": "Jaú",
+      "cliente": null
+    },
+    {
+      "id": "f66a2df5-42ff-4571-8b72-5649b3b47b71",
+      "status": "Enviado",
+      "cliente_pais": null,
+      "cliente_uf": "SP",
+      "cliente_cidade": "Barueri",
+      "cliente": null
+    },
+    {
+      "id": "b5fe1ea4-79af-4287-b35f-7d1a93de6f56",
+      "status": "Aprovado",
+      "cliente_pais": null,
+      "cliente_uf": "SP",
+      "cliente_cidade": "Mogi Guaçu",
+      "cliente": {
+        "id": "3db27611-c757-44ca-81ca-d01593533c6e",
+        "pais": null,
+        "cidade": "Mogi Guaçu",
+        "estado": "SP"
+      }
+    },
+    {
+      "id": "24456016-390b-4981-8100-b0ba445bf78d",
+      "status": "Aprovado",
+      "cliente_pais": null,
+      "cliente_uf": "SP",
+      "cliente_cidade": "Jundiaí",
+      "cliente": null
+    },
+    {
+      "id": "165ce324-6d55-4685-a1d0-b14958e436f6",
+      "status": "Aprovado",
+      "cliente_pais": null,
+      "cliente_uf": "SP",
+      "cliente_cidade": "Guarulhos",
+      "cliente": null
+    }
+  ],
+  "solicitacoes": [
+    {
+      "id": "7d47223b-dc15-465b-beea-c9a3b9a180ab",
+      "status": "Convertida",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "32e52c7e-597c-4e94-8737-98a19bb24e22",
+      "status": "Convertida",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "64bc9aa7-f4dc-4230-84c8-d0a6cab3b768",
+      "status": "Convertida",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Itapira"
+    },
+    {
+      "id": "fb65ccee-05d7-40e6-9e2b-6a0e5f35ee3f",
+      "status": "Convertida",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "a1f634e3-5b5f-4955-be51-cba5bba8e40d",
+      "status": "Pendente",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "9e2ad3ae-1af5-47a4-9f20-cd345fb9c714",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Bauru"
+    },
+    {
+      "id": "ed2064ba-627d-4fa2-be44-31bb5b96af34",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Bauru"
+    },
+    {
+      "id": "6549a7ad-87f3-4793-8fb7-b56aeaf037fd",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "f88c0696-b681-43bb-b69b-ffb24a81de9b",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "c2d4f6f3-451a-4c0d-92fe-c750346c6750",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "3a52c984-8885-4dc9-b155-1b2b4d95dcaa",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "9fc9f3a3-26c9-4886-bbbe-4750e2bce7c4",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "55785290-dcf1-447a-bf5e-b7a35bdb25f1",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "f04b9c3a-e629-4e69-885a-d23dbbb895e2",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "ad5dfda7-aa97-4a77-aa28-2b9386c8fe51",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "ffb1b634-af92-4329-8c41-e430143ad753",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "c4571e88-5f98-4a57-84e1-329cfe2a5e49",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "ca6a8c1a-4e36-4d06-9979-8f0826db4a9c",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "752d796d-805a-444b-be76-6d80b6d65099",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "8da01ff7-e667-4802-a43d-31a925672331",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "e07523bd-8c94-4e03-9e03-0779487f4cd0",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "f2499721-d143-4fd7-bf47-b050cef0dfb1",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "95493c70-560e-4acc-8648-e3a64ad89200",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "São Paulo"
+    },
+    {
+      "id": "b68ee6ba-b8c3-4b9f-9f70-648687ef8bbc",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Sao Paulo"
+    },
+    {
+      "id": "76969952-1470-4461-945f-0668aa35ae20",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Bauru"
+    },
+    {
+      "id": "f894e297-0242-4f82-86b5-957aeb7d3be1",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "c16b7783-ce74-4fdd-9b37-ac55df9c9aca",
+      "status": "Convertida",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Bauru"
+    },
+    {
+      "id": "2a3047d5-11e4-4263-b234-bfd1c7d1760d",
+      "status": "Pendente",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "e86d5c44-d30f-42a3-b6e3-7027df309700",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "b9606fa9-fed3-4c5a-a309-dac5b46abb72",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "19747a7b-44c5-4395-88bc-597bde1b9924",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "12c4678e-8dea-4b40-a938-d5f95c52686c",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "4818e823-e062-47b6-9f08-5c809a17f873",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "94e469de-a1a4-438e-977d-650c05929cf3",
+      "status": "Convertida",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "71faf66d-a2f4-48ab-b126-da7ab363baec",
+      "status": "Convertida",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "3d656578-bf98-43d8-85f3-22f7f3e37f41",
+      "status": "Arquivada",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "c794bbea-5d4b-47f7-b21a-0c0c62cc61a1",
+      "status": "Convertida",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "91436e83-b17d-4811-9e36-9050591801d5",
+      "status": "Pendente",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jaú"
+    },
+    {
+      "id": "558892a6-0bbf-47c6-bdcf-01adfd175c43",
+      "status": "Pendente",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Barueri"
+    },
+    {
+      "id": "d1cf411b-6c43-4f21-af70-8703d4c94491",
+      "status": "Pendente",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Guarulhos"
+    },
+    {
+      "id": "12d1f4e1-131c-4e3d-8c3a-d7a5552c88e0",
+      "status": "Convertida",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jundiaí"
+    },
+    {
+      "id": "caca032a-8269-494d-80c7-aee690c3c3bb",
+      "status": "Convertida",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Santa Rosa de Viterbo"
+    }
+  ],
+  "interesses": [
+    {
+      "id": "1bbfbf2b-c634-4ccb-aca0-d548f98fd131",
+      "pais": null,
+      "estado": "BA",
+      "cidade": "Salvador "
+    },
+    {
+      "id": "db9839fd-d2ca-4343-a5cd-8d5585095707",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "Jau"
+    },
+    {
+      "id": "2094083f-a2d0-4ee0-9eef-3c6115cccd74",
+      "pais": null,
+      "estado": "Sp",
+      "cidade": "Jaú "
+    },
+    {
+      "id": "fd9e80a3-7124-4e70-9bd4-448f01fb07d3",
+      "pais": null,
+      "estado": "SP",
+      "cidade": "BARUERI"
+    }
+  ]
+}
