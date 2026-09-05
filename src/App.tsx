@@ -1635,11 +1635,6 @@ function App() {
                     <input name="nf_emitida_em" type="date" value={form.nf_emitida_em || ''} onChange={handleChange}
                       className="form-input" />
                   </div>
-                  <div className="sm:col-span-2">
-                    <label className="form-label">Link do PDF da NF</label>
-                    <input name="nf_pdf_url" type="url" value={form.nf_pdf_url || ''} onChange={handleChange}
-                      className="form-input" placeholder="Ex: https://drive.google.com/..." />
-                  </div>
                   
                   <div className="sm:col-span-2 mt-4">
                     <button
