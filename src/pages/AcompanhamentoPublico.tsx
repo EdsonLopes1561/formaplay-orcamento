@@ -208,6 +208,7 @@ export function AcompanhamentoPublico() {
   const getTipoAmigavel = (tipo: string) => {
     const mapa: Record<string, string> = {
       orcamento: 'Orçamento',
+      confirmacao_pedido: 'Confirmação do pedido',
       nfe_pdf: 'NF-e — PDF',
       nfe_xml: 'NF-e — XML',
       boleto: 'Boleto',
@@ -218,6 +219,7 @@ export function AcompanhamentoPublico() {
   };
 
   const getIconForDoc = (tipo: string) => {
+    if (tipo === 'confirmacao_pedido') return <BadgeCheck size={20} className="text-emerald-400" />;
     if (tipo.includes('nfe')) return <Receipt size={20} className="text-blue-400" />;
     if (tipo === 'boleto') return <FileDown size={20} className="text-amber-400" />;
     if (tipo === 'comprovante_envio') return <Truck size={20} className="text-emerald-400" />;
@@ -497,7 +499,8 @@ export function AcompanhamentoPublico() {
                       <>
                         <Download size={16} />
                         {doc.tipo_documento === 'nfe_pdf' ? 'Baixar DANFE' : 
-                         doc.tipo_documento === 'nfe_xml' ? 'Baixar XML' :
+                         doc.tipo_documento === 'nfe_xml' ? (doc.nome_arquivo.toLowerCase().endsWith('.zip') ? 'Baixar XML (ZIP)' : 'Baixar XML') :
+                         doc.tipo_documento === 'confirmacao_pedido' ? 'Baixar confirmação' :
                          doc.tipo_documento === 'orcamento' ? 'Baixar orçamento' :
                          doc.tipo_documento === 'comprovante_envio' ? 'Baixar comprovante' :
                          'Baixar arquivo'}

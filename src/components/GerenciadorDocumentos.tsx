@@ -2,14 +2,21 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   FileText, FileCode2, Receipt, Truck, File, Plus, Download, Trash2,
   RefreshCw, Eye, EyeOff, Pencil, X, AlertTriangle, CheckCircle2,
-  Loader2, Upload, ShieldCheck, Lock
+  Loader2, Upload, ShieldCheck, Lock, BadgeCheck
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { PerfilUsuario } from '../interfaces/interesses';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
-export type TipoDocumento = 'orcamento' | 'nfe_pdf' | 'nfe_xml' | 'boleto' | 'comprovante_envio' | 'outro';
+export type TipoDocumento =
+  | 'orcamento'
+  | 'confirmacao_pedido'
+  | 'nfe_pdf'
+  | 'nfe_xml'
+  | 'boleto'
+  | 'comprovante_envio'
+  | 'outro';
 
 export interface DocumentoPedido {
   id: string;
@@ -32,6 +39,18 @@ interface GerenciadorDocumentosProps {
   perfilUsuario: PerfilUsuario;
 }
 
+export interface ItemUpload {
+  id: string;
+  arquivo: File | null;
+  tipo_documento: TipoDocumento;
+  titulo: string;
+  numero_documento: string;
+  data_documento: string;
+  visivel_cliente: boolean;
+  status?: 'pendente' | 'enviando' | 'sucesso' | 'erro';
+  erro?: string | null;
+}
+
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
 const BUCKET = 'documentos-pedidos';
@@ -39,6 +58,7 @@ const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 
 const TIPOS_AMIGAVEIS: Record<TipoDocumento, string> = {
   orcamento: 'Orçamento',
+  confirmacao_pedido: 'Confirmação do pedido',
   nfe_pdf: 'NF-e — PDF',
   nfe_xml: 'NF-e — XML',
   boleto: 'Boleto',
@@ -50,15 +70,39 @@ const MIME_PERMITIDOS: Record<string, string> = {
   'application/pdf': '.pdf',
   'application/xml': '.xml',
   'text/xml': '.xml',
+  'application/zip': '.zip',
+  'application/x-zip-compressed': '.zip',
+  'application/x-zip': '.zip',
   'image/jpeg': '.jpg/.jpeg',
   'image/png': '.png',
 };
 
-// Normaliza mime types inconsistentes de navegadores para .xml
+const EXTENSOES_PERMITIDAS = ['pdf', 'xml', 'zip', 'jpg', 'jpeg', 'png'];
+
+// Normaliza mime types de navegadores para garantir padrão restritivo e seguro no Storage
 function normalizarMime(file: File): string {
   const ext = file.name.split('.').pop()?.toLowerCase();
+  if (ext === 'zip') return 'application/zip';
   if (ext === 'xml') return 'application/xml';
-  return file.type;
+  if (ext === 'pdf') return 'application/pdf';
+  if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
+  if (ext === 'png') return 'image/png';
+  return file.type || 'application/octet-stream';
+}
+
+function validarArquivo(file: File): string | null {
+  const ext = file.name.split('.').pop()?.toLowerCase() || '';
+  if (!EXTENSOES_PERMITIDAS.includes(ext)) {
+    return 'Tipo de arquivo não permitido. Aceitamos PDF, XML, ZIP, JPEG e PNG.';
+  }
+  const mimeNorm = normalizarMime(file);
+  if (!MIME_PERMITIDOS[mimeNorm]) {
+    return 'Tipo de arquivo não permitido. Aceitamos PDF, XML, ZIP, JPEG e PNG.';
+  }
+  if (file.size > MAX_BYTES) {
+    return `O arquivo excede o limite de 10 MB (${formatarTamanho(file.size)}).`;
+  }
+  return null;
 }
 
 function formatarTamanho(bytes: number): string {
@@ -79,6 +123,7 @@ function formatarDataHora(iso: string): string {
 function IcTipo({ tipo }: { tipo: TipoDocumento }) {
   const cls = 'shrink-0';
   switch (tipo) {
+    case 'confirmacao_pedido': return <BadgeCheck size={18} className={`${cls} text-emerald-400`} />;
     case 'nfe_pdf': return <FileText size={18} className={`${cls} text-emerald-400`} />;
     case 'nfe_xml': return <FileCode2 size={18} className={`${cls} text-cyan-400`} />;
     case 'boleto': return <Receipt size={18} className={`${cls} text-yellow-400`} />;
@@ -88,25 +133,72 @@ function IcTipo({ tipo }: { tipo: TipoDocumento }) {
   }
 }
 
-// ─── Formulário de novo/edição de documento ───────────────────────────────────
+// Sugere tipo e título inicial com base no nome do arquivo (sugestão editável pelo usuário)
+function inferirTipoETitulo(file: File, isProducao: boolean): { tipo: TipoDocumento; titulo: string } {
+  if (isProducao) {
+    return { tipo: 'comprovante_envio', titulo: 'Comprovante de envio' };
+  }
 
-interface FormDocumento {
-  tipo_documento: TipoDocumento;
-  titulo: string;
-  numero_documento: string;
-  data_documento: string;
-  visivel_cliente: boolean;
-  arquivo: File | null;
+  const nomeSemExt = file.name.replace(/\.[^/.]+$/, '');
+  const nomeLower = file.name.toLowerCase();
+  const ext = file.name.split('.').pop()?.toLowerCase() || '';
+
+  if (nomeLower.includes('orcamento') || nomeLower.includes('orçamento')) {
+    return { tipo: 'orcamento', titulo: nomeSemExt.replace(/_/g, ' ') };
+  }
+  if (nomeLower.includes('pedido') || nomeLower.includes('confirmacao') || nomeLower.includes('confirmação')) {
+    return { tipo: 'confirmacao_pedido', titulo: nomeSemExt.replace(/_/g, ' ') };
+  }
+  if ((nomeLower.includes('nfe') || nomeLower.includes('nf-e') || nomeLower.includes('danfe')) && ext === 'pdf') {
+    return { tipo: 'nfe_pdf', titulo: nomeSemExt.replace(/_/g, ' ') };
+  }
+  if ((nomeLower.includes('nfe') || nomeLower.includes('xml')) && (ext === 'xml' || ext === 'zip')) {
+    return { tipo: 'nfe_xml', titulo: nomeSemExt.replace(/_/g, ' ') };
+  }
+  if (nomeLower.includes('boleto')) {
+    return { tipo: 'boleto', titulo: nomeSemExt.replace(/_/g, ' ') };
+  }
+  if (nomeLower.includes('comprovante') || nomeLower.includes('envio') || nomeLower.includes('rastreio')) {
+    return { tipo: 'comprovante_envio', titulo: nomeSemExt.replace(/_/g, ' ') };
+  }
+
+  if (ext === 'pdf') {
+    return { tipo: 'orcamento', titulo: nomeSemExt.replace(/_/g, ' ') };
+  }
+  if (ext === 'xml' || ext === 'zip') {
+    return { tipo: 'nfe_xml', titulo: nomeSemExt.replace(/_/g, ' ') };
+  }
+  return { tipo: 'outro', titulo: nomeSemExt.replace(/_/g, ' ') };
 }
 
-const emptyForm = (producao: boolean): FormDocumento => ({
-  tipo_documento: producao ? 'comprovante_envio' : 'nfe_pdf',
-  titulo: '',
-  numero_documento: '',
-  data_documento: '',
-  visivel_cliente: false,
-  arquivo: null,
-});
+function criarItemUpload(file?: File, isProducao = false): ItemUpload {
+  const id = crypto.randomUUID();
+  if (file) {
+    const { tipo, titulo } = inferirTipoETitulo(file, isProducao);
+    return {
+      id,
+      arquivo: file,
+      tipo_documento: tipo,
+      titulo,
+      numero_documento: '',
+      data_documento: '',
+      visivel_cliente: false,
+      status: 'pendente',
+      erro: null,
+    };
+  }
+  return {
+    id,
+    arquivo: null,
+    tipo_documento: isProducao ? 'comprovante_envio' : 'orcamento',
+    titulo: '',
+    numero_documento: '',
+    data_documento: '',
+    visivel_cliente: false,
+    status: 'pendente',
+    erro: null,
+  };
+}
 
 // ─── Componente Principal ─────────────────────────────────────────────────────
 
@@ -118,16 +210,22 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
-  // Modal de adição
+  // Modal de adição (Multiupload)
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState<FormDocumento>(emptyForm(isProducao));
+  const [itensUpload, setItensUpload] = useState<ItemUpload[]>([]);
   const [salvando, setSalvando] = useState(false);
-  const [erroForm, setErroForm] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [erroGeral, setErroGeral] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Modal de edição de metadados
   const [editandoId, setEditandoId] = useState<string | null>(null);
-  const [formEdicao, setFormEdicao] = useState<Partial<FormDocumento>>({});
+  const [formEdicao, setFormEdicao] = useState<{
+    tipo_documento?: TipoDocumento;
+    titulo?: string;
+    numero_documento?: string;
+    data_documento?: string;
+    visivel_cliente?: boolean;
+  }>({});
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
 
   // Modal de substituição
@@ -166,82 +264,149 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
     if (orcamentoId) carregarDocumentos();
   }, [orcamentoId, carregarDocumentos]);
 
-  // ── Validar arquivo ───────────────────────────────────────────────────────
+  // ── Adicionar arquivos ao lote ────────────────────────────────────────────
 
-  function validarArquivo(file: File): string | null {
-    const mime = normalizarMime(file);
-    if (!MIME_PERMITIDOS[mime]) {
-      return `Tipo de arquivo não permitido. Aceitamos PDF, XML, JPEG e PNG.`;
+  function adicionarArquivos(files: FileList | File[]) {
+    const novosItens: ItemUpload[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      novosItens.push(criarItemUpload(f, isProducao));
     }
-    if (file.size > MAX_BYTES) {
-      return `O arquivo excede o limite de 10 MB (${formatarTamanho(file.size)}).`;
-    }
-    return null;
+    setItensUpload(prev => {
+      // Se houver apenas 1 item vazio inicial na lista, substitui
+      if (prev.length === 1 && !prev[0].arquivo && !prev[0].titulo.trim()) {
+        return novosItens;
+      }
+      return [...prev, ...novosItens];
+    });
+    setErroGeral(null);
   }
 
-  // ── Upload + INSERT ────────────────────────────────────────────────────────
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files && e.target.files.length > 0) {
+      adicionarArquivos(e.target.files);
+      e.target.value = '';
+    }
+  }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function removerItem(id: string) {
+    setItensUpload(prev => prev.filter(item => item.id !== id));
+  }
+
+  function atualizarItem(id: string, updates: Partial<ItemUpload>) {
+    setItensUpload(prev => prev.map(item => item.id === id ? { ...item, ...updates, erro: null } : item));
+  }
+
+  // ── Multiupload: Salvar todos os documentos da lista ─────────────────────
+
+  async function handleSalvarDocumentos(e: React.FormEvent) {
     e.preventDefault();
     if (salvando) return;
-    setErroForm(null);
+    setErroGeral(null);
 
-    if (!form.titulo.trim()) { setErroForm('Informe o título do documento.'); return; }
-    if (!form.arquivo) { setErroForm('Selecione um arquivo.'); return; }
+    if (itensUpload.length === 0) {
+      setErroGeral('Adicione pelo menos um documento para salvar.');
+      return;
+    }
 
-    const erroArquivo = validarArquivo(form.arquivo);
-    if (erroArquivo) { setErroForm(erroArquivo); return; }
+    // 1. Validação prévia de todos os itens da lista
+    let temErroValidacao = false;
+    const itensValidados = itensUpload.map(item => {
+      if (!item.arquivo) {
+        temErroValidacao = true;
+        return { ...item, erro: 'Selecione um arquivo para este documento.' };
+      }
+      const erroArq = validarArquivo(item.arquivo);
+      if (erroArq) {
+        temErroValidacao = true;
+        return { ...item, erro: erroArq };
+      }
+      if (!item.titulo.trim()) {
+        temErroValidacao = true;
+        return { ...item, erro: 'Informe o título do documento.' };
+      }
+      return { ...item, erro: null };
+    });
 
-    const mimeNorm = normalizarMime(form.arquivo);
-    const ext = form.arquivo.name.split('.').pop()?.toLowerCase() ?? 'bin';
+    if (temErroValidacao) {
+      setItensUpload(itensValidados);
+      setErroGeral('Existem itens com pendências ou arquivos inválidos. Verifique os campos assinalados.');
+      return;
+    }
 
+    // 2. Processamento individual de cada item
     setSalvando(true);
-    try {
-      // 1. Gerar ID do documento antes do upload
-      const documentoId = crypto.randomUUID();
+    const itensProcessados = [...itensValidados];
+    let sucessos = 0;
+    let falhas = 0;
 
-      // 2. Montar storage_path seguro (sem dados do cliente)
+    for (let i = 0; i < itensProcessados.length; i++) {
+      const item = itensProcessados[i];
+      if (item.status === 'sucesso' || !item.arquivo) continue;
+
+      item.status = 'enviando';
+      item.erro = null;
+      setItensUpload([...itensProcessados]);
+
+      const mimeNorm = normalizarMime(item.arquivo);
+      const ext = item.arquivo.name.split('.').pop()?.toLowerCase() ?? 'bin';
+      const documentoId = crypto.randomUUID();
       const nomeArquivoStorage = `${crypto.randomUUID()}.${ext}`;
       const storagePath = `${orcamentoId}/${documentoId}/${nomeArquivoStorage}`;
 
-      // 3. Upload para o bucket privado
-      const { error: uploadError } = await supabase.storage
-        .from(BUCKET)
-        .upload(storagePath, form.arquivo, { contentType: mimeNorm, upsert: false });
+      try {
+        // Upload para o Storage
+        const { error: uploadError } = await supabase.storage
+          .from(BUCKET)
+          .upload(storagePath, item.arquivo, { contentType: mimeNorm, upsert: false });
 
-      if (uploadError) throw new Error(`Falha no upload: ${uploadError.message}`);
+        if (uploadError) throw new Error(`Falha no upload: ${uploadError.message}`);
 
-      // 4. INSERT no banco usando o mesmo documentoId
-      const { error: dbError } = await supabase
-        .from('documentos_pedido')
-        .insert({
-          id: documentoId,
-          orcamento_id: orcamentoId,
-          tipo_documento: form.tipo_documento,
-          titulo: form.titulo.trim(),
-          nome_arquivo: form.arquivo.name,
-          storage_path: storagePath,
-          mime_type: mimeNorm,
-          tamanho_bytes: form.arquivo.size,
-          numero_documento: form.numero_documento.trim() || null,
-          data_documento: form.data_documento || null,
-          visivel_cliente: isProducao ? false : form.visivel_cliente,
-          // created_by preenchido automaticamente pelo banco (auth.uid())
-        });
+        // Insert no Banco
+        const { error: dbError } = await supabase
+          .from('documentos_pedido')
+          .insert({
+            id: documentoId,
+            orcamento_id: orcamentoId,
+            tipo_documento: item.tipo_documento,
+            titulo: item.titulo.trim(),
+            nome_arquivo: item.arquivo.name,
+            storage_path: storagePath,
+            mime_type: mimeNorm,
+            tamanho_bytes: item.arquivo.size,
+            numero_documento: item.numero_documento.trim() || null,
+            data_documento: item.data_documento || null,
+            visivel_cliente: isProducao ? false : item.visivel_cliente,
+          });
 
-      // 5. Rollback do Storage se INSERT falhar
-      if (dbError) {
-        await supabase.storage.from(BUCKET).remove([storagePath]);
-        throw new Error(`Falha ao registrar documento: ${dbError.message}`);
+        if (dbError) {
+          // Rollback do Storage
+          await supabase.storage.from(BUCKET).remove([storagePath]);
+          throw new Error(`Falha ao registrar documento: ${dbError.message}`);
+        }
+
+        item.status = 'sucesso';
+        sucessos++;
+      } catch (err: unknown) {
+        falhas++;
+        item.status = 'erro';
+        item.erro = err instanceof Error ? err.message : 'Erro ao salvar documento.';
       }
 
+      setItensUpload([...itensProcessados]);
+    }
+
+    setSalvando(false);
+    await carregarDocumentos();
+
+    if (falhas === 0) {
       setShowModal(false);
-      setForm(emptyForm(isProducao));
-      await carregarDocumentos();
-    } catch (err: unknown) {
-      setErroForm(err instanceof Error ? err.message : 'Erro ao salvar documento.');
-    } finally {
-      setSalvando(false);
+      setItensUpload([]);
+      setErroGeral(null);
+    } else {
+      // Mantém no modal apenas os itens que falharam (remove os que já foram salvos com sucesso para evitar duplicação)
+      setItensUpload(prev => prev.filter(it => it.status !== 'sucesso'));
+      setErroGeral(`${sucessos} documento(s) salvo(s) com sucesso. ${falhas} documento(s) apresentaram erro. Corrija e tente novamente.`);
     }
   }
 
@@ -276,14 +441,12 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
 
     setExcluindoId(doc.id);
     try {
-      // 1. Remover do Storage primeiro
       const { error: storageErr } = await supabase.storage
         .from(BUCKET)
         .remove([doc.storage_path]);
 
       if (storageErr) throw new Error(`Falha ao remover arquivo: ${storageErr.message}`);
 
-      // 2. Somente então remover o registro
       const { error: dbErr } = await supabase
         .from('documentos_pedido')
         .delete()
@@ -324,7 +487,6 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
           numero_documento: formEdicao.numero_documento?.trim() || null,
           data_documento: formEdicao.data_documento || null,
           visivel_cliente: formEdicao.visivel_cliente,
-          // created_by NÃO é incluído aqui — protegido pelo trigger
         })
         .eq('id', doc.id);
 
@@ -338,7 +500,7 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
     }
   }
 
-  // ── Substituição de arquivo ────────────────────────────────────────────────
+  // ── Substituição de arquivo único ──────────────────────────────────────────
 
   async function handleSubstituir(doc: DocumentoPedido) {
     if (!arquivoSubst || salvandoSubst) return;
@@ -352,18 +514,15 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
 
     setSalvandoSubst(true);
     try {
-      // 1. Novo path para o arquivo substituto
       const novoNomeStorage = `${crypto.randomUUID()}.${ext}`;
       const novoPath = `${orcamentoId}/${doc.id}/${novoNomeStorage}`;
 
-      // 2. Upload do novo arquivo
       const { error: uploadErr } = await supabase.storage
         .from(BUCKET)
         .upload(novoPath, arquivoSubst, { contentType: mimeNorm, upsert: false });
 
       if (uploadErr) throw new Error(`Falha ao enviar novo arquivo: ${uploadErr.message}`);
 
-      // 3. Atualizar o banco (created_by protegido pelo trigger)
       const { error: dbErr } = await supabase
         .from('documentos_pedido')
         .update({
@@ -375,12 +534,10 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
         .eq('id', doc.id);
 
       if (dbErr) {
-        // Reverter: remover novo arquivo, manter antigo
         await supabase.storage.from(BUCKET).remove([novoPath]);
         throw new Error(`Falha ao atualizar registro: ${dbErr.message}`);
       }
 
-      // 4. Remover arquivo antigo (falha aqui não desfaz a substituição)
       const { error: removeErr } = await supabase.storage.from(BUCKET).remove([pathAntigo]);
       if (removeErr) {
         setAvisoOrfao(`Aviso: o arquivo anterior pode precisar de limpeza manual no bucket (${pathAntigo}).`);
@@ -416,11 +573,15 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
         </div>
         <button
           type="button"
-          onClick={() => { setShowModal(true); setForm(emptyForm(isProducao)); setErroForm(null); }}
+          onClick={() => {
+            setShowModal(true);
+            setItensUpload([criarItemUpload(undefined, isProducao)]);
+            setErroGeral(null);
+          }}
           className="flex items-center gap-2 px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 rounded-lg text-sm font-bold transition-all border border-violet-500/30 whitespace-nowrap"
         >
           <Plus size={15} />
-          + Adicionar documento
+          + Adicionar documentos
         </button>
       </div>
 
@@ -467,7 +628,7 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
             return (
               <div key={doc.id} className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-all">
                 {isEditando ? (
-                  /* ── Modo edição inline ── */
+                  /* Modo edição inline */
                   <div className="space-y-3">
                     <div className="flex gap-3">
                       <div className="flex-1">
@@ -541,7 +702,7 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
                     </div>
                   </div>
                 ) : (
-                  /* ── Modo visualização ── */
+                  /* Modo visualização */
                   <div className="flex flex-col sm:flex-row sm:items-start gap-3">
                     <div className="pt-0.5"><IcTipo tipo={doc.tipo_documento} /></div>
                     <div className="flex-1 min-w-0">
@@ -625,158 +786,333 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
         </div>
       )}
 
-      {/* ── Modal: Adicionar documento ─────────────────────────────────── */}
+      {/* ── Modal: Adicionar documentos (Multiupload) ───────────────────── */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-[#0f172a] border border-slate-700 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
-              <h3 className="font-black text-slate-100 flex items-center gap-2">
-                <Upload size={16} className="text-violet-400" /> Adicionar documento
-              </h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-500 hover:text-white transition-colors">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-6">
+          <div className="bg-[#0f172a] border border-slate-700 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+
+            {/* Topo do Modal */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 shrink-0 bg-slate-900/50">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-violet-600/20 text-violet-400">
+                  <Upload size={18} />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-100 text-base">
+                    Adicionar documentos ao pedido
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Selecione múltiplos arquivos para anexar em uma única operação
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => { if (!salvando) setShowModal(false); }}
+                className="text-slate-500 hover:text-white transition-colors p-1"
+                disabled={salvando}
+              >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {/* Tipo */}
-              <div>
-                <label className="form-label">Tipo do documento *</label>
-                <select
-                  value={form.tipo_documento}
-                  onChange={e => setForm(f => ({ ...f, tipo_documento: e.target.value as TipoDocumento }))}
-                  disabled={isProducao}
-                  className="form-input w-full disabled:opacity-60"
-                >
-                  {isProducao ? (
-                    <option value="comprovante_envio">Comprovante de envio</option>
-                  ) : (
-                    (Object.keys(TIPOS_AMIGAVEIS) as TipoDocumento[]).map(t => (
-                      <option key={t} value={t}>{TIPOS_AMIGAVEIS[t]}</option>
-                    ))
-                  )}
-                </select>
-              </div>
+            {/* Conteúdo rolável */}
+            <div className="p-6 space-y-5 overflow-y-auto flex-1">
 
-              {/* Título */}
-              <div>
-                <label className="form-label">Título *</label>
-                <input
-                  value={form.titulo}
-                  onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
-                  className="form-input w-full"
-                  placeholder="Ex: NF-e nº 1234, Boleto Bradesco..."
-                  required
-                />
-              </div>
-
-              {/* Número e data */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="form-label">Número do documento</label>
-                  <input
-                    value={form.numero_documento}
-                    onChange={e => setForm(f => ({ ...f, numero_documento: e.target.value }))}
-                    className="form-input w-full"
-                    placeholder="Opcional"
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Data do documento</label>
-                  <input
-                    type="date"
-                    value={form.data_documento}
-                    onChange={e => setForm(f => ({ ...f, data_documento: e.target.value }))}
-                    className="form-input w-full"
-                  />
-                </div>
-              </div>
-
-              {/* Arquivo */}
-              <div>
-                <label className="form-label">Arquivo *</label>
-                <div
-                  onClick={() => fileRef.current?.click()}
-                  className="border-2 border-dashed border-slate-700 hover:border-violet-500/50 rounded-xl p-5 text-center cursor-pointer transition-all group"
-                >
-                  {form.arquivo ? (
-                    <div className="text-sm text-slate-300">
-                      <CheckCircle2 size={20} className="mx-auto mb-1 text-emerald-400" />
-                      <span className="font-bold">{form.arquivo.name}</span>
-                      <span className="block text-slate-500 text-xs mt-0.5">{formatarTamanho(form.arquivo.size)}</span>
-                    </div>
-                  ) : (
-                    <div className="text-slate-500 group-hover:text-slate-400 transition-colors">
-                      <Upload size={24} className="mx-auto mb-1.5" />
-                      <span className="text-sm">Clique para selecionar</span>
-                      <span className="block text-xs mt-0.5">PDF, XML, JPEG, PNG — máx. 10 MB</span>
-                    </div>
-                  )}
-                </div>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept=".pdf,.xml,.jpg,.jpeg,.png"
-                  className="hidden"
-                  onChange={e => {
-                    const f = e.target.files?.[0] ?? null;
-                    setForm(prev => ({ ...prev, arquivo: f }));
-                    e.target.value = '';
-                  }}
-                />
-              </div>
-
-              {/* Visibilidade (não aparece para produção) */}
-              {!isProducao && (
-                <div className="flex items-center gap-2 bg-slate-900/60 border border-slate-800 rounded-lg px-3 py-2">
-                  <input
-                    type="checkbox"
-                    id="visivel_cliente_modal"
-                    checked={form.visivel_cliente}
-                    onChange={e => setForm(f => ({ ...f, visivel_cliente: e.target.checked }))}
-                    className="w-4 h-4 text-emerald-600 rounded"
-                  />
-                  <label htmlFor="visivel_cliente_modal" className="text-sm text-slate-300 cursor-pointer">
-                    Disponível para o cliente no acompanhamento
-                  </label>
-                  {form.visivel_cliente
-                    ? <Eye size={14} className="ml-auto text-emerald-400" />
-                    : <EyeOff size={14} className="ml-auto text-slate-600" />
+              {/* Dropzone / Seletor em lote */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={e => e.preventDefault()}
+                onDrop={e => {
+                  e.preventDefault();
+                  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    adicionarArquivos(e.dataTransfer.files);
                   }
+                }}
+                className="border-2 border-dashed border-slate-700 hover:border-violet-500/60 bg-slate-900/40 hover:bg-violet-950/10 rounded-xl p-5 text-center cursor-pointer transition-all group"
+              >
+                <Upload size={28} className="mx-auto mb-2 text-violet-400 group-hover:scale-110 transition-transform" />
+                <p className="text-sm font-bold text-slate-200">
+                  Clique para selecionar ou arraste arquivos aqui
+                </p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Aceitamos PDF, XML, ZIP, JPEG e PNG — máx. 10 MB por arquivo
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.xml,.zip,.jpg,.jpeg,.png,application/zip,application/x-zip-compressed,application/x-zip"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
+
+              {/* Erro Geral do Envio */}
+              {erroGeral && (
+                <div className="flex items-start gap-2 text-xs text-red-300 bg-red-950/40 border border-red-800/60 rounded-xl p-3">
+                  <AlertTriangle size={15} className="mt-0.5 shrink-0 text-red-400" />
+                  <span className="flex-1">{erroGeral}</span>
                 </div>
               )}
 
-              {/* Erro */}
-              {erroForm && (
-                <div className="flex items-center gap-2 text-xs text-red-400 bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2">
-                  <AlertTriangle size={13} /> {erroForm}
+              {/* Lista de Documentos a Adicionar */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-400 uppercase tracking-wider">
+                    Documentos a adicionar ({itensUpload.length})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setItensUpload(prev => [...prev, criarItemUpload(undefined, isProducao)])}
+                    disabled={salvando}
+                    className="text-xs font-bold text-violet-400 hover:text-violet-300 flex items-center gap-1"
+                  >
+                    <Plus size={13} /> Adicionar item manual
+                  </button>
                 </div>
-              )}
 
-              {/* Botões */}
-              <div className="flex gap-3 pt-1">
-                <button
-                  type="submit"
-                  disabled={salvando}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-60"
-                >
-                  {salvando ? <><Loader2 size={15} className="animate-spin" /> Enviando...</> : <><Upload size={15} /> Salvar documento</>}
-                </button>
+                {itensUpload.length === 0 ? (
+                  <div className="text-center py-6 border border-slate-800/80 rounded-xl text-xs text-slate-500">
+                    Nenhum arquivo selecionado. Clique acima para adicionar documentos.
+                  </div>
+                ) : (
+                  itensUpload.map((item, index) => {
+                    const isEnviando = item.status === 'enviando';
+                    const isSucesso = item.status === 'sucesso';
+                    const isErro = item.status === 'erro' || !!item.erro;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className={`bg-slate-900/80 border rounded-xl p-4 transition-all ${
+                          isErro
+                            ? 'border-red-500/60 shadow-[0_0_12px_rgba(239,68,68,0.15)]'
+                            : isSucesso
+                            ? 'border-emerald-500/50 bg-emerald-950/10'
+                            : 'border-slate-800 hover:border-slate-700'
+                        }`}
+                      >
+                        {/* Cabeçalho do Card */}
+                        <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-800/70">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="w-5 h-5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center shrink-0">
+                              {index + 1}
+                            </span>
+                            {item.arquivo ? (
+                              <div className="flex items-center gap-2 min-w-0">
+                                <IcTipo tipo={item.tipo_documento} />
+                                <span className="text-xs font-bold text-slate-200 truncate" title={item.arquivo.name}>
+                                  {item.arquivo.name}
+                                </span>
+                                <span className="text-[10px] text-slate-500 shrink-0">
+                                  ({formatarTamanho(item.arquivo.size)})
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-amber-400 font-semibold flex items-center gap-1">
+                                <AlertTriangle size={12} /> Arquivo não selecionado
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            {isEnviando && (
+                              <span className="text-[11px] text-violet-400 flex items-center gap-1 font-semibold">
+                                <Loader2 size={12} className="animate-spin" /> Enviando...
+                              </span>
+                            )}
+                            {isSucesso && (
+                              <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-semibold">
+                                <CheckCircle2 size={12} /> Salvo
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => removerItem(item.id)}
+                              disabled={salvando}
+                              className="p-1 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                              title="Remover este documento da lista"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Mensagem de Erro Específica do Item */}
+                        {item.erro && (
+                          <div className="mb-3 flex items-center gap-1.5 text-xs text-red-400 bg-red-950/30 border border-red-900/40 rounded-lg p-2.5">
+                            <AlertTriangle size={13} className="shrink-0" />
+                            <span>{item.erro}</span>
+                          </div>
+                        )}
+
+                        {/* Campos do Documento */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {/* Tipo */}
+                          <div>
+                            <label className="text-[11px] font-bold text-slate-400 mb-1 block">
+                              Tipo do documento *
+                            </label>
+                            <select
+                              value={item.tipo_documento}
+                              onChange={e => atualizarItem(item.id, { tipo_documento: e.target.value as TipoDocumento })}
+                              disabled={isProducao || salvando}
+                              className="form-input text-xs w-full disabled:opacity-60"
+                            >
+                              {isProducao ? (
+                                <option value="comprovante_envio">Comprovante de envio</option>
+                              ) : (
+                                (Object.keys(TIPOS_AMIGAVEIS) as TipoDocumento[]).map(t => (
+                                  <option key={t} value={t}>{TIPOS_AMIGAVEIS[t]}</option>
+                                ))
+                              )}
+                            </select>
+                          </div>
+
+                          {/* Título */}
+                          <div>
+                            <label className="text-[11px] font-bold text-slate-400 mb-1 block">
+                              Título do documento *
+                            </label>
+                            <input
+                              value={item.titulo}
+                              onChange={e => atualizarItem(item.id, { titulo: e.target.value })}
+                              disabled={salvando}
+                              className="form-input text-xs w-full"
+                              placeholder="Ex: NF-e 1234, Confirmação do Pedido..."
+                              required
+                            />
+                          </div>
+
+                          {/* Número */}
+                          <div>
+                            <label className="text-[11px] font-bold text-slate-400 mb-1 block">
+                              Número do documento
+                            </label>
+                            <input
+                              value={item.numero_documento}
+                              onChange={e => atualizarItem(item.id, { numero_documento: e.target.value })}
+                              disabled={salvando}
+                              className="form-input text-xs w-full"
+                              placeholder="Opcional"
+                            />
+                          </div>
+
+                          {/* Data */}
+                          <div>
+                            <label className="text-[11px] font-bold text-slate-400 mb-1 block">
+                              Data do documento
+                            </label>
+                            <input
+                              type="date"
+                              value={item.data_documento}
+                              onChange={e => atualizarItem(item.id, { data_documento: e.target.value })}
+                              disabled={salvando}
+                              className="form-input text-xs w-full"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Seletor de Arquivo se o item estiver sem arquivo */}
+                        {!item.arquivo && (
+                          <div className="mt-3">
+                            <label className="text-[11px] font-bold text-slate-400 mb-1 block">
+                              Selecionar arquivo *
+                            </label>
+                            <input
+                              type="file"
+                              accept=".pdf,.xml,.zip,.jpg,.jpeg,.png,application/zip,application/x-zip-compressed,application/x-zip"
+                              disabled={salvando}
+                              onChange={e => {
+                                const f = e.target.files?.[0];
+                                if (f) {
+                                  const { tipo, titulo } = inferirTipoETitulo(f, isProducao);
+                                  atualizarItem(item.id, {
+                                    arquivo: f,
+                                    tipo_documento: item.tipo_documento === 'orcamento' ? tipo : item.tipo_documento,
+                                    titulo: item.titulo || titulo,
+                                  });
+                                }
+                              }}
+                              className="text-xs text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-violet-600/20 file:text-violet-300 hover:file:bg-violet-600/30"
+                            />
+                          </div>
+                        )}
+
+                        {/* Visibilidade para o cliente */}
+                        {!isProducao && (
+                          <div className="mt-3 flex items-center gap-2 bg-slate-950/40 border border-slate-800/80 rounded-lg px-3 py-2">
+                            <input
+                              type="checkbox"
+                              id={`vis_upload_${item.id}`}
+                              checked={item.visivel_cliente}
+                              onChange={e => atualizarItem(item.id, { visivel_cliente: e.target.checked })}
+                              disabled={salvando}
+                              className="w-4 h-4 text-emerald-600 rounded"
+                            />
+                            <label htmlFor={`vis_upload_${item.id}`} className="text-xs text-slate-300 cursor-pointer">
+                              Disponível para o cliente no acompanhamento público
+                            </label>
+                            {item.visivel_cliente
+                              ? <Eye size={14} className="ml-auto text-emerald-400" />
+                              : <EyeOff size={14} className="ml-auto text-slate-600" />
+                            }
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Rodapé Fixo */}
+            <div className="px-6 py-4 border-t border-slate-800 bg-slate-900/50 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+              <div className="text-xs text-slate-400">
+                {itensUpload.length > 0 ? (
+                  <span>
+                    <strong className="text-slate-200">{itensUpload.length}</strong> documento(s) na fila
+                  </span>
+                ) : (
+                  <span>Nenhum documento na fila</span>
+                )}
+              </div>
+
+              <div className="flex gap-2 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
                   disabled={salvando}
-                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
+                  className="flex-1 sm:flex-initial px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
                 >
                   Cancelar
                 </button>
+                <button
+                  type="button"
+                  onClick={handleSalvarDocumentos}
+                  disabled={salvando || itensUpload.length === 0}
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 shadow-lg shadow-violet-900/20"
+                >
+                  {salvando ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Salvando documentos...
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={14} />
+                      Salvar {itensUpload.length > 1 ? `${itensUpload.length} documentos` : 'documento'}
+                    </>
+                  )}
+                </button>
               </div>
-            </form>
+            </div>
+
           </div>
         </div>
       )}
 
-      {/* ── Modal: Substituir arquivo ──────────────────────────────────── */}
+      {/* ── Modal: Substituir arquivo único ──────────────────────────────── */}
       {substituindoDoc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="bg-[#0f172a] border border-slate-700 rounded-2xl shadow-2xl w-full max-w-md">
@@ -804,13 +1140,14 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
                   <div className="text-slate-500">
                     <Upload size={24} className="mx-auto mb-1.5" />
                     <span className="text-sm">Clique para selecionar o novo arquivo</span>
+                    <span className="block text-xs mt-0.5">PDF, XML, ZIP, JPEG, PNG — máx. 10 MB</span>
                   </div>
                 )}
               </div>
               <input
                 ref={fileSubstRef}
                 type="file"
-                accept=".pdf,.xml,.jpg,.jpeg,.png"
+                accept=".pdf,.xml,.zip,.jpg,.jpeg,.png,application/zip,application/x-zip-compressed,application/x-zip"
                 className="hidden"
                 onChange={e => { setArquivoSubst(e.target.files?.[0] ?? null); e.target.value = ''; }}
               />
