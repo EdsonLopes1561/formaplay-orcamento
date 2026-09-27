@@ -185,21 +185,28 @@ export function AcompanhamentoPublico() {
 
       const data = await response.json();
       
-      if (data.url) {
-        // Inicia o download nativo do navegador usando a URL temporária assinada
-        const a = document.createElement('a');
-        a.href = data.url;
-        a.download = data.nome_arquivo || 'documento';
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      } else {
+      if (!data.url) {
         throw new Error('URL não retornada pela API');
       }
+
+      // Baixa o arquivo via Blob para garantir download nativo com nome amigável sem bloqueio de pop-up
+      const fileResponse = await fetch(data.url);
+      if (!fileResponse.ok) {
+        throw new Error('Falha ao baixar o arquivo do storage');
+      }
+
+      const blob = await fileResponse.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = data.nome_arquivo || 'documento';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(blobUrl);
     } catch (err) {
       console.error('Erro no download:', err);
-      alert('Não foi possível disponibilizar este documento no momento. Tente novamente.');
+      alert('Não foi possível baixar o documento. Tente novamente.');
     } finally {
       setDownloadingDocId(null);
     }
