@@ -23,6 +23,7 @@ import { PainelProducaoModal } from './components/PainelProducaoModal';
 import { PainelInteressesModal } from './components/PainelInteressesModal';
 import { GerenciadorDocumentos } from './components/GerenciadorDocumentos';
 import { useAuth } from './AuthWrapper';
+import { getPublicOrderTrackingUrl } from './config/appUrl';
 
 type Toast = { type: 'success' | 'error'; message: string };
 
@@ -562,7 +563,7 @@ function App() {
     }
     
     if (token) {
-      const link = `${window.location.origin}/acompanhar-pedido/${token}`;
+      const link = getPublicOrderTrackingUrl(token);
       try {
         await navigator.clipboard.writeText(link);
         showToast('success', 'Link copiado. A página pública será ativada na próxima fase.');
@@ -926,10 +927,7 @@ function App() {
     }
     
     if (token) {
-      const baseUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-        ? 'https://formaplay-orcamento.vercel.app'
-        : window.location.origin;
-      const link = `${baseUrl}/acompanhar-pedido/${token}`;
+      const link = getPublicOrderTrackingUrl(token);
       
       const tituloPedido = form.numero ? `Pedido ${form.numero}` : 'Pedido FormaPlay';
       const mensagem = `${tituloPedido} — acompanhamento:\n${link}`;

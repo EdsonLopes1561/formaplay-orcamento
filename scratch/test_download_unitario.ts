@@ -18,9 +18,9 @@ function testValidacaoEntrada() {
   pass('Estrutura METHOD_CHECK existe no código');
 
   // token_publico vazio → inválido
-  const tokenVazio = '';
-  const tokenCurto = 'abc';
-  const tokenValido = 'meu-token-valido-longo';
+  const tokenVazio: string = '';
+  const tokenCurto: string = 'abc';
+  const tokenValido: string = 'meu-token-valido-longo';
 
   if (!tokenVazio || tokenVazio.trim().length < 8) pass('Token vazio → rejeitado');
   else fail('Token vazio', 'deveria ser rejeitado');
