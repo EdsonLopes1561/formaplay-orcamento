@@ -1,11 +1,13 @@
 import { calcularVolumesMultiProdutos } from '../config/produtosLogisticos';
 import React, { useState, useEffect, useRef } from 'react';
+import { CreditCard } from 'lucide-react';
 import { supabase } from '../supabase';
 import { Produto, ItemOrcamentoSnapshot } from '../types';
 import { PRODUTOS_FALLBACK, isProdutoEmDesenvolvimento, isProdutoDisponivel, normalizarNomeProduto } from '../config/produtosFallback';
 import { criarItemSnapshot, calcularSubtotalItens, calcularQuantidadeTotalItens } from '../utils/orcamentoItens';
 import { interessesService } from '../services/interessesService';
 import { useLocationData, normalizeText } from '../hooks/useLocationData';
+import { calcularOpcoesParcelamento } from '../config/taxasCartao';
 
 type Jogo = string;
 
@@ -1127,6 +1129,31 @@ export const SolicitacaoPublica: React.FC = () => {
                         <option value="Boleto / transferência">Boleto / transferência</option>
                         <option value="A combinar">A combinar</option>
                       </select>
+
+                      {form.forma_pagamento === 'Cartão' && (
+                        <div className="mt-3 p-4 bg-slate-900/90 border border-blue-900/60 rounded-xl space-y-2.5 shadow-inner">
+                          <div className="flex items-center gap-2 text-blue-300 font-bold text-sm">
+                            <CreditCard size={18} className="text-blue-400" />
+                            <span>Cartão de crédito</span>
+                          </div>
+                          <p className="text-xs text-slate-300 font-medium">
+                            Os valores abaixo já incluem o acréscimo da operadora.
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                            {calcularOpcoesParcelamento(totalEstimado > 0 ? totalEstimado : subtotalProdutos).map((op) => (
+                              <div 
+                                key={op.parcelas}
+                                className="p-2.5 rounded-lg bg-slate-800/90 border border-slate-700/80 text-xs flex justify-between items-center text-slate-200"
+                              >
+                                <span className="font-bold text-white">{op.parcelas}x de {fmtCurrency(op.valorParcela)}</span>
+                                {op.parcelas > 1 && (
+                                  <span className="text-[11px] text-slate-400 font-medium">total {fmtCurrency(op.totalComAcrescimo)}</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}

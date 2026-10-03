@@ -166,7 +166,7 @@ export const EMPRESA = {
   cnpj: '66.710.107/0001-31',
   whatsapp: '(14) 9 9844-2917',
   whatsappNumero: '5514998442917',
-  email: 'contato.formaplay@gmail.com',
+  email: 'contato@formaplayjogos.com.br',
 };
 
 export const PRODUTOS = [

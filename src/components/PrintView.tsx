@@ -1,6 +1,8 @@
 import { Orcamento, Cliente, EMPRESA, formatarCampoCliente } from '../types';
 import { Building2, MessageCircle, Mail } from 'lucide-react';
 import { FormaPlayBrand } from './FormaPlayBrand';
+import { QRCodeSVG } from 'qrcode.react';
+import { getPublicOrderTrackingUrl } from '../config/appUrl';
 
 interface PrintViewProps {
   orcamento: Orcamento;
@@ -392,16 +394,24 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
       {/* Conditions */}
       <div className="print-section">
         <h2 className="print-section-title">Condições Comerciais</h2>
-        <div className="print-conditions-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 16px' }}>
+        <div className="print-conditions-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
           
           {(() => {
+            const removerPorcentagens = (texto: string): string => {
+              return texto
+                .replace(/\s*\(\+?\s*\d+([.,]\d+)?%\)/gi, '')
+                .replace(/\s*taxa\s+(?:de\s+)?\d+([.,]\d+)?%/gi, '')
+                .replace(/\s*\+\s*\d+([.,]\d+)?%/gi, '')
+                .trim();
+            };
+
             const getPagamento = () => {
               let pag = orcamento.pagamento === 'Personalizado' ? orcamento.forma_pagamento_personalizada : orcamento.pagamento;
-              if (pag === 'conforme processo de pagamento do SENAC') pag = ''; // Limpa velho default
+              if (pag === 'conforme processo de pagamento do SENAC') pag = '';
               if (!pag || pag.trim() === '' || pag.toLowerCase() === 'a combinar') {
                 return "Conforme combinado com o cliente.";
               }
-              return pag;
+              return removerPorcentagens(pag);
             };
 
             const getPrazoEntrega = () => {
@@ -423,9 +433,51 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
             const getValidade = () => {
               let val = orcamento.validade;
               if (!val || val.trim() === '') val = "15 dias";
-              // Impede duplicar a frase se já estiver salva
               if (val.includes('Valores válidos para as condições')) return val;
               return `${val}. Valores válidos para as condições descritas neste orçamento.`;
+            };
+
+            const formatarCondicoesPagamento = (texto?: string | null) => {
+              if (!texto) return null;
+
+              const textoLimpo = removerPorcentagens(texto);
+              const linhas = textoLimpo.split('\n').map(l => l.trim()).filter(Boolean);
+
+              // Detecta se já é opção escolhida específica no cartão
+              const isCartaoEscolhido = linhas.some(l => /parcelamento:\s*\d+x/i.test(l) || /total no cart[ãa]o/i.test(l));
+              if (isCartaoEscolhido) {
+                return (
+                  <div className="print-parcelamento-container">
+                    {linhas.map((linha, idx) => (
+                      <p key={idx} className="print-value-observacoes" style={{ margin: '1px 0', fontWeight: 600 }}>
+                        {linha}
+                      </p>
+                    ))}
+                  </div>
+                );
+              }
+
+              // Detecta se há múltiplas parcelas (ex: 1x, 2x, 3x...)
+              const regexParcela = /^(\d+x\s+(?:de\s+)?R?\$?\s*[\d.,]+.*)$/i;
+              const parcelas = linhas.filter(l => regexParcela.test(l));
+              const outros = linhas.filter(l => !regexParcela.test(l));
+
+              if (parcelas.length >= 2) {
+                return (
+                  <div className="print-parcelamento-container">
+                    <p className="print-parcelamento-intro">
+                      {outros.length > 0 ? outros.join(' ') : 'Os valores abaixo já incluem o acréscimo da operadora.'}
+                    </p>
+                    <div className="print-parcelas-grid">
+                      {parcelas.map((p, idx) => (
+                        <span key={idx} className="print-parcela-badge">{p}</span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+
+              return <span className="print-value-observacoes">{textoLimpo}</span>;
             };
 
             const condicoesPag = orcamento.condicoes_pagamento;
@@ -479,19 +531,19 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
                   {condicoesPag && (
                     <div className="print-field">
                       <span className="print-label">Condições de Pagamento:</span>
-                      <span className="print-value print-value-observacoes">{condicoesPag}</span>
+                      <div className="print-value">{formatarCondicoesPagamento(condicoesPag)}</div>
                     </div>
                   )}
                 </div>
 
                 {infoComp && (
-                  <div className="print-field print-field-full" style={{ gridColumn: 'span 2', marginTop: '2px' }}>
+                  <div className="print-field print-field-full" style={{ gridColumn: 'span 2', marginTop: '1px' }}>
                     <span className="print-label">Informações Complementares:</span>
                     <span className="print-value print-value-observacoes">{infoComp}</span>
                   </div>
                 )}
                 {finalObs && (
-                  <div className="print-field print-field-full" style={{ gridColumn: 'span 2', marginTop: '2px' }}>
+                  <div className="print-field print-field-full" style={{ gridColumn: 'span 2', marginTop: '1px' }}>
                     <span className="print-label">Observações:</span>
                     <span className="print-value print-value-observacoes">{finalObs}</span>
                   </div>
@@ -525,40 +577,59 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
       <div className="print-footer">
         <div className="print-footer-line" />
         <div className="print-footer-card">
-          <div className="print-footer-brand">
-            <p className="print-footer-brand-name"><FormaPlayBrand /> Jogos Educacionais</p>
-            <p className="print-footer-brand-tagline">Educação que transforma</p>
+          <div className="print-footer-main">
+            <div className="print-footer-brand">
+              <p className="print-footer-brand-name"><FormaPlayBrand /> Jogos Educacionais</p>
+              <span className="print-footer-brand-tagline">— Educação que transforma</span>
+            </div>
+            <div className="print-footer-divider-soft" />
+            <div className="print-footer-content">
+              <div className="print-footer-item">
+                <span className="print-footer-icon-wrap">
+                  <Building2 className="print-footer-icon" />
+                </span>
+                <div className="print-footer-item-text">
+                  <span className="print-footer-label">CNPJ</span>
+                  <span className="print-footer-value">{EMPRESA.cnpj}</span>
+                </div>
+              </div>
+              <div className="print-footer-item">
+                <span className="print-footer-icon-wrap">
+                  <MessageCircle className="print-footer-icon" />
+                </span>
+                <div className="print-footer-item-text">
+                  <span className="print-footer-label">WhatsApp</span>
+                  <span className="print-footer-value">{EMPRESA.whatsapp}</span>
+                </div>
+              </div>
+              <div className="print-footer-item">
+                <span className="print-footer-icon-wrap">
+                  <Mail className="print-footer-icon" />
+                </span>
+                <div className="print-footer-item-text">
+                  <span className="print-footer-label">E-mail</span>
+                  <span className="print-footer-value">{EMPRESA.email}</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="print-footer-divider-soft" />
-          <div className="print-footer-content">
-            <div className="print-footer-item">
-              <span className="print-footer-icon-wrap">
-                <Building2 className="print-footer-icon" />
-              </span>
-              <div className="print-footer-item-text">
-                <span className="print-footer-label">CNPJ</span>
-                <span className="print-footer-value">{EMPRESA.cnpj}</span>
+
+          {orcamento.token_publico && (
+            <div className="print-footer-qr-block">
+              <div className="print-footer-qr-box">
+                <QRCodeSVG
+                  value={getPublicOrderTrackingUrl(orcamento.token_publico)}
+                  size={46}
+                  level="M"
+                  includeMargin={false}
+                />
+              </div>
+              <div className="print-footer-qr-text">
+                <span className="print-footer-qr-title">Acompanhe seu pedido</span>
+                <span className="print-footer-qr-sub">Escaneie para status e documentos</span>
               </div>
             </div>
-            <div className="print-footer-item">
-              <span className="print-footer-icon-wrap">
-                <MessageCircle className="print-footer-icon" />
-              </span>
-              <div className="print-footer-item-text">
-                <span className="print-footer-label">WhatsApp</span>
-                <span className="print-footer-value">{EMPRESA.whatsapp}</span>
-              </div>
-            </div>
-            <div className="print-footer-item">
-              <span className="print-footer-icon-wrap">
-                <Mail className="print-footer-icon" />
-              </span>
-              <div className="print-footer-item-text">
-                <span className="print-footer-label">E-mail</span>
-                <span className="print-footer-value">{EMPRESA.email}</span>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
         <p className="print-footer-disclaimer">
           Orçamento comercial sem valor fiscal
