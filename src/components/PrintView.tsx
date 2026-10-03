@@ -626,8 +626,8 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
                 />
               </div>
               <div className="print-footer-qr-text">
-                <span className="print-footer-qr-title">Acompanhe seu pedido</span>
-                <span className="print-footer-qr-sub">Escaneie para status e documentos</span>
+                <span className="print-footer-qr-title">ACOMPANHE SEU ORÇAMENTO</span>
+                <span className="print-footer-qr-sub">Escaneie para acompanhar o status</span>
               </div>
             </div>
           )}

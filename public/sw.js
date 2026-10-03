@@ -1,5 +1,5 @@
-const CACHE_NAME = 'formaplay-orcamentos-v6';
-const STATIC_CACHE = 'formaplay-static-v6';
+const CACHE_NAME = 'formaplay-orcamentos-v8';
+const STATIC_CACHE = 'formaplay-static-v8';
 
 // Apenas métodos seguros e cacheáveis
 const CACHEABLE_METHODS = ['GET'];
@@ -15,6 +15,10 @@ function isApiRequest(url) {
 }
 
 function isCacheable(request, url) {
+  // Não cachear em desenvolvimento local
+  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') return false;
+  // Não cachear arquivos de desenvolvimento TS/TSX ou rotas do Vite /src/
+  if (url.pathname.endsWith('.ts') || url.pathname.endsWith('.tsx') || url.pathname.includes('/src/')) return false;
   // Não cachear métodos que modificam dados
   if (!CACHEABLE_METHODS.includes(request.method)) return false;
   // Não cachear extensões do Chrome ou URLs não-http

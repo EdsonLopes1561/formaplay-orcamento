@@ -1,6 +1,8 @@
 import { Orcamento, Cliente, EMPRESA, formatarCampoCliente } from '../types';
 import { Building2, MessageCircle, Mail } from 'lucide-react';
 import { FormaPlayBrand } from './FormaPlayBrand';
+import { QRCodeSVG } from 'qrcode.react';
+import { getPublicOrderTrackingUrl } from '../config/appUrl';
 
 interface ConfirmacaoCompraViewProps {
   orcamento: Orcamento;
@@ -502,6 +504,22 @@ export function ConfirmacaoCompraView({ orcamento, clienteData }: ConfirmacaoCom
               </div>
             </div>
           </div>
+          {orcamento.token_publico && (
+            <div className="print-footer-qr-block">
+              <div className="print-footer-qr-box">
+                <QRCodeSVG
+                  value={getPublicOrderTrackingUrl(orcamento.token_publico)}
+                  size={46}
+                  level="M"
+                  includeMargin={false}
+                />
+              </div>
+              <div className="print-footer-qr-text">
+                <span className="print-footer-qr-title">ACOMPANHE SEU PEDIDO</span>
+                <span className="print-footer-qr-sub">Escaneie para status e documentos</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

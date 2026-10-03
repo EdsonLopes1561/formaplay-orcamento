@@ -205,6 +205,9 @@ export const emptyOrcamento = (): Omit<Orcamento, 'id' | 'created_at'> => ({
   proxima_acao: '',
   data_retorno: '',
   observacao_interna: '',
+  token_publico: null,
+  status_acompanhamento: 'Orçamento criado',
+  status_atualizado_em: null,
 });
 
 export interface ItemOrcamentoSnapshot {

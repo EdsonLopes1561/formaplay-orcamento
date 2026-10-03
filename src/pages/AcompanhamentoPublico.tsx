@@ -60,7 +60,7 @@ interface DocumentoPublico {
   tamanho_bytes: number;
 }
 
-import { ETAPAS_TIMELINE } from '../constants/etapasTimeline';
+import { ETAPAS_TIMELINE_PUBLICA, mapearStatusParaPublico, isFaseOrcamento } from '../constants/etapasTimeline';
 
 export function AcompanhamentoPublico() {
   const { token } = useParams<{ token: string }>();
@@ -241,10 +241,17 @@ export function AcompanhamentoPublico() {
   const temNovaNfe = documentos.some(d => d.tipo_documento === 'nfe_pdf');
   const showDocumentos = documentos.length > 0 || (dados.nf_pdf_url && !temNovaNfe);
 
-  const isCancelado = dados.status_acompanhamento === 'Cancelado';
-  const etapasAtuais = isCancelado ? [...ETAPAS_TIMELINE, "Cancelado"] : ETAPAS_TIMELINE;
-  const currentIndex = etapasAtuais.indexOf(dados.status_acompanhamento || "Solicitação recebida");
-  const nfIndex = etapasAtuais.indexOf("Nota fiscal emitida");
+  const statusPublicoAtual = mapearStatusParaPublico(dados.status_acompanhamento);
+  const isCancelado = statusPublicoAtual === 'Cancelado' || dados.status_acompanhamento === 'Cancelado';
+  const isOrcamento = isFaseOrcamento(dados.status_acompanhamento);
+
+  const etapasAtuais: string[] = isCancelado 
+    ? [...ETAPAS_TIMELINE_PUBLICA, "Cancelado"] 
+    : [...ETAPAS_TIMELINE_PUBLICA];
+
+  const currentIndex = isCancelado 
+    ? etapasAtuais.indexOf("Cancelado") 
+    : etapasAtuais.indexOf(statusPublicoAtual);
 
   const getStatusColor = (index: number, etapaNome: string) => {
     if (isCancelado) {
@@ -252,15 +259,10 @@ export function AcompanhamentoPublico() {
       return 'text-slate-600 bg-slate-900/50 border-slate-800'; 
     }
     
-    if (index === nfIndex && dados.nf_emitida) {
-      if (index === currentIndex) return 'text-blue-400 bg-blue-500/20 border-blue-400/50 shadow-[0_0_25px_rgba(59,130,246,0.4)] scale-125 z-20';
-      return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.15)]';
-    }
-    
     if (index < currentIndex) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.15)]';
     
     if (index === currentIndex) {
-      if (etapaNome === "Pedido entregue") {
+      if (etapaNome === "Entregue") {
         return 'text-emerald-300 bg-emerald-500/20 border-emerald-400/60 shadow-[0_0_30px_rgba(16,185,129,0.5)] scale-125 z-20 ring-2 ring-emerald-500/30 ring-offset-2 ring-offset-[#0a0f1d]';
       }
       return 'text-blue-400 bg-blue-500/20 border-blue-400/50 shadow-[0_0_25px_rgba(59,130,246,0.4)] scale-125 z-20';
@@ -272,25 +274,17 @@ export function AcompanhamentoPublico() {
   const getIcon = (index: number, etapaNome: string) => {
     let IconComp = CheckCircle2; 
 
-    if (etapaNome === "Solicitação recebida") IconComp = FileDown;
-    else if (etapaNome === "Orçamento enviado") IconComp = Send;
-    else if (etapaNome === "Aguardando confirmação do cliente") IconComp = Clock;
-    else if (etapaNome === "Aguardando pagamento/autorização de compra") IconComp = CreditCard;
-    else if (etapaNome === "Pedido autorizado para produção") IconComp = BadgeCheck;
-    else if (etapaNome === "Pedido em produção") IconComp = Package;
-    else if (etapaNome === "Nota fiscal emitida") IconComp = Receipt;
-    else if (etapaNome === "Pedido em fase de entrega") IconComp = Truck;
-    else if (etapaNome === "Pedido entregue") IconComp = PackageCheck;
+    if (etapaNome === "Orçamento criado") IconComp = FileDown;
+    else if (etapaNome === "Aguardando confirmação") IconComp = Clock;
+    else if (etapaNome === "Produção") IconComp = Package;
+    else if (etapaNome === "Transporte") IconComp = Truck;
+    else if (etapaNome === "Entregue") IconComp = PackageCheck;
     else if (etapaNome === "Cancelado") IconComp = XCircle;
-    
-    // Future expansion: "Conferência do pedido" -> ClipboardCheck
-    // Future expansion: "Conferência antes da entrega" -> SearchCheck
 
     return (
       <div className="relative flex items-center justify-center w-full h-full">
         <IconComp size={index === currentIndex ? 24 : 20} className="relative z-10 sm:w-7 sm:h-7" />
-        {/* Adiciona um mini check para etapas concluídas se não for a atual nem cancelada */}
-        {((index < currentIndex && !isCancelado) || (index === nfIndex && dados.nf_emitida && !isCancelado && index !== currentIndex)) && (
+        {(index < currentIndex && !isCancelado) && (
           <div className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 bg-[#0a0f1d] rounded-full text-emerald-400 p-0.5 sm:p-1 shadow-md border border-emerald-500/30 z-20 transition-transform hover:scale-110">
             <CheckCircle2 size={16} strokeWidth={3} className="sm:w-5 sm:h-5" />
           </div>
@@ -314,7 +308,7 @@ export function AcompanhamentoPublico() {
             </div>
           </div>
           <div className="text-right">
-            <p className="text-xs text-slate-400 font-medium">Pedido</p>
+            <p className="text-xs text-slate-400 font-medium">{isOrcamento ? 'Orçamento' : 'Pedido'}</p>
             <p className="font-black text-white text-lg">{dados.numero}</p>
           </div>
         </div>
@@ -340,7 +334,7 @@ export function AcompanhamentoPublico() {
           
           <h2 className="text-xl font-black text-white mb-6 flex items-center gap-2">
             <Package className="text-emerald-400" />
-            Resumo do Pedido
+            Resumo {isOrcamento ? 'da Proposta' : 'do Pedido'}
           </h2>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
@@ -349,7 +343,9 @@ export function AcompanhamentoPublico() {
               <p className="font-semibold text-slate-200">{dados.cliente_nome_publico}</p>
             </div>
             <div className="md:col-span-1">
-              <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Orçamento de origem</p>
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">
+                {isOrcamento ? 'Nº Orçamento' : 'Nº Pedido'}
+              </p>
               <p className="font-semibold text-slate-200">{dados.numero}</p>
             </div>
             <div className="sm:col-span-2 md:col-span-2">
@@ -567,27 +563,23 @@ export function AcompanhamentoPublico() {
 
                 const styling = getStatusColor(idx, etapa);
                 const isActive = idx === currentIndex;
-                const isPast = (idx < currentIndex && !isCancelado) || (idx === nfIndex && dados.nf_emitida && !isCancelado);
-                const isNextActive = (idx + 1 === currentIndex && !isCancelado) || (isPast && idx + 1 <= currentIndex);
+                const isPast = idx < currentIndex && !isCancelado;
+                const isNextActive = idx + 1 === currentIndex && !isCancelado;
                 
                 const isLastVisible = isCancelado ? idx === currentIndex : idx === etapasAtuais.length - 1;
 
-                // Busca data real no histórico ou aplica fallbacks de segurança para pedidos antigos
-                const hist = dados.historico_status?.find(h => h.status === etapa);
+                // Busca data no histórico para esta etapa pública
+                const histList = dados.historico_status?.filter(h => mapearStatusParaPublico(h.status) === etapa) || [];
+                const hist = histList.length > 0 ? histList[histList.length - 1] : undefined;
                 let dataEtapa: string | undefined = hist?.data_status;
                 const observacao = hist?.observacao_publica;
                 
-                // Aplicar regra de prioridade de rastreamento (Fase 4)
-                if (etapa === "Pedido em fase de entrega" && dados.data_envio) {
+                if (etapa === "Transporte" && dados.data_envio) {
                   dataEtapa = dados.data_envio + 'T12:00:00Z';
                 }
                 
-                if (!dataEtapa) {
-                  if (isActive && !isCancelado) {
-                    dataEtapa = dados.status_atualizado_em;
-                  } else if (etapa === "Nota fiscal emitida" && dados.nf_emitida && dados.nf_emitida_em) {
-                    dataEtapa = dados.nf_emitida_em + 'T12:00:00Z'; // Fallback para data
-                  }
+                if (!dataEtapa && isActive && !isCancelado) {
+                  dataEtapa = dados.status_atualizado_em;
                 }
 
                 let dataFormatada = null;
@@ -618,7 +610,7 @@ export function AcompanhamentoPublico() {
                     <div className={`pt-2 sm:pt-4 flex-1 min-w-0 ${isActive ? 'scale-105 transform origin-left transition-transform duration-500' : ''}`}>
                       <h4 className={`text-sm sm:text-lg transition-colors duration-500 ${
                         isActive 
-                          ? (isCancelado ? 'text-rose-400 font-black' : (etapa === "Pedido entregue" ? 'text-emerald-400 font-black tracking-wide drop-shadow-[0_2px_15px_rgba(16,185,129,0.5)]' : 'text-white font-black tracking-wide drop-shadow-[0_2px_10px_rgba(59,130,246,0.5)]')) 
+                          ? (isCancelado ? 'text-rose-400 font-black' : (etapa === "Entregue" ? 'text-emerald-400 font-black tracking-wide drop-shadow-[0_2px_15px_rgba(16,185,129,0.5)]' : 'text-white font-black tracking-wide drop-shadow-[0_2px_10px_rgba(59,130,246,0.5)]')) 
                           : (isPast ? 'text-emerald-50/90 font-bold' : 'text-slate-500 font-semibold')
                       }`}>
                         {etapa}
@@ -627,7 +619,7 @@ export function AcompanhamentoPublico() {
                       {/* Exibição da Data da Etapa */}
                       {dataFormatada ? (
                         <p className={`text-[11px] sm:text-xs font-semibold mt-0.5 sm:mt-1 ${
-                          isActive && !isCancelado ? (etapa === "Pedido entregue" ? 'text-emerald-200/90' : 'text-blue-200/90') : (isPast ? 'text-emerald-400/80' : 'text-slate-400')
+                          isActive && !isCancelado ? (etapa === "Entregue" ? 'text-emerald-200/90' : 'text-blue-200/90') : (isPast ? 'text-emerald-400/80' : 'text-slate-400')
                         }`}>
                           {dataFormatada}
                         </p>
@@ -648,7 +640,7 @@ export function AcompanhamentoPublico() {
                         </div>
                       )}
 
-                      {etapa === "Pedido em produção" && dados.producao_itens_concluidos !== undefined && (isActive || isPast) && (
+                      {etapa === "Produção" && dados.producao_itens_concluidos !== undefined && (isActive || isPast) && (
                         <div className="mt-3 bg-slate-900/60 border border-slate-700/50 p-4 rounded-xl shadow-inner max-w-md">
                           {dados.producao_itens_concluidos === 0 ? (
                             <p className="text-sm text-slate-300 font-medium">Preparando produção...</p>
@@ -677,16 +669,28 @@ export function AcompanhamentoPublico() {
                       )}
 
                       {isActive && !isCancelado && (
-                        etapa === "Pedido entregue" ? (
+                        etapa === "Entregue" ? (
                           <div className="mt-2 sm:mt-3 bg-gradient-to-r from-emerald-900/40 to-emerald-900/10 border border-emerald-500/30 p-3 sm:p-4 rounded-xl shadow-lg">
                             <p className="text-xs sm:text-sm text-emerald-200 font-medium leading-relaxed">
                               <span className="font-bold text-emerald-400 block mb-1">Missão Concluída! 🎉</span>
                               Parabéns! O Desafio Logístico chegou ao destino final. Agora a rota continua com aprendizado, estratégia e muita diversão.
                             </p>
                           </div>
-                        ) : etapa !== "Pedido em produção" ? (
+                        ) : etapa === "Orçamento criado" ? (
                           <p className="text-xs sm:text-sm text-blue-200/90 mt-1 sm:mt-1.5 font-medium leading-relaxed max-w-md">
-                            Este é o status atual do seu pedido.<br className="hidden sm:block" /> Acompanhe as próximas atualizações por aqui.
+                            Seu orçamento foi criado e está aguardando confirmação.<br className="hidden sm:block" /> Acompanhe todas as etapas por aqui.
+                          </p>
+                        ) : etapa === "Aguardando confirmação" ? (
+                          <p className="text-xs sm:text-sm text-blue-200/90 mt-1 sm:mt-1.5 font-medium leading-relaxed max-w-md">
+                            Aguardando confirmação comercial / autorização de compra para início da produção.
+                          </p>
+                        ) : etapa === "Transporte" ? (
+                          <p className="text-xs sm:text-sm text-blue-200/90 mt-1 sm:mt-1.5 font-medium leading-relaxed max-w-md">
+                            Seu pedido está em trânsito! Acompanhe os detalhes da entrega acima.
+                          </p>
+                        ) : etapa !== "Produção" ? (
+                          <p className="text-xs sm:text-sm text-blue-200/90 mt-1 sm:mt-1.5 font-medium leading-relaxed max-w-md">
+                            Este é o status atual da sua solicitação.<br className="hidden sm:block" /> Acompanhe as próximas atualizações por aqui.
                           </p>
                         ) : null
                       )}

@@ -668,6 +668,21 @@ function App() {
     try {
       const payload: any = { ...form };
       
+      // Se não existir token_publico, gera automaticamente no primeiro salvamento
+      if (!payload.token_publico) {
+        payload.token_publico = `fp_${crypto.randomUUID()}`;
+      }
+
+      // Primeiro salvamento: inicializa a timeline em 'Orçamento criado'.
+      // Em edições, o status escolhido pelo operador (inclusive vazio) é preservado.
+      if (!currentId && !payload.status_acompanhamento) {
+        payload.status_acompanhamento = 'Orçamento criado';
+        payload.status_atualizado_em = new Date().toISOString();
+      }
+      if (!currentId && payload.status_acompanhamento && !payload.status_atualizado_em) {
+        payload.status_atualizado_em = new Date().toISOString();
+      }
+
       // Normalizar campos de data vazios para null
       const dateFields = ['nf_emitida_em', 'status_atualizado_em', 'data_retorno'];
       dateFields.forEach(field => {
@@ -690,6 +705,8 @@ function App() {
             'Nenhum orçamento foi atualizado. Verifique permissões RLS no Supabase ou se o ID do orçamento é válido.'
           );
         }
+        setForm(payload);
+        savedFormRef.current = JSON.stringify(payload);
         showToast('success', 'Orçamento atualizado com sucesso!');
       } else {
         const payloadToInsert = { ...payload };
@@ -705,7 +722,11 @@ function App() {
         if (data) {
           savedOrcamentoId = (data as Orcamento).id ?? null;
           setCurrentId(savedOrcamentoId);
-          const updatedForm = { ...payloadToInsert, numero: (data as Orcamento).numero };
+          const updatedForm = { 
+            ...payloadToInsert, 
+            numero: (data as Orcamento).numero,
+            token_publico: (data as Orcamento).token_publico || payloadToInsert.token_publico
+          };
           setForm(updatedForm);
           savedFormRef.current = JSON.stringify(updatedForm);
         }
@@ -971,7 +992,13 @@ function App() {
         prioridade: 'Baixa',
         data_retorno: '',
         proxima_acao: '',
-        observacao_interna: ''
+        observacao_interna: '',
+        // A cópia é um novo orçamento: não herda o link público do original.
+        // O token será gerado no primeiro salvamento da cópia.
+        token_publico: null,
+        status_acompanhamento: 'Orçamento criado',
+        status_atualizado_em: null,
+        observacao_publica_status: null,
       }));
       setCurrentId(null);
       showToast('success', 'Orçamento duplicado com sucesso.');
@@ -1631,15 +1658,20 @@ function App() {
                       <select name="status_acompanhamento" value={form.status_acompanhamento || ''} onChange={handleChange}
                         className="form-input appearance-none pr-10 font-bold text-emerald-400">
                         <option value="">Nenhum (Inativo)</option>
+                        <option value="Orçamento criado">Orçamento criado</option>
                         <option value="Solicitação recebida">Solicitação recebida</option>
                         <option value="Orçamento enviado">Orçamento enviado</option>
+                        <option value="Aguardando confirmação">Aguardando confirmação</option>
                         <option value="Aguardando confirmação do cliente">Aguardando confirmação do cliente</option>
                         <option value="Aguardando pagamento ou autorização">Aguardando pagamento/autorização de compra</option>
                         <option value="Pagamento/autorização aprovado">Pedido autorizado para produção</option>
                         <option value="Pedido em produção">Pedido em produção</option>
+                        <option value="Produção">Produção</option>
                         <option value="Nota fiscal emitida">Nota fiscal emitida</option>
                         <option value="Pedido em fase de entrega">Pedido em fase de entrega</option>
+                        <option value="Transporte">Transporte</option>
                         <option value="Pedido entregue">Pedido entregue</option>
+                        <option value="Entregue">Entregue</option>
                         <option value="Cancelado">Cancelado</option>
                       </select>
                       <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
