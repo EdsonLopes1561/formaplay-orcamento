@@ -39,7 +39,9 @@
   [class*="overlay"]:not(.print-area):not(.print-area *),
   [id*="error-overlay"],
   [id*="vite-error"],
-  [class*="elemento-envio"] {
+  [class*="elemento-envio"],
+  .no-print,
+  .print-hidden {
     display: none !important;
     visibility: hidden !important;
   }
@@ -55,8 +57,9 @@
   .print-area {
     width: 100%;
     max-width: 210mm;
+    min-height: 295mm;
     box-sizing: border-box;
-    padding: 5mm 8mm 3mm;
+    padding: 6mm 8mm 4mm;
     margin: 0 auto;
     background: #fff;
     -webkit-print-color-adjust: exact !important;
@@ -64,8 +67,8 @@
     color-adjust: exact !important;
     position: relative;
     isolation: isolate;
-    page-break-inside: avoid;
-    break-inside: avoid;
+    display: flex;
+    flex-direction: column;
   }
 
   .print-area * {
@@ -98,7 +101,7 @@
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(15, 23, 90, 0.22);
-    margin-bottom: 4px;
+    margin-bottom: 5px;
     page-break-inside: avoid;
     break-inside: avoid;
   }
@@ -295,7 +298,7 @@
   .print-divider-premium {
     height: 2px;
     background: linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #1e40af 100%);
-    margin: 4px 0;
+    margin: 3px 0 5px;
     border-radius: 4px;
     opacity: 0.9;
   }
@@ -308,7 +311,7 @@
 
   /* Section */
   .print-section {
-    margin-bottom: 3px;
+    margin-bottom: 4px;
     page-break-inside: avoid;
     break-inside: avoid;
   }
@@ -409,7 +412,7 @@
     justify-content: space-between;
     align-items: stretch;
     gap: 8px;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
     page-break-inside: avoid;
     break-inside: avoid;
   }
@@ -637,6 +640,41 @@
     line-height: 1.25;
     word-break: break-word;
     white-space: pre-wrap;
+  }
+
+  /* Bloco Inferior: Assinatura e Rodapé fixados na base quando houver espaço */
+  .print-bottom-section {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 5px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Termo de Confirmação de Compra */
+  .print-termo-confirmacao {
+    background: #f8fafc;
+    border: 1px solid #dbeafe;
+    border-radius: 6px;
+    padding: 3px 8px;
+    margin-bottom: 2px;
+  }
+
+  .print-termo-texto-principal {
+    font-size: 7px;
+    color: #1e3a8a;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0 0 1px;
+  }
+
+  .print-termo-texto-secundario {
+    font-size: 6.5px;
+    color: #475569;
+    line-height: 1.15;
+    margin: 0;
   }
 
   /* Signature */

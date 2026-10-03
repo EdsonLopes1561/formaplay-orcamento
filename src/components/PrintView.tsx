@@ -347,12 +347,20 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
           </div>
           <div className="print-summary-row">
             <span>Frete</span>
-            <span>+ {fmt(orcamento.frete)}</span>
+            <span>
+              {orcamento.frete_incluso
+                ? 'Incluso'
+                : ((!orcamento.tipo_frete || orcamento.tipo_frete === 'A combinar' || orcamento.tipo_frete.toLowerCase() === 'a combinar') && (!orcamento.frete || Number(orcamento.frete) === 0))
+                  ? 'A combinar'
+                  : `+ ${fmt(orcamento.frete)}`}
+            </span>
           </div>
-          <div className="print-summary-row">
-            <span>Desconto</span>
-            <span>- {fmt(orcamento.desconto)}</span>
-          </div>
+          {orcamento.desconto > 0 && (
+            <div className="print-summary-row">
+              <span>Desconto</span>
+              <span>- {fmt(orcamento.desconto)}</span>
+            </div>
+          )}
           <div className="print-summary-divider" />
           <div className="print-summary-total">
             <span>TOTAL</span>
@@ -516,7 +524,9 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
                     <span className="print-value">
                       {orcamento.frete_incluso 
                         ? 'Contemplado no valor total, sem cobrança em separado' 
-                        : fmt(orcamento.frete)}
+                        : ((!orcamento.tipo_frete || orcamento.tipo_frete === 'A combinar' || orcamento.tipo_frete.toLowerCase() === 'a combinar') && (!orcamento.frete || Number(orcamento.frete) === 0))
+                          ? 'A combinar'
+                          : fmt(orcamento.frete)}
                     </span>
                   </div>
                   {orcamento.desconto > 0 && (
@@ -555,86 +565,88 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
         </div>
       </div>
 
-      {/* Signature */}
-      <div className="print-signature">
-        <div className="print-signature-line">
-          <div className="print-sig-box">
-            <div className="print-sig-empty" />
-            <div className="print-sig-line" />
-            <p>Assinatura do Cliente</p>
-            <p>{orcamento.cliente}</p>
-          </div>
-          <div className="print-sig-box">
-            <img src="/Assinatura Edson.png?v=2" alt="Assinatura" className="print-sig-image" />
-            <div className="print-sig-line" />
-            <p>Edson Lopes</p>
-            <p>Responsável — FormaPlay</p>
+      {/* Bloco Inferior: Assinaturas e Rodapé fixados na base via margin-top: auto */}
+      <div className="print-bottom-section">
+        {/* Signature */}
+        <div className="print-signature">
+          <div className="print-signature-line">
+            <div className="print-sig-box">
+              <div className="print-sig-empty" />
+              <div className="print-sig-line" />
+              <p>Assinatura do Cliente</p>
+              <p>{orcamento.cliente}</p>
+            </div>
+            <div className="print-sig-box">
+              <img src="/Assinatura Edson.png?v=2" alt="Assinatura" className="print-sig-image" />
+              <div className="print-sig-line" />
+              <p>Edson Lopes</p>
+              <p>Responsável — FormaPlay</p>
+            </div>
           </div>
         </div>
-      </div>
 
+        {/* Footer */}
+        <div className="print-footer">
+          <div className="print-footer-line" />
+          <div className="print-footer-card">
+            <div className="print-footer-main">
+              <div className="print-footer-brand">
+                <p className="print-footer-brand-name"><FormaPlayBrand /> Jogos Educacionais</p>
+                <span className="print-footer-brand-tagline">— Educação que transforma</span>
+              </div>
+              <div className="print-footer-divider-soft" />
+              <div className="print-footer-content">
+                <div className="print-footer-item">
+                  <span className="print-footer-icon-wrap">
+                    <Building2 className="print-footer-icon" />
+                  </span>
+                  <div className="print-footer-item-text">
+                    <span className="print-footer-label">CNPJ</span>
+                    <span className="print-footer-value">{EMPRESA.cnpj}</span>
+                  </div>
+                </div>
+                <div className="print-footer-item">
+                  <span className="print-footer-icon-wrap">
+                    <MessageCircle className="print-footer-icon" />
+                  </span>
+                  <div className="print-footer-item-text">
+                    <span className="print-footer-label">WhatsApp</span>
+                    <span className="print-footer-value">{EMPRESA.whatsapp}</span>
+                  </div>
+                </div>
+                <div className="print-footer-item">
+                  <span className="print-footer-icon-wrap">
+                    <Mail className="print-footer-icon" />
+                  </span>
+                  <div className="print-footer-item-text">
+                    <span className="print-footer-label">E-mail</span>
+                    <span className="print-footer-value">{EMPRESA.email}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-      {/* Footer */}
-      <div className="print-footer">
-        <div className="print-footer-line" />
-        <div className="print-footer-card">
-          <div className="print-footer-main">
-            <div className="print-footer-brand">
-              <p className="print-footer-brand-name"><FormaPlayBrand /> Jogos Educacionais</p>
-              <span className="print-footer-brand-tagline">— Educação que transforma</span>
-            </div>
-            <div className="print-footer-divider-soft" />
-            <div className="print-footer-content">
-              <div className="print-footer-item">
-                <span className="print-footer-icon-wrap">
-                  <Building2 className="print-footer-icon" />
-                </span>
-                <div className="print-footer-item-text">
-                  <span className="print-footer-label">CNPJ</span>
-                  <span className="print-footer-value">{EMPRESA.cnpj}</span>
+            {orcamento.token_publico && (
+              <div className="print-footer-qr-block">
+                <div className="print-footer-qr-box">
+                  <QRCodeSVG
+                    value={getPublicOrderTrackingUrl(orcamento.token_publico)}
+                    size={46}
+                    level="M"
+                    includeMargin={false}
+                  />
+                </div>
+                <div className="print-footer-qr-text">
+                  <span className="print-footer-qr-title">ACOMPANHE SEU ORÇAMENTO</span>
+                  <span className="print-footer-qr-sub">Escaneie para acompanhar o status</span>
                 </div>
               </div>
-              <div className="print-footer-item">
-                <span className="print-footer-icon-wrap">
-                  <MessageCircle className="print-footer-icon" />
-                </span>
-                <div className="print-footer-item-text">
-                  <span className="print-footer-label">WhatsApp</span>
-                  <span className="print-footer-value">{EMPRESA.whatsapp}</span>
-                </div>
-              </div>
-              <div className="print-footer-item">
-                <span className="print-footer-icon-wrap">
-                  <Mail className="print-footer-icon" />
-                </span>
-                <div className="print-footer-item-text">
-                  <span className="print-footer-label">E-mail</span>
-                  <span className="print-footer-value">{EMPRESA.email}</span>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
-
-          {orcamento.token_publico && (
-            <div className="print-footer-qr-block">
-              <div className="print-footer-qr-box">
-                <QRCodeSVG
-                  value={getPublicOrderTrackingUrl(orcamento.token_publico)}
-                  size={46}
-                  level="M"
-                  includeMargin={false}
-                />
-              </div>
-              <div className="print-footer-qr-text">
-                <span className="print-footer-qr-title">ACOMPANHE SEU ORÇAMENTO</span>
-                <span className="print-footer-qr-sub">Escaneie para acompanhar o status</span>
-              </div>
-            </div>
-          )}
+          <p className="print-footer-disclaimer">
+            Orçamento comercial sem valor fiscal
+          </p>
         </div>
-        <p className="print-footer-disclaimer">
-          Orçamento comercial sem valor fiscal
-        </p>
       </div>
     </div>
   );
