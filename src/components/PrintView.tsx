@@ -444,11 +444,12 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
               const linhas = textoLimpo.split('\n').map(l => l.trim()).filter(Boolean);
 
               // Detecta se já é opção escolhida específica no cartão
-              const isCartaoEscolhido = linhas.some(l => /parcelamento:\s*\d+x/i.test(l) || /total no cart[ãa]o/i.test(l));
+              const isCartaoEscolhido = linhas.some(l => /parcelamento:\s*\d+x/i.test(l) || /total no cart/i.test(l) || /sem juros/i.test(l));
               if (isCartaoEscolhido) {
+                const linhasFiltradas = linhas.filter(l => !/^forma de pagamento:\s*cart[ãa]o/i.test(l));
                 return (
                   <div className="print-parcelamento-container">
-                    {linhas.map((linha, idx) => (
+                    {linhasFiltradas.map((linha, idx) => (
                       <p key={idx} className="print-value-observacoes" style={{ margin: '1px 0', fontWeight: 600 }}>
                         {linha}
                       </p>
@@ -458,7 +459,7 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
               }
 
               // Detecta se há múltiplas parcelas (ex: 1x, 2x, 3x...)
-              const regexParcela = /^(\d+x\s+(?:de\s+)?R?\$?\s*[\d.,]+.*)$/i;
+              const regexParcela = /^(\d+x\s+(?:de\s+|sem juros.*)?R?\$?\s*[\d.,]+.*)$/i;
               const parcelas = linhas.filter(l => regexParcela.test(l));
               const outros = linhas.filter(l => !regexParcela.test(l));
 
@@ -466,7 +467,7 @@ export function PrintView({ orcamento, clienteData }: PrintViewProps) {
                 return (
                   <div className="print-parcelamento-container">
                     <p className="print-parcelamento-intro">
-                      {outros.length > 0 ? outros.join(' ') : 'Os valores abaixo já incluem o acréscimo da operadora.'}
+                      {outros.length > 0 ? outros.join(' ') : '1x sem juros. A partir de 2x, os valores já incluem o acréscimo da operadora.'}
                     </p>
                     <div className="print-parcelas-grid">
                       {parcelas.map((p, idx) => (

@@ -393,6 +393,12 @@ export function ConfirmacaoCompraView({ orcamento, clienteData }: ConfirmacaoCom
             };
 
             const condicoesPag = orcamento.condicoes_pagamento;
+            const condicoesFormatadas = (() => {
+              if (!condicoesPag) return null;
+              const linhas = condicoesPag.split('\n').map(l => l.trim()).filter(Boolean);
+              const linhasFiltradas = linhas.filter(l => !/^forma de pagamento:\s*cart[ãa]o/i.test(l));
+              return linhasFiltradas.join('\n');
+            })();
             const finalObs = obsFiltrada || "";
 
             return (
@@ -413,10 +419,10 @@ export function ConfirmacaoCompraView({ orcamento, clienteData }: ConfirmacaoCom
                     <span className="print-label">Nota Fiscal:</span>
                     <span className="print-value">Sim, emitida pela FormaPlay Jogos Educacionais.</span>
                   </div>
-                  {condicoesPag && (
+                  {condicoesFormatadas && (
                     <div className="print-field">
                       <span className="print-label">Condições de Pagamento:</span>
-                      <span className="print-value print-value-observacoes">{condicoesPag}</span>
+                      <span className="print-value print-value-observacoes">{condicoesFormatadas}</span>
                     </div>
                   )}
                 </div>

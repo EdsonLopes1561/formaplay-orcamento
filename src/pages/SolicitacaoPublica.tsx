@@ -109,6 +109,7 @@ export const SolicitacaoPublica: React.FC = () => {
   const [freteSelecionado, setFreteSelecionado] = useState<any | null>(null);
   const [loadingFrete, setLoadingFrete] = useState(false);
   const [erroFrete, setErroFrete] = useState<string | null>(null);
+  const [parcelasCartao, setParcelasCartao] = useState<number>(1);
 
   const numeroInputRef = useRef<HTMLInputElement>(null);
   const enderecoInputRef = useRef<HTMLInputElement>(null);
@@ -508,7 +509,9 @@ export const SolicitacaoPublica: React.FC = () => {
             return obsFinal || null;
           })(),
           embrulho_presente: form.embrulho_presente,
-          forma_pagamento: form.forma_pagamento,
+          forma_pagamento: form.forma_pagamento === 'Cartão'
+            ? (parcelasCartao === 1 ? 'Cartão de crédito — 1x sem juros' : `Cartão de crédito — ${parcelasCartao}x`)
+            : form.forma_pagamento,
           itens: itensCarrinho
         });
 
@@ -1132,25 +1135,44 @@ export const SolicitacaoPublica: React.FC = () => {
 
                       {form.forma_pagamento === 'Cartão' && (
                         <div className="mt-3 p-4 bg-slate-900/90 border border-blue-900/60 rounded-xl space-y-2.5 shadow-inner">
-                          <div className="flex items-center gap-2 text-blue-300 font-bold text-sm">
-                            <CreditCard size={18} className="text-blue-400" />
-                            <span>Cartão de crédito</span>
+                          <div className="flex items-center justify-between text-blue-300 font-bold text-sm">
+                            <div className="flex items-center gap-2">
+                              <CreditCard size={18} className="text-blue-400" />
+                              <span>Cartão de crédito</span>
+                            </div>
+                            <span className="text-xs text-blue-400 font-normal">Selecione o parcelamento</span>
                           </div>
                           <p className="text-xs text-slate-300 font-medium">
-                            Os valores abaixo já incluem o acréscimo da operadora.
+                            1x sem juros. A partir de 2x, os valores já incluem o acréscimo da operadora.
                           </p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
-                            {calcularOpcoesParcelamento(totalEstimado > 0 ? totalEstimado : subtotalProdutos).map((op) => (
-                              <div 
-                                key={op.parcelas}
-                                className="p-2.5 rounded-lg bg-slate-800/90 border border-slate-700/80 text-xs flex justify-between items-center text-slate-200"
-                              >
-                                <span className="font-bold text-white">{op.parcelas}x de {fmtCurrency(op.valorParcela)}</span>
-                                {op.parcelas > 1 && (
-                                  <span className="text-[11px] text-slate-400 font-medium">total {fmtCurrency(op.totalComAcrescimo)}</span>
-                                )}
-                              </div>
-                            ))}
+                            {calcularOpcoesParcelamento(totalEstimado > 0 ? totalEstimado : subtotalProdutos).map((op) => {
+                              const isSelected = parcelasCartao === op.parcelas;
+                              return (
+                                <button 
+                                  type="button"
+                                  key={op.parcelas}
+                                  onClick={() => setParcelasCartao(op.parcelas)}
+                                  className={`p-2.5 rounded-lg border text-xs flex justify-between items-center transition-all text-left w-full cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-blue-600/30 border-blue-400 text-white ring-1 ring-blue-400 font-bold shadow-sm'
+                                      : 'bg-slate-800/90 border-slate-700/80 text-slate-200 hover:border-slate-500 hover:bg-slate-800'
+                                  }`}
+                                >
+                                  <div>
+                                    <div className="font-bold text-white">
+                                      {op.parcelas === 1 ? `1x sem juros — ${fmtCurrency(op.valorParcela)}` : `${op.parcelas}x de ${fmtCurrency(op.valorParcela)}`}
+                                    </div>
+                                    {op.parcelas > 1 && (
+                                      <div className="text-[11px] text-slate-400 font-medium">total {fmtCurrency(op.totalComAcrescimo)}</div>
+                                    )}
+                                  </div>
+                                  {isSelected && (
+                                    <span className="text-xs text-blue-400 font-bold ml-2">✓</span>
+                                  )}
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       )}

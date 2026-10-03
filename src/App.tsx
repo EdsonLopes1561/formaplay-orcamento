@@ -24,6 +24,7 @@ import { PainelInteressesModal } from './components/PainelInteressesModal';
 import { GerenciadorDocumentos } from './components/GerenciadorDocumentos';
 import { useAuth } from './AuthWrapper';
 import { getPublicOrderTrackingUrl } from './config/appUrl';
+import { calcularOpcoesParcelamento, formatarTextoCondicoesCartao, extrairNumeroParcelas } from './config/taxasCartao';
 
 type Toast = { type: 'success' | 'error'; message: string };
 
@@ -422,7 +423,13 @@ function App() {
       };
     }
     
-    if (s.forma_pagamento === 'Pix com desconto') {
+    const formaPagLower = (s.forma_pagamento || '').toLowerCase();
+    if (formaPagLower.includes('cart') || formaPagLower.includes('crédito')) {
+      novo.pagamento = 'Cartão de crédito';
+      const parcelas = extrairNumeroParcelas(s.forma_pagamento);
+      const calcValores = calcularValores(novo);
+      novo.condicoes_pagamento = formatarTextoCondicoesCartao(calcValores.total, parcelas);
+    } else if (s.forma_pagamento === 'Pix com desconto') {
       novo.desconto = s.desconto_pix;
     }
 
@@ -538,6 +545,12 @@ function App() {
         updated.status_acompanhamento = 'Nota fiscal emitida';
         updated.status_atualizado_em = new Date().toISOString();
       }
+    }
+
+    if (name === 'pagamento' && value === 'Cartão de crédito') {
+      const calc = calcularValores(updated);
+      const parcelas = extrairNumeroParcelas(updated.condicoes_pagamento) || 1;
+      updated.condicoes_pagamento = formatarTextoCondicoesCartao(calc.total, parcelas);
     }
 
     setForm(calcularValores(updated));
@@ -1472,9 +1485,7 @@ function App() {
                         <option>Boleto bancário</option>
                         <option>Boleto bancário — 20/30 dias</option>
                         <option>Depósito bancário — 20/30 dias</option>
-                        <option>Cartão de crédito — 1x</option>
-                        <option>Cartão de crédito — 2x sem juros</option>
-                        <option>Cartão de crédito — 3x sem juros</option>
+                        <option>Cartão de crédito</option>
                         <option>50% entrada + 50% na entrega</option>
                         <option>Conforme processo de pagamento da instituição</option>
                         <option>A combinar</option>
@@ -1483,6 +1494,53 @@ function App() {
                       <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                     </div>
                   </div>
+
+                  {form.pagamento === 'Cartão de crédito' && (
+                    <div className="sm:col-span-2 p-3.5 bg-slate-900/70 border border-blue-900/60 rounded-xl space-y-2.5 shadow-inner">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-blue-300 flex items-center gap-1.5">
+                          <Layers size={14} className="text-blue-400" />
+                          Seletor de Parcelamento (1x a 12x)
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-medium">
+                          Total base: {fmtCurrency(form.total)}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-300 font-medium">
+                        1x sem juros. A partir de 2x, os valores já incluem o acréscimo da operadora.
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-52 overflow-y-auto pr-1">
+                        {calcularOpcoesParcelamento(form.total).map((op) => {
+                          const parcelasAtuais = extrairNumeroParcelas(form.condicoes_pagamento);
+                          const isSelected = parcelasAtuais === op.parcelas;
+                          return (
+                            <button
+                              type="button"
+                              key={op.parcelas}
+                              onClick={() => {
+                                setForm((prev) => ({
+                                  ...prev,
+                                  condicoes_pagamento: formatarTextoCondicoesCartao(prev.total, op.parcelas)
+                                }));
+                              }}
+                              className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'bg-blue-600/30 border-blue-400 text-white ring-1 ring-blue-400 font-bold shadow-sm'
+                                  : 'bg-slate-800/80 border-slate-700/80 text-slate-300 hover:border-slate-500 hover:bg-slate-800'
+                              }`}
+                            >
+                              <div className="text-xs font-bold text-white">
+                                {op.parcelas === 1 ? '1x sem juros' : `${op.parcelas}x de ${fmtCurrency(op.valorParcela)}`}
+                              </div>
+                              <div className="text-[10px] text-slate-400">
+                                {op.parcelas === 1 ? fmtCurrency(op.totalComAcrescimo) : `total ${fmtCurrency(op.totalComAcrescimo)}`}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {form.pagamento === 'Personalizado' && (
                     <div className="sm:col-span-2">
