@@ -121,7 +121,11 @@ export function isFaseOrcamento(status?: string | null): boolean {
 /**
  * Retorna o cabeçalho dinâmico e a mensagem contextual da fase para a página pública.
  */
-export function getMensagemDestaqueFase(etapa: EtapaPublica, produto?: string): {
+export function getMensagemDestaqueFase(
+  etapa: EtapaPublica, 
+  produto?: string,
+  statusInterno?: string | null
+): {
   titulo: string;
   subtitulo: string;
   destaque: string;
@@ -146,13 +150,32 @@ export function getMensagemDestaqueFase(etapa: EtapaPublica, produto?: string): 
         statusDescricao: produto ? `Aguardando sua confirmação para o ${nomeProduto}.` : "Aguardando sua confirmação."
       };
 
-    case "Produção":
+    case "Produção": {
+      const sInterno = (statusInterno || '').trim().toLowerCase();
+      const isApenasAutorizado = 
+        sInterno.includes("autorizado para produção") || 
+        sInterno.includes("autorizado para producao") ||
+        sInterno.includes("autorização aprovado") ||
+        sInterno.includes("autorizacao aprovado");
+
+      if (isApenasAutorizado) {
+        return {
+          titulo: "Acompanhamento do Pedido",
+          subtitulo: "FormaPlay — Jogos Educacionais",
+          destaque: "Seu pedido foi confirmado e está aguardando o início da produção.",
+          statusDescricao: produto 
+            ? `Seu pedido para o ${nomeProduto} foi confirmado e está aguardando o início da produção.` 
+            : "Seu pedido foi confirmado e está aguardando o início da produção."
+        };
+      }
+
       return {
         titulo: "Acompanhamento do Pedido",
         subtitulo: "FormaPlay — Jogos Educacionais",
-        destaque: "Seu pedido foi confirmado e está em produção.",
+        destaque: "Estamos preparando seu jogo.",
         statusDescricao: produto ? `Estamos preparando seu ${nomeProduto}.` : "Estamos preparando seu pedido."
       };
+    }
 
     case "Transporte":
       return {

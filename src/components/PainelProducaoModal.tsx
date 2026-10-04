@@ -88,8 +88,8 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
       const cat = classificarPedidoProducao(p);
       const sit = avaliarSituacaoPrazo(p, hoje);
 
-      // Não contar pedidos entregues ou cancelados nos cards operacionais
-      if (cat === 'entregue' || cat === 'cancelado' || cat === 'transporte') {
+      // Não contar pedidos entregues, cancelados ou não aprovados nos cards operacionais
+      if (cat === 'entregue' || cat === 'cancelado' || cat === 'transporte' || cat === 'nao_aprovado') {
         return;
       }
 
@@ -116,10 +116,10 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
 
     // 1. Filtro de Categoria Operacional
     if (filtroCategoria === 'fila_operacional') {
-      // Fila principal: exclui entregues, cancelados e transporte
+      // Fila principal: apenas pedidos aprovados/autorizados em aguardando, em produção ou prontos
       filtrados = filtrados.filter(p => {
         const cat = classificarPedidoProducao(p);
-        return cat !== 'entregue' && cat !== 'cancelado' && cat !== 'transporte';
+        return cat === 'aguardando_producao' || cat === 'em_producao' || cat === 'pronto_envio';
       });
     } else if (filtroCategoria === 'aguardando_producao') {
       filtrados = filtrados.filter(p => classificarPedidoProducao(p) === 'aguardando_producao');
@@ -130,7 +130,7 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
     } else if (filtroCategoria === 'atencao_atrasados') {
       filtrados = filtrados.filter(p => {
         const cat = classificarPedidoProducao(p);
-        if (cat === 'entregue' || cat === 'cancelado' || cat === 'transporte') return false;
+        if (cat !== 'aguardando_producao' && cat !== 'em_producao' && cat !== 'pronto_envio') return false;
         const sit = avaliarSituacaoPrazo(p, hoje);
         return sit.categoria === 'atrasado' || sit.categoria === 'vence_hoje' || sit.categoria === 'atencao';
       });

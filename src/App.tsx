@@ -25,6 +25,7 @@ import { GerenciadorDocumentos } from './components/GerenciadorDocumentos';
 import { useAuth } from './AuthWrapper';
 import { getPublicOrderTrackingUrl } from './config/appUrl';
 import { calcularOpcoesParcelamento, formatarTextoCondicoesCartao, extrairNumeroParcelas } from './config/taxasCartao';
+import { isFaseOrcamento } from './constants/etapasTimeline';
 
 type Toast = { type: 'success' | 'error'; message: string };
 
@@ -535,6 +536,15 @@ function App() {
       }
     }
     
+    // Sincronização comercial com acompanhamento público
+    if (name === 'status' && value === 'Aprovado') {
+      const statusAcompAtual = updated.status_acompanhamento || '';
+      if (!statusAcompAtual || isFaseOrcamento(statusAcompAtual)) {
+        updated.status_acompanhamento = 'Pedido autorizado para produção';
+        updated.status_atualizado_em = new Date().toISOString();
+      }
+    }
+
     // Regras de automação do Acompanhamento Público
     if (name === 'status_acompanhamento') {
       updated.status_atualizado_em = new Date().toISOString();

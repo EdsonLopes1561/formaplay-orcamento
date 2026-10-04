@@ -119,6 +119,24 @@ const TEST_SCENARIOS: Record<string, { dados: DadosAcompanhamento; documentos: D
       }
     ]
   },
+  AUT: {
+    dados: {
+      numero: 'PED-2026-002',
+      cliente_nome_publico: 'Colégio Santa Maria',
+      produto: 'Desafio Logístico',
+      quantidade: 2,
+      status_acompanhamento: 'Pedido autorizado para produção',
+      status_atualizado_em: '2026-10-04T10:00:00-03:00',
+      observacao_publica_status: 'Seu pedido foi confirmado e está aguardando o início da produção.',
+      nf_emitida: false,
+      historico_status: [
+        { status: 'Orçamento criado', data_status: '2026-10-01T09:00:00-03:00', observacao_publica: 'Orçamento criado no sistema.' },
+        { status: 'Orçamento enviado', data_status: '2026-10-02T14:30:00-03:00', observacao_publica: 'Orçamento enviado ao cliente.' },
+        { status: 'Pedido autorizado para produção', data_status: '2026-10-04T10:00:00-03:00', observacao_publica: 'Pedido aprovado pelo cliente. Autorizado para produção.' }
+      ]
+    },
+    documentos: []
+  },
   C: {
     dados: {
       numero: 'PED-2026-003',
@@ -499,7 +517,7 @@ export function AcompanhamentoPublico() {
   const isOrcamento = isCancelado 
     ? (dados.numero?.toUpperCase().startsWith('ORC') ?? true)
     : isFaseOrcamento(dados.status_acompanhamento);
-  const infoFase = getMensagemDestaqueFase(statusPublicoAtual, dados.produto);
+  const infoFase = getMensagemDestaqueFase(statusPublicoAtual, dados.produto, dados.status_acompanhamento);
 
   const currentIndex = isCancelado ? -1 : ETAPAS_TIMELINE_PUBLICA.indexOf(statusPublicoAtual as any);
 

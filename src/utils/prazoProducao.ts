@@ -9,7 +9,8 @@ export type CategoriaOperacional =
   | 'pronto_envio'
   | 'transporte'
   | 'entregue'
-  | 'cancelado';
+  | 'cancelado'
+  | 'nao_aprovado';
 
 export interface SituacaoPrazoInfo {
   categoria: CategoriaPrazo;
@@ -193,27 +194,59 @@ export function avaliarSituacaoPrazo(
  * Classifica operacionalmente o pedido na esteira da fábrica.
  */
 export function classificarPedidoProducao(pedido: Partial<Orcamento> & Record<string, any>): CategoriaOperacional {
+  const statusComercial = (pedido.status || '').trim();
   const statusAcomp = (pedido.status_acompanhamento || '').trim();
   const statusPublico = mapearStatusParaPublico(statusAcomp);
   const statusProd = (pedido.status_producao || 'Não iniciada').trim();
   const checklist = Array.isArray(pedido.producao_checklist) ? pedido.producao_checklist : [];
 
-  if (statusPublico === 'Cancelado' || (pedido.status || '').toLowerCase() === 'cancelado') {
+  // 1. Cancelado / Recusado
+  if (
+    statusPublico === 'Cancelado' ||
+    statusComercial.toLowerCase() === 'cancelado' ||
+    statusComercial.toLowerCase() === 'recusado'
+  ) {
     return 'cancelado';
   }
 
+  // 2. Entregue
   if (statusPublico === 'Entregue' || Boolean(pedido.data_entrega)) {
     return 'entregue';
   }
 
+  // 3. Transporte
   if (statusPublico === 'Transporte' || Boolean(pedido.data_envio)) {
     return 'transporte';
   }
 
+  // 4. Verificar autorização para produção (Comercial ou Fase Pública Autorizada)
+  const isAprovadoComercial = statusComercial === 'Aprovado';
+  const isAutorizadoAcomp =
+    Boolean(statusAcomp) &&
+    (statusPublico === 'Produção' ||
+      statusPublico === 'Transporte' ||
+      statusPublico === 'Entregue' ||
+      statusAcomp.toLowerCase().includes('autorizado para produção') ||
+      statusAcomp.toLowerCase().includes('autorizado para producao') ||
+      statusAcomp.toLowerCase().includes('autorização aprovado') ||
+      statusAcomp.toLowerCase().includes('autorizacao aprovado') ||
+      statusAcomp.toLowerCase().includes('em produção') ||
+      statusAcomp.toLowerCase().includes('em producao') ||
+      statusAcomp.toLowerCase().includes('nota fiscal') ||
+      statusAcomp.toLowerCase().includes('fase de entrega'));
+
+  const isAutorizado = isAprovadoComercial || isAutorizadoAcomp;
+
+  if (!isAutorizado) {
+    return 'nao_aprovado';
+  }
+
+  // 5. Checklist 17/17 ou Pronto para envio
   if (checklist.length === TOTAL_ETAPAS_PRODUCAO || statusProd === 'Pronto para envio') {
     return 'pronto_envio';
   }
 
+  // 6. Checklist 1..16 ou Em produção / Em conferência
   if (
     (checklist.length > 0 && checklist.length < TOTAL_ETAPAS_PRODUCAO) ||
     statusProd === 'Em produção' ||
@@ -222,6 +255,7 @@ export function classificarPedidoProducao(pedido: Partial<Orcamento> & Record<st
     return 'em_producao';
   }
 
+  // 7. Checklist 0 / Não iniciada
   return 'aguardando_producao';
 }
 
