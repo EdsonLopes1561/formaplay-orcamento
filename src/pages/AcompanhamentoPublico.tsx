@@ -512,6 +512,13 @@ export function AcompanhamentoPublico() {
   // Verificação de rastreio ativo
   const temRastreio = Boolean(dados.codigo_rastreio || dados.link_rastreio || dados.transportadora);
 
+  // Cálculo percentual de progresso da produção (arredondado para inteiro)
+  const percentualProducao = (dados.producao_itens_concluidos && dados.producao_itens_concluidos > 0)
+    ? Math.min(Math.round((dados.producao_itens_concluidos / TOTAL_ETAPAS_PRODUCAO) * 100), 100)
+    : null;
+
+  const temDadosProducao = Boolean(dados.status_producao || (typeof dados.producao_itens_concluidos === 'number' && dados.producao_itens_concluidos > 0));
+
   // Formatação de data/hora amigável
   const formatarDataHora = (isoDate?: string | null) => {
     if (!isoDate) return null;
@@ -773,6 +780,13 @@ export function AcompanhamentoPublico() {
                       {etapaNome}
                     </p>
 
+                    {/* Percentual discreto de produção na timeline */}
+                    {etapaNome === 'Produção' && percentualProducao !== null && (
+                      <span className="text-[10px] font-bold text-emerald-400 mt-0.5 block">
+                        {percentualProducao}% concluído
+                      </span>
+                    )}
+
                     {/* Data Real da Etapa */}
                     {dataEtapa ? (
                       <span className="text-[11px] font-semibold text-slate-400 mt-1 flex items-center gap-1">
@@ -847,7 +861,12 @@ export function AcompanhamentoPublico() {
                         </span>
                       )}
                     </div>
-                    {isAtiva && (
+                    {etapaNome === 'Produção' && percentualProducao !== null && (
+                      <p className="text-[11px] font-semibold text-emerald-400 mt-0.5">
+                        {percentualProducao}% concluído
+                      </p>
+                    )}
+                    {isAtiva && (etapaNome !== 'Produção' || percentualProducao === null) && (
                       <p className="text-[11px] text-blue-300 font-medium mt-0.5">
                         Etapa em andamento
                       </p>
@@ -860,7 +879,7 @@ export function AcompanhamentoPublico() {
         </div>
 
         {/* 4. PROGRESSO DA PRODUÇÃO (Secundário, exibido quando em Produção e houver dados reais) */}
-        {statusPublicoAtual === "Produção" && (dados.status_producao || (dados.producao_itens_concluidos && dados.producao_itens_concluidos > 0)) && (
+        {statusPublicoAtual === "Produção" && temDadosProducao && (
           <div className="bg-slate-900/60 rounded-3xl border border-blue-900/40 p-5 sm:p-6 shadow-xl">
             <h3 className="text-sm font-bold text-blue-400 uppercase tracking-wider mb-4 flex items-center gap-2">
               <Package size={16} />
@@ -878,18 +897,23 @@ export function AcompanhamentoPublico() {
               </div>
             )}
 
-            {dados.producao_itens_concluidos && dados.producao_itens_concluidos > 0 && (
+            {dados.producao_itens_concluidos && dados.producao_itens_concluidos > 0 && percentualProducao !== null && (
               <div>
-                <div className="flex justify-between items-center text-xs font-semibold mb-1.5">
+                <div className="flex flex-wrap justify-between items-center gap-1.5 text-xs font-semibold mb-1.5">
                   <span className="text-slate-300">Itens concluídos na linha de produção</span>
-                  <span className="font-bold text-emerald-400">
-                    {dados.producao_itens_concluidos} de {TOTAL_ETAPAS_PRODUCAO} etapas
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-emerald-400">
+                      {percentualProducao}% concluído
+                    </span>
+                    <span className="text-[11px] text-slate-400 font-medium">
+                      ({dados.producao_itens_concluidos} de {TOTAL_ETAPAS_PRODUCAO} etapas concluídas)
+                    </span>
+                  </div>
                 </div>
                 <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden shadow-inner">
                   <div 
                     className="bg-gradient-to-r from-blue-500 to-emerald-400 h-2 rounded-full transition-all duration-700" 
-                    style={{ width: `${Math.min(Math.round((dados.producao_itens_concluidos / TOTAL_ETAPAS_PRODUCAO) * 100), 100)}%` }} 
+                    style={{ width: `${percentualProducao}%` }} 
                   />
                 </div>
               </div>
