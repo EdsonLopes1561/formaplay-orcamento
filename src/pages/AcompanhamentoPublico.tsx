@@ -21,7 +21,6 @@ import {
   Check,
   Calendar,
   Layers,
-  ArrowRight,
   Info
 } from 'lucide-react';
 
@@ -515,9 +514,11 @@ export function AcompanhamentoPublico() {
   // Proteção e cálculo seguro do percentual de progresso da produção
   const rawItens = dados.producao_itens_concluidos;
   const itensConcluidos = 
-    rawItens !== null && rawItens !== undefined && rawItens !== '' 
-      ? Number(rawItens) 
-      : NaN;
+    typeof rawItens === 'number'
+      ? rawItens
+      : (rawItens !== null && rawItens !== undefined && String(rawItens).trim() !== ''
+          ? Number(rawItens)
+          : NaN);
 
   const percentualProducao =
     Number.isFinite(itensConcluidos) && itensConcluidos >= 0
@@ -825,7 +826,6 @@ export function AcompanhamentoPublico() {
             {ETAPAS_TIMELINE_PUBLICA.map((etapaNome, idx) => {
               const isConcluida = !isCancelado && idx < currentIndex;
               const isAtiva = !isCancelado && idx === currentIndex;
-              const isFutura = isCancelado || idx > currentIndex;
               const isLast = idx === ETAPAS_TIMELINE_PUBLICA.length - 1;
               const dataEtapa = getDataPrimeiraOcorrencia(etapaNome);
 
