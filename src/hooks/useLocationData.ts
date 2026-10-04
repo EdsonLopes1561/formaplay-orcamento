@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import cidadesBrData from '../assets/data/cidades_br.json';
 import { normalizeText, ESTADOS_BR } from '../utils/locationUtils';
 

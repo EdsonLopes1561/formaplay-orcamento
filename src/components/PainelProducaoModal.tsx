@@ -9,12 +9,7 @@ import {
   Clock, 
   CheckCircle2, 
   AlertTriangle, 
-  Search,
-  Truck,
-  ArrowRight,
-  Filter,
-  CheckCircle,
-  AlertCircle
+  Search
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { TOTAL_ETAPAS_PRODUCAO } from '../constants/etapasTimeline';
@@ -25,8 +20,7 @@ import {
   calcularPercentualProducao, 
   formatarDataAtualizacao,
   formatarDataCriacao,
-  ordenarFilaProducao,
-  CategoriaOperacional
+  ordenarFilaProducao
 } from '../utils/prazoProducao';
 
 interface PainelProducaoModalProps {
@@ -632,8 +626,8 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
                       </div>
 
                       <button
-                        onClick={() => handleAbrirOrdem(pedido.id)}
-                        disabled={isLoadingRow}
+                        onClick={() => pedido.id && handleAbrirOrdem(pedido.id)}
+                        disabled={isLoadingRow || !pedido.id}
                         className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 flex-shrink-0 ${
                           isPronto
                             ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/40'

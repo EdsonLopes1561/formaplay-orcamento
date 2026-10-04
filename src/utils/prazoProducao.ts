@@ -224,8 +224,6 @@ export function classificarPedidoProducao(pedido: Partial<Orcamento> & Record<st
   const isAutorizadoAcomp =
     Boolean(statusAcomp) &&
     (statusPublico === 'Produção' ||
-      statusPublico === 'Transporte' ||
-      statusPublico === 'Entregue' ||
       statusAcomp.toLowerCase().includes('autorizado para produção') ||
       statusAcomp.toLowerCase().includes('autorizado para producao') ||
       statusAcomp.toLowerCase().includes('autorização aprovado') ||
