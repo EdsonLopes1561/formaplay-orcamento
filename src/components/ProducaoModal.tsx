@@ -3,6 +3,8 @@ import { X, Save, CheckCircle, Package, Clock, User, AlertCircle, RefreshCw } fr
 import { supabase } from '../supabase';
 import { Orcamento } from '../types';
 
+import { CHECKLIST_PRODUCAO_PADRAO } from '../constants/etapasTimeline';
+
 interface ProducaoModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -11,25 +13,7 @@ interface ProducaoModalProps {
   onSaved: (updatedOrcamento: Partial<Orcamento>) => void;
 }
 
-const CHECKLIST_ITEMS = [
-  { id: 'caixa_tampa', label: 'Caixa tampa' },
-  { id: 'caixa_fundo', label: 'Caixa fundo' },
-  { id: 'tabuleiro', label: 'Tabuleiro' },
-  { id: 'cartas_custos', label: 'Cartas CUSTOS' },
-  { id: 'cartas_imprevistos', label: 'Cartas IMPREVISTOS' },
-  { id: 'cartas_desafio', label: 'Cartas DESAFIO' },
-  { id: 'cartas_eventos', label: 'Cartas EVENTOS' },
-  { id: 'cartas_super_virada', label: 'Cartas SUPER VIRADA' },
-  { id: 'dinheiro_jogo', label: 'Dinheiro do jogo' },
-  { id: 'peoes_caminhoes', label: 'Peões caminhões' },
-  { id: 'dado', label: 'Dado' },
-  { id: 'manual', label: 'Manual / instruções' },
-  { id: 'conferencia_quantidade', label: 'Conferência de quantidade' },
-  { id: 'conferencia_visual', label: 'Conferência visual' },
-  { id: 'embalagem_final', label: 'Embalagem final' },
-  { id: 'nf_conferida', label: 'Nota fiscal conferida' },
-  { id: 'pronto_envio', label: 'Pedido pronto para envio' }
-];
+const CHECKLIST_ITEMS = CHECKLIST_PRODUCAO_PADRAO;
 
 const STATUS_OPTIONS = [
   'Não iniciada',
