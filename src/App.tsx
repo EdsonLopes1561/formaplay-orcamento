@@ -569,8 +569,11 @@ function App() {
       }
     }
 
-    // Regra legada de NF (mantida sem ampliação)
+    // Regra de NF: preenche automaticamente a data atual se estiver vazia ao marcar emitida
     if (name === 'nf_emitida' && finalValue === true) {
+      if (!updated.nf_emitida_em) {
+        updated.nf_emitida_em = new Date().toISOString().split('T')[0];
+      }
       if (!updated.status_acompanhamento) {
         updated.status_acompanhamento = 'Nota fiscal emitida';
         updated.status_atualizado_em = new Date().toISOString();
@@ -720,6 +723,18 @@ function App() {
           payload[field] = null;
         }
       });
+
+      // Validação de NF Emitida (FASE 2.1)
+      if (payload.nf_emitida === true) {
+        if (!payload.nf_numero || !String(payload.nf_numero).trim()) {
+          showToast('error', 'Informe o número da NF-e para registrar a nota fiscal como emitida.');
+          setSaving(false);
+          return;
+        }
+        if (!payload.nf_emitida_em) {
+          payload.nf_emitida_em = new Date().toISOString().split('T')[0];
+        }
+      }
 
       let savedOrcamentoId = currentId;
 
@@ -1777,6 +1792,8 @@ function App() {
                 <GerenciadorDocumentos
                   orcamentoId={currentId}
                   perfilUsuario={usuarioApp.perfil}
+                  orcamentoNfNumero={form.nf_numero || ''}
+                  orcamentoNfEmitidaEm={form.nf_emitida_em || ''}
                 />
               )}
 

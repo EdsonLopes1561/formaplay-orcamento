@@ -9,7 +9,8 @@ import {
   Clock, 
   CheckCircle2, 
   AlertTriangle, 
-  Search
+  Search,
+  Receipt
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { TOTAL_ETAPAS_PRODUCAO } from '../constants/etapasTimeline';
@@ -51,7 +52,8 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
           status_producao, producao_checklist, producao_atualizado_em, created_at,
           prioridade_producao, prazo_producao, observacao_prioridade, observacao_producao,
           prazo_entrega, data_envio, data_entrega, transportadora,
-          cliente_cidade, cliente_uf, cidade
+          cliente_cidade, cliente_uf, cidade,
+          nf_emitida, nf_numero, nf_emitida_em
         `);
       
       if (error) throw error;
@@ -568,6 +570,27 @@ export function PainelProducaoModal({ isOpen, onClose, onAbrirOrdem }: PainelPro
                           </p>
                         )}
                       </div>
+
+                      {/* Tag de NF para Pedidos Prontos para Envio */}
+                      {isPronto && (
+                        <div className="p-2.5 bg-slate-950/70 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <Receipt size={13} className={pedido.nf_emitida && pedido.nf_numero ? "text-emerald-400" : "text-amber-400"} />
+                            Nota Fiscal
+                          </span>
+                          {pedido.nf_emitida && pedido.nf_numero && String(pedido.nf_numero).trim() ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-950/90 text-emerald-300 border border-emerald-500/40">
+                              <CheckCircle2 size={11} className="text-emerald-400" />
+                              NF Emitida (Nº {pedido.nf_numero})
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-amber-950/90 text-amber-300 border border-amber-500/40">
+                              <AlertTriangle size={11} className="text-amber-400" />
+                              NF Pendente
+                            </span>
+                          )}
+                        </div>
+                      )}
 
                       {/* Bloco de Prazo e Situação */}
                       <div className={`p-3 rounded-xl border ${

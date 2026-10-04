@@ -37,6 +37,8 @@ export interface DocumentoPedido {
 interface GerenciadorDocumentosProps {
   orcamentoId: string;
   perfilUsuario: PerfilUsuario;
+  orcamentoNfNumero?: string | null;
+  orcamentoNfEmitidaEm?: string | null;
 }
 
 export interface ItemUpload {
@@ -49,6 +51,11 @@ export interface ItemUpload {
   visivel_cliente: boolean;
   status?: 'pendente' | 'enviando' | 'sucesso' | 'erro';
   erro?: string | null;
+  avisoDuplicidade?: {
+    tipo: 'nfe_pdf' | 'nfe_xml';
+    docExistenteId: string;
+    docExistenteTitulo: string;
+  } | null;
 }
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
@@ -171,20 +178,27 @@ function inferirTipoETitulo(file: File, isProducao: boolean): { tipo: TipoDocume
   return { tipo: 'outro', titulo: nomeSemExt.replace(/_/g, ' ') };
 }
 
-function criarItemUpload(file?: File, isProducao = false): ItemUpload {
+function criarItemUpload(
+  file?: File, 
+  isProducao = false,
+  defaultNfNumero?: string | null,
+  defaultNfEmitidaEm?: string | null
+): ItemUpload {
   const id = crypto.randomUUID();
   if (file) {
     const { tipo, titulo } = inferirTipoETitulo(file, isProducao);
+    const isNfe = tipo === 'nfe_pdf' || tipo === 'nfe_xml';
     return {
       id,
       arquivo: file,
       tipo_documento: tipo,
       titulo,
-      numero_documento: '',
-      data_documento: '',
-      visivel_cliente: false,
+      numero_documento: isNfe && defaultNfNumero ? defaultNfNumero : '',
+      data_documento: isNfe && defaultNfEmitidaEm ? defaultNfEmitidaEm : '',
+      visivel_cliente: isProducao ? false : (isNfe ? true : false),
       status: 'pendente',
       erro: null,
+      avisoDuplicidade: null,
     };
   }
   return {
@@ -197,12 +211,18 @@ function criarItemUpload(file?: File, isProducao = false): ItemUpload {
     visivel_cliente: false,
     status: 'pendente',
     erro: null,
+    avisoDuplicidade: null,
   };
 }
 
 // ─── Componente Principal ─────────────────────────────────────────────────────
 
-export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: GerenciadorDocumentosProps) {
+export function GerenciadorDocumentos({ 
+  orcamentoId, 
+  perfilUsuario,
+  orcamentoNfNumero,
+  orcamentoNfEmitidaEm
+}: GerenciadorDocumentosProps) {
   const isProducao = perfilUsuario === 'producao';
   const podeEditar = perfilUsuario === 'administrador' || perfilUsuario === 'comercial';
 
@@ -270,7 +290,30 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
     const novosItens: ItemUpload[] = [];
     for (let i = 0; i < files.length; i++) {
       const f = files[i];
-      novosItens.push(criarItemUpload(f, isProducao));
+      const item = criarItemUpload(f, isProducao, orcamentoNfNumero, orcamentoNfEmitidaEm);
+      
+      // Checagem de duplicidade prévia
+      if (item.tipo_documento === 'nfe_pdf') {
+        const existente = documentos.find(d => d.tipo_documento === 'nfe_pdf');
+        if (existente) {
+          item.avisoDuplicidade = {
+            tipo: 'nfe_pdf',
+            docExistenteId: existente.id,
+            docExistenteTitulo: existente.titulo
+          };
+        }
+      } else if (item.tipo_documento === 'nfe_xml') {
+        const existente = documentos.find(d => d.tipo_documento === 'nfe_xml');
+        if (existente) {
+          item.avisoDuplicidade = {
+            tipo: 'nfe_xml',
+            docExistenteId: existente.id,
+            docExistenteTitulo: existente.titulo
+          };
+        }
+      }
+      
+      novosItens.push(item);
     }
     setItensUpload(prev => {
       // Se houver apenas 1 item vazio inicial na lista, substitui
@@ -294,7 +337,39 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
   }
 
   function atualizarItem(id: string, updates: Partial<ItemUpload>) {
-    setItensUpload(prev => prev.map(item => item.id === id ? { ...item, ...updates, erro: null } : item));
+    setItensUpload(prev => prev.map(item => {
+      if (item.id !== id) return item;
+      const updated = { ...item, ...updates, erro: null };
+      
+      // Se o usuário alterou o tipo para nfe_pdf ou nfe_xml, ajusta visibilidade, metadados e checa duplicidade
+      if (updates.tipo_documento === 'nfe_pdf' || updates.tipo_documento === 'nfe_xml') {
+        const isPdf = updates.tipo_documento === 'nfe_pdf';
+        const docExist = documentos.find(d => d.tipo_documento === updates.tipo_documento);
+        
+        if (!isProducao) {
+          updated.visivel_cliente = true;
+        }
+        if (!updated.numero_documento && orcamentoNfNumero) {
+          updated.numero_documento = orcamentoNfNumero;
+        }
+        if (!updated.data_documento && orcamentoNfEmitidaEm) {
+          updated.data_documento = orcamentoNfEmitidaEm;
+        }
+        if (docExist) {
+          updated.avisoDuplicidade = {
+            tipo: isPdf ? 'nfe_pdf' : 'nfe_xml',
+            docExistenteId: docExist.id,
+            docExistenteTitulo: docExist.titulo
+          };
+        } else {
+          updated.avisoDuplicidade = null;
+        }
+      } else if (updates.tipo_documento) {
+        updated.avisoDuplicidade = null;
+      }
+      
+      return updated;
+    }));
   }
 
   // ── Multiupload: Salvar todos os documentos da lista ─────────────────────
@@ -863,7 +938,7 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
                   </span>
                   <button
                     type="button"
-                    onClick={() => setItensUpload(prev => [...prev, criarItemUpload(undefined, isProducao)])}
+                    onClick={() => setItensUpload(prev => [...prev, criarItemUpload(undefined, isProducao, orcamentoNfNumero, orcamentoNfEmitidaEm)])}
                     disabled={salvando}
                     className="text-xs font-bold text-violet-400 hover:text-violet-300 flex items-center gap-1"
                   >
@@ -889,6 +964,8 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
                             ? 'border-red-500/60 shadow-[0_0_12px_rgba(239,68,68,0.15)]'
                             : isSucesso
                             ? 'border-emerald-500/50 bg-emerald-950/10'
+                            : item.avisoDuplicidade
+                            ? 'border-amber-500/50 bg-amber-950/10'
                             : 'border-slate-800 hover:border-slate-700'
                         }`}
                       >
@@ -937,6 +1014,48 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
                             </button>
                           </div>
                         </div>
+
+                        {/* Aviso de Duplicidade de DANFE / XML */}
+                        {item.avisoDuplicidade && (
+                          <div className="mb-3 p-3 bg-amber-950/40 border border-amber-800/60 rounded-xl text-xs text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                            <div className="flex items-start gap-2 min-w-0">
+                              <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-400" />
+                              <span>
+                                Já existe um {item.avisoDuplicidade.tipo === 'nfe_pdf' ? 'DANFE' : 'XML de NF-e'} cadastrado para este pedido (<strong>{item.avisoDuplicidade.docExistenteTitulo}</strong>).
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const doc = documentos.find(d => d.id === item.avisoDuplicidade?.docExistenteId);
+                                  if (doc && item.arquivo) {
+                                    setShowModal(false);
+                                    setSubstituindoDoc(doc);
+                                    setArquivoSubst(item.arquivo);
+                                  }
+                                }}
+                                className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold text-[11px] transition-all shadow-sm"
+                              >
+                                Substituir documento existente
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => atualizarItem(item.id, { avisoDuplicidade: null })}
+                                className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-bold text-[11px] transition-all border border-slate-700"
+                              >
+                                Adicionar mesmo assim
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removerItem(item.id)}
+                                className="px-2 py-1 text-slate-400 hover:text-red-400 font-bold text-[11px] transition-all"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        )}
 
                         {/* Mensagem de Erro Específica do Item */}
                         {item.erro && (
@@ -1027,10 +1146,20 @@ export function GerenciadorDocumentos({ orcamentoId, perfilUsuario }: Gerenciado
                                 const f = e.target.files?.[0];
                                 if (f) {
                                   const { tipo, titulo } = inferirTipoETitulo(f, isProducao);
+                                  const isNfe = tipo === 'nfe_pdf' || tipo === 'nfe_xml';
+                                  const docExist = isNfe ? documentos.find(d => d.tipo_documento === tipo) : null;
                                   atualizarItem(item.id, {
                                     arquivo: f,
                                     tipo_documento: item.tipo_documento === 'orcamento' ? tipo : item.tipo_documento,
                                     titulo: item.titulo || titulo,
+                                    visivel_cliente: isProducao ? false : (isNfe ? true : item.visivel_cliente),
+                                    numero_documento: isNfe && !item.numero_documento && orcamentoNfNumero ? orcamentoNfNumero : item.numero_documento,
+                                    data_documento: isNfe && !item.data_documento && orcamentoNfEmitidaEm ? orcamentoNfEmitidaEm : item.data_documento,
+                                    avisoDuplicidade: docExist ? {
+                                      tipo: tipo as 'nfe_pdf' | 'nfe_xml',
+                                      docExistenteId: docExist.id,
+                                      docExistenteTitulo: docExist.titulo
+                                    } : null
                                   });
                                 }
                               }}
