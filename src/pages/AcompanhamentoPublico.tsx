@@ -512,12 +512,28 @@ export function AcompanhamentoPublico() {
   // Verificação de rastreio ativo
   const temRastreio = Boolean(dados.codigo_rastreio || dados.link_rastreio || dados.transportadora);
 
-  // Cálculo percentual de progresso da produção (arredondado para inteiro)
-  const percentualProducao = (dados.producao_itens_concluidos && dados.producao_itens_concluidos > 0)
-    ? Math.min(Math.round((dados.producao_itens_concluidos / TOTAL_ETAPAS_PRODUCAO) * 100), 100)
-    : null;
+  // Proteção e cálculo seguro do percentual de progresso da produção
+  const rawItens = dados.producao_itens_concluidos;
+  const itensConcluidos = 
+    rawItens !== null && rawItens !== undefined && rawItens !== '' 
+      ? Number(rawItens) 
+      : NaN;
 
-  const temDadosProducao = Boolean(dados.status_producao || (typeof dados.producao_itens_concluidos === 'number' && dados.producao_itens_concluidos > 0));
+  const percentualProducao =
+    Number.isFinite(itensConcluidos) && itensConcluidos >= 0
+      ? Math.min(
+          100,
+          Math.max(
+            0,
+            Math.round((itensConcluidos / TOTAL_ETAPAS_PRODUCAO) * 100)
+          )
+        )
+      : null;
+
+  const temDadosProducao = Boolean(
+    dados.status_producao || 
+    (percentualProducao !== null && percentualProducao > 0)
+  );
 
   // Formatação de data/hora amigável
   const formatarDataHora = (isoDate?: string | null) => {
@@ -781,7 +797,7 @@ export function AcompanhamentoPublico() {
                     </p>
 
                     {/* Percentual discreto de produção na timeline */}
-                    {etapaNome === 'Produção' && percentualProducao !== null && (
+                    {etapaNome === 'Produção' && percentualProducao !== null && percentualProducao > 0 && (
                       <span className="text-[10px] font-bold text-emerald-400 mt-0.5 block">
                         {percentualProducao}% concluído
                       </span>
@@ -861,12 +877,12 @@ export function AcompanhamentoPublico() {
                         </span>
                       )}
                     </div>
-                    {etapaNome === 'Produção' && percentualProducao !== null && (
+                    {etapaNome === 'Produção' && percentualProducao !== null && percentualProducao > 0 && (
                       <p className="text-[11px] font-semibold text-emerald-400 mt-0.5">
                         {percentualProducao}% concluído
                       </p>
                     )}
-                    {isAtiva && (etapaNome !== 'Produção' || percentualProducao === null) && (
+                    {isAtiva && (etapaNome !== 'Produção' || percentualProducao === null || percentualProducao === 0) && (
                       <p className="text-[11px] text-blue-300 font-medium mt-0.5">
                         Etapa em andamento
                       </p>
@@ -897,7 +913,7 @@ export function AcompanhamentoPublico() {
               </div>
             )}
 
-            {dados.producao_itens_concluidos && dados.producao_itens_concluidos > 0 && percentualProducao !== null && (
+            {percentualProducao !== null && percentualProducao > 0 && (
               <div>
                 <div className="flex flex-wrap justify-between items-center gap-1.5 text-xs font-semibold mb-1.5">
                   <span className="text-slate-300">Itens concluídos na linha de produção</span>
@@ -906,7 +922,7 @@ export function AcompanhamentoPublico() {
                       {percentualProducao}% concluído
                     </span>
                     <span className="text-[11px] text-slate-400 font-medium">
-                      ({dados.producao_itens_concluidos} de {TOTAL_ETAPAS_PRODUCAO} etapas concluídas)
+                      ({itensConcluidos} de {TOTAL_ETAPAS_PRODUCAO} etapas concluídas)
                     </span>
                   </div>
                 </div>
