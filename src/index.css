@@ -64,7 +64,6 @@
     background: #fff;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    color-adjust: exact !important;
     position: relative;
     isolation: isolate;
     display: flex;

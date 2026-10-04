@@ -3,7 +3,8 @@ import { X, Save, CheckCircle, Package, Clock, User, AlertCircle, RefreshCw } fr
 import { supabase } from '../supabase';
 import { Orcamento } from '../types';
 
-import { CHECKLIST_PRODUCAO_PADRAO } from '../constants/etapasTimeline';
+import { CHECKLIST_PRODUCAO_PADRAO, TOTAL_ETAPAS_PRODUCAO } from '../constants/etapasTimeline';
+import { calcularPercentualProducao } from '../utils/prazoProducao';
 
 interface ProducaoModalProps {
   isOpen: boolean;
@@ -76,7 +77,7 @@ export const ProducaoModal: React.FC<ProducaoModalProps> = ({ isOpen, onClose, o
         producao_checklist: arrayChecklist,
         observacao_producao: observacao,
         producao_atualizado_em: agora,
-        prioridade_producao: prioridade,
+        prioridade_producao: prioridade as 'Normal' | 'Alta' | 'Urgente',
         prazo_producao: prazo || null,
         observacao_prioridade: observacaoPrioridade
       };
@@ -97,9 +98,9 @@ export const ProducaoModal: React.FC<ProducaoModalProps> = ({ isOpen, onClose, o
     }
   };
 
-  const totalItems = CHECKLIST_ITEMS.length;
+  const totalItems = TOTAL_ETAPAS_PRODUCAO;
   const completedItems = checkedItems.size;
-  const progressPercent = Math.round((completedItems / totalItems) * 100);
+  const progressPercent = calcularPercentualProducao(Array.from(checkedItems));
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
