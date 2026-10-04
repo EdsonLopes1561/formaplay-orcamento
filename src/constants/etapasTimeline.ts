@@ -119,6 +119,26 @@ export function isFaseOrcamento(status?: string | null): boolean {
 }
 
 /**
+ * Retorna se o pedido está comercialmente aprovado ou em fase autorizada de produção/entrega.
+ */
+export function isPedidoAutorizado(statusComercial?: string | null, statusAcompanhamento?: string | null): boolean {
+  const sCom = (statusComercial || '').trim().toLowerCase();
+  if (sCom === 'cancelado' || sCom === 'recusado') return false;
+
+  const sAcomp = (statusAcompanhamento || '').trim().toLowerCase();
+  if (sAcomp === 'cancelado') return false;
+
+  if (sCom === 'aprovado') return true;
+
+  // Se o status de acompanhamento já for além da fase de orçamento (ex: produção, transporte, entregue)
+  if (Boolean(statusAcompanhamento) && !isFaseOrcamento(statusAcompanhamento)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Retorna o cabeçalho dinâmico e a mensagem contextual da fase para a página pública.
  */
 export function getMensagemDestaqueFase(

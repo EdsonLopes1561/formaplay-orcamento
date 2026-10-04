@@ -3,7 +3,7 @@ import { X, Save, CheckCircle, Package, Clock, User, AlertCircle, RefreshCw } fr
 import { supabase } from '../supabase';
 import { Orcamento } from '../types';
 
-import { CHECKLIST_PRODUCAO_PADRAO, TOTAL_ETAPAS_PRODUCAO } from '../constants/etapasTimeline';
+import { CHECKLIST_PRODUCAO_PADRAO, TOTAL_ETAPAS_PRODUCAO, mapearStatusParaPublico } from '../constants/etapasTimeline';
 import { calcularPercentualProducao } from '../utils/prazoProducao';
 
 interface ProducaoModalProps {
@@ -58,6 +58,16 @@ export const ProducaoModal: React.FC<ProducaoModalProps> = ({ isOpen, onClose, o
       newChecked.add(id);
     }
     setCheckedItems(newChecked);
+
+    const publico = mapearStatusParaPublico(orcamento.status_acompanhamento);
+    const isDespachadoOuEntregue = publico === 'Transporte' || publico === 'Entregue' || Boolean(orcamento.data_envio) || Boolean(orcamento.data_entrega);
+
+    // Automação FASE 2: 17/17 -> "Pronto para envio" / Desmarcar -> "Em produção" (somente se não despachado/entregue)
+    if (newChecked.size === TOTAL_ETAPAS_PRODUCAO) {
+      setStatus('Pronto para envio');
+    } else if (newChecked.size < TOTAL_ETAPAS_PRODUCAO && status === 'Pronto para envio' && !isDespachadoOuEntregue) {
+      setStatus('Em produção');
+    }
   };
 
   const handleSave = async () => {

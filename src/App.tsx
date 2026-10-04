@@ -25,7 +25,7 @@ import { GerenciadorDocumentos } from './components/GerenciadorDocumentos';
 import { useAuth } from './AuthWrapper';
 import { getPublicOrderTrackingUrl } from './config/appUrl';
 import { calcularOpcoesParcelamento, formatarTextoCondicoesCartao, extrairNumeroParcelas } from './config/taxasCartao';
-import { isFaseOrcamento } from './constants/etapasTimeline';
+import { isFaseOrcamento, mapearStatusParaPublico, isPedidoAutorizado } from './constants/etapasTimeline';
 
 type Toast = { type: 'success' | 'error'; message: string };
 
@@ -536,7 +536,7 @@ function App() {
       }
     }
     
-    // Sincronização comercial com acompanhamento público
+    // Sincronização comercial com acompanhamento público (Fase 1)
     if (name === 'status' && value === 'Aprovado') {
       const statusAcompAtual = updated.status_acompanhamento || '';
       if (!statusAcompAtual || isFaseOrcamento(statusAcompAtual)) {
@@ -545,11 +545,31 @@ function App() {
       }
     }
 
-    // Regras de automação do Acompanhamento Público
+    // Regras de automação do Acompanhamento Público (Fase 2)
     if (name === 'status_acompanhamento') {
       updated.status_atualizado_em = new Date().toISOString();
     }
     
+    // Automação FASE 2: data_envio preenchida -> status_acompanhamento = "Transporte" (se pedido autorizado)
+    if (name === 'data_envio' && Boolean(value && String(value).trim())) {
+      const publicoAtual = mapearStatusParaPublico(updated.status_acompanhamento);
+      const isAutorizado = isPedidoAutorizado(updated.status, updated.status_acompanhamento);
+      if (isAutorizado && publicoAtual !== 'Transporte' && publicoAtual !== 'Entregue') {
+        updated.status_acompanhamento = 'Transporte';
+        updated.status_atualizado_em = new Date().toISOString();
+      }
+    }
+
+    // Automação FASE 2: data_entrega preenchida -> status_acompanhamento = "Pedido entregue" (se pedido autorizado)
+    if (name === 'data_entrega' && Boolean(value && String(value).trim())) {
+      const isAutorizado = isPedidoAutorizado(updated.status, updated.status_acompanhamento);
+      if (isAutorizado) {
+        updated.status_acompanhamento = 'Pedido entregue';
+        updated.status_atualizado_em = new Date().toISOString();
+      }
+    }
+
+    // Regra legada de NF (mantida sem ampliação)
     if (name === 'nf_emitida' && finalValue === true) {
       if (!updated.status_acompanhamento) {
         updated.status_acompanhamento = 'Nota fiscal emitida';
@@ -694,7 +714,7 @@ function App() {
       }
 
       // Normalizar campos de data vazios para null
-      const dateFields = ['nf_emitida_em', 'status_atualizado_em', 'data_retorno'];
+      const dateFields = ['nf_emitida_em', 'status_atualizado_em', 'data_retorno', 'data_envio', 'previsao_entrega', 'data_entrega'];
       dateFields.forEach(field => {
         if (payload[field] === "" || payload[field] === undefined) {
           payload[field] = null;
@@ -1793,6 +1813,11 @@ function App() {
                   <div>
                     <label className="form-label">Previsão de Entrega</label>
                     <input name="previsao_entrega" type="date" value={form.previsao_entrega || ''} onChange={handleChange}
+                      className="form-input" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="form-label">Data de Entrega</label>
+                    <input name="data_entrega" type="date" value={form.data_entrega || ''} onChange={handleChange}
                       className="form-input" />
                   </div>
                   <div className="sm:col-span-2">
